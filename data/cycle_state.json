@@ -1,11 +1,11 @@
 {
   "date": "2026-05-08",
-  "btc_price": 79699.7734375,
+  "btc_price": 79803.4453125,
   "exposure": 0.5,
   "direction": "BEARISH",
   "composite": 0.023148148148148143,
   "gate": 0.0,
-  "vol_z": -0.8493228728517296,
+  "vol_z": -0.8518328709122032,
   "vol_regime": "LOW",
   "bull_count": 16,
   "neut_count": 33,
