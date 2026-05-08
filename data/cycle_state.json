@@ -1,21 +1,20 @@
 {
-  "date": "2026-05-07",
-  "btc_price": 80854.2578125,
+  "date": "2026-05-08",
+  "btc_price": 79699.7734375,
   "exposure": 0.5,
   "direction": "BEARISH",
   "composite": 0.023148148148148143,
   "gate": 0.0,
-  "vol_z": -0.8742380675301246,
+  "vol_z": -0.8493228728517296,
   "vol_regime": "LOW",
-  "bull_count": 17,
-  "neut_count": 31,
-  "bear_count": 11,
+  "bull_count": 16,
+  "neut_count": 33,
+  "bear_count": 10,
   "bull_signals": [
     "MVRV",
     "LTH_SOPR",
     "Exch_Reserve",
     "SOPR_Ratio",
-    "Dormancy",
     "Puell_Proxy",
     "RealVol_30",
     "LR_1Y",
@@ -31,7 +30,6 @@
   ],
   "bear_signals": [
     "Whale_Ratio",
-    "MPI",
     "Lev_Ratio",
     "HY_Spread",
     "Zscore_SMA50_daily",
@@ -50,7 +48,9 @@
     "NVM",
     "S2F_Dev",
     "Exch_Netflow",
+    "MPI",
     "Puell",
+    "Dormancy",
     "SSR",
     "Open_Interest",
     "Coinbase_Prem",
@@ -77,24 +77,14 @@
   ],
   "flips": [
     {
-      "signal": "Exch_Netflow",
-      "from": "BEAR",
-      "to": "NEUTRAL"
-    },
-    {
       "signal": "RealVol_30",
       "from": "NEUTRAL",
       "to": "BULL"
     },
     {
-      "signal": "MABreak_EMA_daily_30_90_180_365",
-      "from": "BULL",
-      "to": "NEUTRAL"
-    },
-    {
-      "signal": "MABreak_EMA_weekly_4_13_26_52",
-      "from": "BULL",
-      "to": "NEUTRAL"
+      "signal": "DXY",
+      "from": "NEUTRAL",
+      "to": "BULL"
     }
   ],
   "dominant_pairs": [
