@@ -5,7 +5,9 @@ import dynamic from "next/dynamic";
 import type { StrategyData, AssetData } from "@/lib/types";
 import type { PositionsData } from "@/lib/loadPositions";
 import type { ChartPoint, AssetPerfEntry, MetricsSummary } from "@/lib/privateFundTypes";
+import { MCAP_WEIGHTS, LIQUIDITY_WEIGHTS } from "@/lib/benchmarkWeights";
 import Nav from "./Nav";
+import type { SeriesConfig } from "./PrivateFundIndexChart";
 
 const PrivateFundIndexChart = dynamic(() => import("./PrivateFundIndexChart"), { ssr: false });
 const PrivateFundAssetPerf = dynamic(() => import("./PrivateFundAssetPerf"), { ssr: false });
@@ -14,12 +16,26 @@ interface Props {
   privateData: StrategyData | undefined;
   btcData: AssetData | undefined;
   allAssets: Record<string, AssetData>;
+  etfData: StrategyData | undefined;
+  qualityData: StrategyData | undefined;
+  riskData: StrategyData | undefined;
   positions: PositionsData | null;
   lastUpdated: string;
   latestRebalanceDate: string;
 }
 
 type PriceMap = Record<string, number>;
+
+const CHART_SERIES: SeriesConfig[] = [
+  { key: "index",     label: "Private Fund Index",    color: "#8b5cf6" },
+  { key: "combined",  label: "Index + Signal (50/50)", color: "#06b6d4" },
+  { key: "btc",       label: "Bitcoin",               color: "#f97316" },
+  { key: "etf",       label: "ETF Weights",           color: "#f59e0b" },
+  { key: "quality",   label: "Quality Factor",        color: "#10b981" },
+  { key: "risk",      label: "Risk Factor",           color: "#ef4444" },
+  { key: "mcap",      label: "MCAP Weighted",         color: "#3b82f6" },
+  { key: "liquidity", label: "1/N Equal (Liquidity)", color: "#ec4899" },
+];
 
 function fmtPrice(p: number): string {
   if (p >= 1000) return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -31,10 +47,40 @@ function fmtUsd(n: number, decimals = 0): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
+// Compute weighted portfolio cumReturn series from allAssets
+function computeWeightedSeries(
+  weights: Record<string, number>,
+  allAssets: Record<string, AssetData>,
+): Map<string, number> {
+  const result = new Map<string, number>();
+  const assetDateMap = new Map<string, Map<string, number>>();
+  for (const id of Object.keys(weights)) {
+    const data = allAssets[id];
+    if (!data) continue;
+    const m = new Map<string, number>();
+    for (const dp of data.dailyData) m.set(dp.date, dp.cumReturn);
+    assetDateMap.set(id, m);
+  }
+  const dates = new Set<string>();
+  Array.from(assetDateMap.values()).forEach((m) => m.forEach((_, d) => dates.add(d)));
+  Array.from(dates).forEach((date) => {
+    let val = 0;
+    for (const [id, w] of Object.entries(weights)) {
+      const cr = assetDateMap.get(id)?.get(date);
+      if (cr !== undefined) val += w * cr;
+    }
+    result.set(date, val);
+  });
+  return result;
+}
+
 export default function PrivateFundDashboard({
   privateData,
   btcData,
   allAssets,
+  etfData,
+  qualityData,
+  riskData,
   positions,
   lastUpdated,
   latestRebalanceDate,
@@ -121,14 +167,30 @@ export default function PrivateFundDashboard({
   const portfolioLiveReturn = totalPnlPct / 100;
   const isLive = livePrices !== null;
 
-  // Metrics
   const btcPos = positionMap.get("bitcoin");
   const btcLive = livePrices?.["bitcoin"];
   const btcReturn = btcPos && btcLive
     ? btcLive / btcPos.executionPrice - 1
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
-  const allMetrics: MetricsSummary[] = [
+  // Pre-compute MCAP and 1/N weighted series
+  const mcapSeries = useMemo(() => computeWeightedSeries(MCAP_WEIGHTS, allAssets), [allAssets]);
+  const liquiditySeries = useMemo(() => computeWeightedSeries(LIQUIDITY_WEIGHTS, allAssets), [allAssets]);
+
+  const mcapTotalReturn = useMemo(() => {
+    const maxDate = Array.from(mcapSeries.keys()).sort().at(-1);
+    const last = maxDate ? (mcapSeries.get(maxDate) ?? 1) : 1;
+    return (last - 1) * 100;
+  }, [mcapSeries]);
+
+  const liquidityTotalReturn = useMemo(() => {
+    const maxDate = Array.from(liquiditySeries.keys()).sort().at(-1);
+    const last = maxDate ? (liquiditySeries.get(maxDate) ?? 1) : 1;
+    return (last - 1) * 100;
+  }, [liquiditySeries]);
+
+  // Primary metric cards
+  const primaryMetrics: MetricsSummary[] = [
     {
       label: "Private Fund Index",
       color: "#8b5cf6",
@@ -158,10 +220,63 @@ export default function PrivateFundDashboard({
     },
   ];
 
-  // Chart series: historical from performance.json + live point for today
+  // Benchmark metric cards
+  const benchmarkMetrics: MetricsSummary[] = [
+    {
+      label: "ETF Weights",
+      color: "#f59e0b",
+      totalReturn: parseFloat((((etfData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
+      sharpe: null,
+      maxDrawdown: etfData?.metrics?.maxDrawdown ?? 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+    {
+      label: "Quality Factor",
+      color: "#10b981",
+      totalReturn: parseFloat((((qualityData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
+      sharpe: null,
+      maxDrawdown: qualityData?.metrics?.maxDrawdown ?? 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+    {
+      label: "Risk Factor",
+      color: "#ef4444",
+      totalReturn: parseFloat((((riskData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
+      sharpe: null,
+      maxDrawdown: riskData?.metrics?.maxDrawdown ?? 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+    {
+      label: "MCAP Weighted",
+      color: "#3b82f6",
+      totalReturn: parseFloat(mcapTotalReturn.toFixed(2)),
+      sharpe: null,
+      maxDrawdown: 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+    {
+      label: "1/N Equal (Liquidity)",
+      color: "#ec4899",
+      totalReturn: parseFloat(liquidityTotalReturn.toFixed(2)),
+      sharpe: null,
+      maxDrawdown: 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+  ];
+
+  // Chart series: all strategies base-1000 from May 1
   const chartSeries = useMemo((): ChartPoint[] => {
     const dateMap = new Map<string, ChartPoint>();
-    dateMap.set("2026-05-01", { date: "2026-05-01", index: 1000, combined: 1000 });
+    dateMap.set("2026-05-01", {
+      date: "2026-05-01",
+      index: 1000, combined: 1000,
+      etf: 1000, quality: 1000, risk: 1000,
+    });
 
     let combinedValue = 1000;
     if (privateData) {
@@ -179,7 +294,34 @@ export default function PrivateFundDashboard({
         dateMap.get(d.date)!.btc = parseFloat((d.cumReturn * 1000).toFixed(4));
       }
     }
-    // Live point
+    if (etfData) {
+      for (const d of etfData.dailyData) {
+        if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
+        dateMap.get(d.date)!.etf = parseFloat((d.cumReturn * 1000).toFixed(4));
+      }
+    }
+    if (qualityData) {
+      for (const d of qualityData.dailyData) {
+        if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
+        dateMap.get(d.date)!.quality = parseFloat((d.cumReturn * 1000).toFixed(4));
+      }
+    }
+    if (riskData) {
+      for (const d of riskData.dailyData) {
+        if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
+        dateMap.get(d.date)!.risk = parseFloat((d.cumReturn * 1000).toFixed(4));
+      }
+    }
+    // MCAP and 1/N from allAssets cumReturn
+    mcapSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.mcap = parseFloat((cr * 1000).toFixed(4));
+    });
+    liquiditySeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.liquidity = parseFloat((cr * 1000).toFixed(4));
+    });
+    // Live point for Private Fund and BTC
     if (isLive) {
       const today = new Date().toISOString().split("T")[0];
       if (!dateMap.has(today)) dateMap.set(today, { date: today });
@@ -189,8 +331,8 @@ export default function PrivateFundDashboard({
       if (btcPos && btcLive) pt.btc = parseFloat((1000 * (btcLive / btcPos.executionPrice)).toFixed(4));
     }
 
-    return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [privateData, btcData, isLive, portfolioLiveReturn, btcPos, btcLive]);
+    return Array.from(dateMap.values()).sort((a, b) => (a.date as string).localeCompare(b.date as string));
+  }, [privateData, btcData, etfData, qualityData, riskData, mcapSeries, liquiditySeries, isLive, portfolioLiveReturn, btcPos, btcLive]);
 
   const topMovers = useMemo(
     () => [...portfolioAssets].sort((a, b) => b.totalReturn - a.totalReturn),
@@ -284,37 +426,24 @@ export default function PrivateFundDashboard({
               </section>
             )}
 
-            {/* Performance metric cards */}
+            {/* Primary performance cards */}
             <section>
               <SectionHeader
-                title="Performance Comparison"
+                title="Performance"
                 subtitle={`since ${positions?.executionDate ?? latestRebalanceDate} · ${isLive ? "live prices" : "end-of-day"}`}
               />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {allMetrics.map((m) => (
-                  <div
-                    key={m.label}
-                    className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                    style={{ borderLeftWidth: 3, borderLeftColor: m.color }}
-                  >
-                    <div className="text-xs mb-1" style={{ color: m.color }}>{m.label}</div>
-                    <div className="text-2xl font-bold" style={{ color: m.totalReturn >= 0 ? "#4ade80" : "#f87171" }}>
-                      {m.totalReturn >= 0 ? "+" : ""}{m.totalReturn.toFixed(2)}%
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">Total Return</div>
-                    <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
-                      <div>
-                        <div className="text-gray-500">Sharpe</div>
-                        <div className="text-gray-500 font-mono">— <span className="text-gray-700">(30d min)</span></div>
-                      </div>
-                      <div>
-                        <div className="text-gray-500">Max DD</div>
-                        <div className="text-red-400 font-mono">
-                          {m.maxDrawdown > 0 ? `-${m.maxDrawdown.toFixed(2)}%` : "0%"}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {primaryMetrics.map((m) => (
+                  <MetricCard key={m.label} m={m} />
+                ))}
+              </div>
+              {/* Benchmark cards */}
+              <div className="mb-2">
+                <span className="text-xs text-gray-500 uppercase tracking-wider">Benchmark Strategies</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {benchmarkMetrics.map((m) => (
+                  <MetricCardSmall key={m.label} m={m} />
                 ))}
               </div>
             </section>
@@ -323,10 +452,10 @@ export default function PrivateFundDashboard({
             <section>
               <SectionHeader
                 title="Index Performance (Base 1000)"
-                subtitle="Private Fund Index vs BTC vs Index+Signal"
+                subtitle="All strategies vs benchmarks · toggle to compare"
               />
               <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
-                <PrivateFundIndexChart chartSeries={chartSeries} />
+                <PrivateFundIndexChart chartSeries={chartSeries} series={CHART_SERIES} />
               </div>
             </section>
 
@@ -473,6 +602,54 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
     <div className="flex items-baseline gap-2 mb-4">
       <h2 className="text-lg font-semibold">{title}</h2>
       {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
+    </div>
+  );
+}
+
+function MetricCard({ m }: { m: MetricsSummary }) {
+  return (
+    <div
+      className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+      style={{ borderLeftWidth: 3, borderLeftColor: m.color }}
+    >
+      <div className="text-xs mb-1" style={{ color: m.color }}>{m.label}</div>
+      <div className="text-2xl font-bold" style={{ color: m.totalReturn >= 0 ? "#4ade80" : "#f87171" }}>
+        {m.totalReturn >= 0 ? "+" : ""}{m.totalReturn.toFixed(2)}%
+      </div>
+      <div className="text-xs text-gray-500 mt-0.5">Total Return</div>
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+        <div>
+          <div className="text-gray-500">Sharpe</div>
+          <div className="text-gray-500 font-mono">— <span className="text-gray-700">(30d min)</span></div>
+        </div>
+        <div>
+          <div className="text-gray-500">Max DD</div>
+          <div className="text-red-400 font-mono">
+            {m.maxDrawdown > 0 ? `-${m.maxDrawdown.toFixed(2)}%` : "0%"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCardSmall({ m }: { m: MetricsSummary }) {
+  return (
+    <div
+      className="bg-[#1a1d29] rounded-xl p-3 border border-[#2d3144]"
+      style={{ borderLeftWidth: 3, borderLeftColor: m.color }}
+    >
+      <div className="text-xs mb-1 truncate" style={{ color: m.color }}>{m.label}</div>
+      <div className="text-xl font-bold" style={{ color: m.totalReturn >= 0 ? "#4ade80" : "#f87171" }}>
+        {m.totalReturn >= 0 ? "+" : ""}{m.totalReturn.toFixed(2)}%
+      </div>
+      <div className="text-xs text-gray-600 mt-0.5">Total Return</div>
+      {m.maxDrawdown > 0 && (
+        <div className="mt-2 text-xs">
+          <span className="text-gray-600">Max DD </span>
+          <span className="text-red-400 font-mono">-{m.maxDrawdown.toFixed(2)}%</span>
+        </div>
+      )}
     </div>
   );
 }

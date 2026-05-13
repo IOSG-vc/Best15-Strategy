@@ -13,15 +13,16 @@ import {
 } from "recharts";
 import type { ChartPoint } from "@/lib/privateFundTypes";
 
-interface Props {
-  chartSeries: ChartPoint[];
+export interface SeriesConfig {
+  key: string;
+  label: string;
+  color: string;
 }
 
-const SERIES = [
-  { key: "index" as const, label: "Private Fund Index", color: "#8b5cf6" },
-  { key: "btc" as const, label: "Bitcoin", color: "#f97316" },
-  { key: "combined" as const, label: "Index + Signal (50/50)", color: "#06b6d4" },
-];
+interface Props {
+  chartSeries: ChartPoint[];
+  series: SeriesConfig[];
+}
 
 interface TooltipPayload {
   dataKey: string;
@@ -33,10 +34,12 @@ function CustomTooltip({
   active,
   label,
   payload,
+  seriesMap,
 }: {
   active?: boolean;
   label?: string;
   payload?: TooltipPayload[];
+  seriesMap: Map<string, SeriesConfig>;
 }) {
   if (!active || !payload?.length) return null;
   return (
@@ -47,11 +50,11 @@ function CustomTooltip({
         .map((p) => {
           const pct = ((p.value / 1000 - 1) * 100).toFixed(2);
           const pctNum = parseFloat(pct);
-          const series = SERIES.find((s) => s.key === p.dataKey);
+          const s = seriesMap.get(p.dataKey);
           return (
             <div key={p.dataKey} className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-              <span className="text-gray-300 w-36">{series?.label ?? p.dataKey}</span>
+              <span className="text-gray-300 w-40">{s?.label ?? p.dataKey}</span>
               <span className="font-mono ml-auto text-right" style={{ color: pctNum >= 0 ? "#4ade80" : "#f87171" }}>
                 {pctNum >= 0 ? "+" : ""}
                 {pct}%
@@ -64,8 +67,10 @@ function CustomTooltip({
   );
 }
 
-export default function PrivateFundIndexChart({ chartSeries }: Props) {
-  const [active, setActive] = useState<Set<string>>(() => new Set(SERIES.map((s) => s.key)));
+export default function PrivateFundIndexChart({ chartSeries, series }: Props) {
+  const [active, setActive] = useState<Set<string>>(() => new Set(series.map((s) => s.key)));
+
+  const seriesMap = useMemo(() => new Map(series.map((s) => [s.key, s])), [series]);
 
   const toggle = (key: string) =>
     setActive((prev) => {
@@ -75,15 +80,15 @@ export default function PrivateFundIndexChart({ chartSeries }: Props) {
     });
 
   const filteredData = useMemo(
-    () => chartSeries.filter((p) => SERIES.some((s) => active.has(s.key) && p[s.key] !== undefined)),
-    [chartSeries, active],
+    () => chartSeries.filter((p) => series.some((s) => active.has(s.key) && p[s.key] !== undefined)),
+    [chartSeries, series, active],
   );
 
-  // Y-axis domain
   const allValues = filteredData.flatMap((p) =>
-    SERIES.filter((s) => active.has(s.key))
+    series
+      .filter((s) => active.has(s.key))
       .map((s) => p[s.key])
-      .filter((v): v is number => v !== undefined),
+      .filter((v): v is number => typeof v === "number"),
   );
   const minVal = allValues.length ? Math.floor(Math.min(...allValues) * 0.998) : 950;
   const maxVal = allValues.length ? Math.ceil(Math.max(...allValues) * 1.002) : 1100;
@@ -92,7 +97,7 @@ export default function PrivateFundIndexChart({ chartSeries }: Props) {
     <div>
       {/* Legend / toggle */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {SERIES.map((s) => {
+        {series.map((s) => {
           const on = active.has(s.key);
           return (
             <button
@@ -112,7 +117,7 @@ export default function PrivateFundIndexChart({ chartSeries }: Props) {
         })}
       </div>
 
-      <ResponsiveContainer width="100%" height={380}>
+      <ResponsiveContainer width="100%" height={400}>
         <LineChart data={chartSeries} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" />
           <XAxis
@@ -127,9 +132,18 @@ export default function PrivateFundIndexChart({ chartSeries }: Props) {
             width={60}
             tickFormatter={(v: number) => v.toFixed(0)}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={(props) => (
+              <CustomTooltip
+                active={props.active}
+                label={props.label as string}
+                payload={props.payload as TooltipPayload[]}
+                seriesMap={seriesMap}
+              />
+            )}
+          />
           <ReferenceLine y={1000} stroke="#4b5563" strokeDasharray="4 3" strokeWidth={1} />
-          {SERIES.filter((s) => active.has(s.key)).map((s) => (
+          {series.filter((s) => active.has(s.key)).map((s) => (
             <Line
               key={s.key}
               type="monotone"

@@ -1,8 +1,6 @@
 export interface ChartPoint {
   date: string;
-  index?: number;
-  btc?: number;
-  combined?: number;
+  [key: string]: number | string | undefined;
 }
 
 export interface MetricsSummary {
