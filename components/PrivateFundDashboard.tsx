@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import type { StrategyData, AssetData } from "@/lib/types";
 import type { PositionsData } from "@/lib/loadPositions";
 import type { ChartPoint, AssetPerfEntry, MetricsSummary } from "@/lib/privateFundTypes";
-import { MCAP_WEIGHTS, LIQUIDITY_WEIGHTS } from "@/lib/benchmarkWeights";
+import { MCAP_WEIGHTS, VOLUME_WEIGHTS, LIQUIDITY_WEIGHTS } from "@/lib/benchmarkWeights";
 import Nav from "./Nav";
 import type { SeriesConfig } from "./PrivateFundIndexChart";
 
@@ -34,7 +34,8 @@ const CHART_SERIES: SeriesConfig[] = [
   { key: "quality",   label: "Quality Factor",        color: "#10b981" },
   { key: "risk",      label: "Risk Factor",           color: "#ef4444" },
   { key: "mcap",      label: "MCAP Weighted",         color: "#3b82f6" },
-  { key: "liquidity", label: "1/N Equal (Liquidity)", color: "#ec4899" },
+  { key: "volume",    label: "Liquidity Weighted",    color: "#84cc16" },
+  { key: "liquidity", label: "1/N Equal",             color: "#ec4899" },
 ];
 
 function fmtPrice(p: number): string {
@@ -173,8 +174,9 @@ export default function PrivateFundDashboard({
     ? btcLive / btcPos.executionPrice - 1
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
-  // Pre-compute MCAP and 1/N weighted series
+  // Pre-compute weighted benchmark series
   const mcapSeries = useMemo(() => computeWeightedSeries(MCAP_WEIGHTS, allAssets), [allAssets]);
+  const volumeSeries = useMemo(() => computeWeightedSeries(VOLUME_WEIGHTS, allAssets), [allAssets]);
   const liquiditySeries = useMemo(() => computeWeightedSeries(LIQUIDITY_WEIGHTS, allAssets), [allAssets]);
 
   const mcapTotalReturn = useMemo(() => {
@@ -182,6 +184,12 @@ export default function PrivateFundDashboard({
     const last = maxDate ? (mcapSeries.get(maxDate) ?? 1) : 1;
     return (last - 1) * 100;
   }, [mcapSeries]);
+
+  const volumeTotalReturn = useMemo(() => {
+    const maxDate = Array.from(volumeSeries.keys()).sort().at(-1);
+    const last = maxDate ? (volumeSeries.get(maxDate) ?? 1) : 1;
+    return (last - 1) * 100;
+  }, [volumeSeries]);
 
   const liquidityTotalReturn = useMemo(() => {
     const maxDate = Array.from(liquiditySeries.keys()).sort().at(-1);
@@ -259,7 +267,16 @@ export default function PrivateFundDashboard({
       volatility: 0,
     },
     {
-      label: "1/N Equal (Liquidity)",
+      label: "Liquidity Weighted",
+      color: "#84cc16",
+      totalReturn: parseFloat(volumeTotalReturn.toFixed(2)),
+      sharpe: null,
+      maxDrawdown: 0,
+      annReturn: 0,
+      volatility: 0,
+    },
+    {
+      label: "1/N Equal",
       color: "#ec4899",
       totalReturn: parseFloat(liquidityTotalReturn.toFixed(2)),
       sharpe: null,
@@ -312,10 +329,14 @@ export default function PrivateFundDashboard({
         dateMap.get(d.date)!.risk = parseFloat((d.cumReturn * 1000).toFixed(4));
       }
     }
-    // MCAP and 1/N from allAssets cumReturn
+    // Computed benchmark series from allAssets cumReturn
     mcapSeries.forEach((cr, date) => {
       if (!dateMap.has(date)) dateMap.set(date, { date });
       dateMap.get(date)!.mcap = parseFloat((cr * 1000).toFixed(4));
+    });
+    volumeSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.volume = parseFloat((cr * 1000).toFixed(4));
     });
     liquiditySeries.forEach((cr, date) => {
       if (!dateMap.has(date)) dateMap.set(date, { date });
@@ -332,7 +353,7 @@ export default function PrivateFundDashboard({
     }
 
     return Array.from(dateMap.values()).sort((a, b) => (a.date as string).localeCompare(b.date as string));
-  }, [privateData, btcData, etfData, qualityData, riskData, mcapSeries, liquiditySeries, isLive, portfolioLiveReturn, btcPos, btcLive]);
+  }, [privateData, btcData, etfData, qualityData, riskData, mcapSeries, volumeSeries, liquiditySeries, isLive, portfolioLiveReturn, btcPos, btcLive]);
 
   const topMovers = useMemo(
     () => [...portfolioAssets].sort((a, b) => b.totalReturn - a.totalReturn),
@@ -441,7 +462,7 @@ export default function PrivateFundDashboard({
               <div className="mb-2">
                 <span className="text-xs text-gray-500 uppercase tracking-wider">Benchmark Strategies</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {benchmarkMetrics.map((m) => (
                   <MetricCardSmall key={m.label} m={m} />
                 ))}
