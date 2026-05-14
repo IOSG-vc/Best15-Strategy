@@ -100,6 +100,7 @@ export const ETF_LIQ_BASE: Record<string, number> = {
   coin:        0.054880845506078760,
   hood:        0.064236408192348370,
   mstr:        0.064440822827968360,
+  aave:        0.009989367161618150, // not in performance data
   binancecoin: 0.076616210433600100,
   bitcoin:     0.328935961099211970,
   cardano:     0.025387139889281644,
@@ -109,6 +110,7 @@ export const ETF_LIQ_BASE: Record<string, number> = {
   litecoin:    0.017356886156875560,
   ripple:      0.077275609985871060,
   solana:      0.058190438585385940,
+  sui:         0.015941345239178130, // not in performance data
   zcash:       0.020355709808295038,
 };
 
@@ -116,6 +118,7 @@ export const ETF_LIQ_MINVAR: Record<string, number> = {
   coin:        0.080034232911397250,
   hood:        0.069965767088602750,
   mstr:        0.15,
+  aave:        0.013780437129233016, // not in performance data
   binancecoin: 0.055389203666261480,
   bitcoin:     0.443846746901235930,
   cardano:     0.014064560658367947,
@@ -125,6 +128,7 @@ export const ETF_LIQ_MINVAR: Record<string, number> = {
   litecoin:    0.031690672892099480,
   ripple:      0.031997546425762580,
   solana:      0.015144717018582636,
+  sui:         0.010603805326004318, // not in performance data
   zcash:       0.012064822510700965,
 };
 
@@ -132,6 +136,7 @@ export const ETF_LIQ_PLUS_LIQ: Record<string, number> = {
   coin:        0.0802,
   hood:        0.0698,
   mstr:        0.15,
+  aave:        0.0129, // not in performance data
   binancecoin: 0.0676,
   bitcoin:     0.4436,
   cardano:     0.0147,
@@ -141,6 +146,7 @@ export const ETF_LIQ_PLUS_LIQ: Record<string, number> = {
   litecoin:    0.0291,
   ripple:      0.0321,
   solana:      0.016,
+  sui:         0.0106, // not in performance data
   zcash:       0.0119,
 };
 
@@ -148,6 +154,7 @@ export const ETF_LIQ_PLUS_TECH: Record<string, number> = {
   coin:        0.0801,
   hood:        0.0699,
   mstr:        0.15,
+  aave:        0.0124, // not in performance data
   binancecoin: 0.0722,
   bitcoin:     0.4471,
   cardano:     0.0145,
@@ -157,11 +164,12 @@ export const ETF_LIQ_PLUS_TECH: Record<string, number> = {
   litecoin:    0.0313,
   ripple:      0.0285,
   solana:      0.015,
+  sui:         0.01,   // not in performance data
   zcash:       0.0128,
 };
 
 // ── PF Family — same weights for MCAP and Liquidity universes ─────────────────
-// Missing: sky → computeWeightedSeries normalizes by available weight sum
+// sky not in performance data — included so it shows as grayed-out row
 
 export const PF_BASE: Record<string, number> = {
   coin:        0.08757268597546156,
@@ -174,6 +182,7 @@ export const PF_BASE: Record<string, number> = {
   ethereum:    0.1902274198341007,
   hyperliquid: 0.039440623093709826,
   morpho:      0.009252812391341122,
+  sky:         0.012493262160665595, // not in performance data
   solana:      0.061612752488162954,
   uniswap:     0.017592722531619715,
   zcash:       0.01191418945007743,
@@ -191,6 +200,7 @@ export const PF_PLUS_SIZE: Record<string, number> = {
   ethereum:    0.017716582812277455,
   hyperliquid: 0.029777748336373675,
   morpho:      0.01793627675498861,
+  sky:         0.08485709229527819,  // not in performance data
   solana:      0.015181037684936335,
   uniswap:     0.014080329352504053,
   zcash:       0.010065941160863068,
@@ -208,6 +218,7 @@ export const PF_PLUS_LIQ: Record<string, number> = {
   ethereum:    0.018077938604765982,
   hyperliquid: 0.025366462758376392,
   morpho:      0.01479724091008594,
+  sky:         0.039155045993170136, // not in performance data
   solana:      0.015408688945664183,
   uniswap:     0.01327273599035586,
   zcash:       0.01,
@@ -225,6 +236,7 @@ export const PF_PLUS_TECH: Record<string, number> = {
   ethereum:    0.013175243770316016,
   hyperliquid: 0.01572945749417817,
   morpho:      0.016871691968353565,
+  sky:         0.029616481890742147, // not in performance data
   solana:      0.012476985994446868,
   uniswap:     0.013639962838981555,
   zcash:       0.010039695152581735,
@@ -242,6 +254,7 @@ export const PF_PLUS_QUALITY: Record<string, number> = {
   ethereum:    0.03674384446697792,
   hyperliquid: 0.06338722375216412,
   morpho:      0.01709448904988038,
+  sky:         0.03479338442298111,  // not in performance data
   solana:      0.017767797222247445,
   uniswap:     0.020942100881150425,
   zcash:       0.01,

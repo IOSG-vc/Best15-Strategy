@@ -91,6 +91,9 @@ ASSET_DISPLAY_NAMES: dict[str, str] = {
     "hood":         "HOOD",
     "coin":         "COIN",
     "crcl":         "CRCL",
+    "sky":          "SKY",
+    "aave":         "AAVE",
+    "sui":          "SUI",
 }
 
 # Fixed colors per asset for consistent display
@@ -115,8 +118,15 @@ ASSET_COLORS: dict[str, str] = {
     "hood":         "#22c55e",
     "coin":         "#f59e0b",
     "crcl":         "#818cf8",
+    "sky":          "#10b981",
+    "aave":         "#b6509e",
+    "sui":          "#4da2ff",
 }
 ASSET_COLOR_FALLBACKS = ["#94a3b8", "#64748b", "#475569", "#334155", "#1e293b"]
+
+# Extra assets to always fetch even if not in any weight CSV
+# (used by benchmark construction stages in benchmarkWeights.ts)
+EXTRA_CRYPTO_ASSETS: list[str] = ["sky", "aave", "sui"]
 
 
 # ── Weight loading ─────────────────────────────────────────────────────────
@@ -374,7 +384,7 @@ def main():
         for gid in w.index
     }
     stock_ids  = sorted(all_ids & set(STOCK_ID_TO_TICKER))
-    crypto_ids = sorted(all_ids - set(STOCK_ID_TO_TICKER))
+    crypto_ids = sorted((all_ids - set(STOCK_ID_TO_TICKER)) | set(EXTRA_CRYPTO_ASSETS))
 
     start_date = min(d for dd in all_weights.values() for d in dd)
     end_date   = today
