@@ -121,6 +121,96 @@ type CompRow =
   | { type: "section"; label: string; color: string }
   | { type: "data"; label: string; color: string; mcap: number; liq: number };
 
+// ── Asset Breakdown helpers ────────────────────────────────────────────────────
+
+type StrategyGroup = "pf" | "etf_mcap" | "etf_liq" | "onn";
+
+interface StrategyStage {
+  key: string;
+  label: string;
+  color: string;
+  weights: Record<string, number>;
+}
+
+interface StrategyGroupDef {
+  key: StrategyGroup;
+  label: string;
+  color: string;
+  stages: StrategyStage[];
+}
+
+const STRAT_GROUPS: StrategyGroupDef[] = [
+  {
+    key: "pf", label: "PF Family", color: "#10b981",
+    stages: [
+      { key: "pf_b",  label: "Base",     color: "#6ee7b7", weights: PF_BASE },
+      { key: "pf_sz", label: "+Size",    color: "#34d399", weights: PF_PLUS_SIZE },
+      { key: "pf_lq", label: "+Liq",     color: "#10b981", weights: PF_PLUS_LIQ },
+      { key: "pf_tc", label: "+Tech",    color: "#059669", weights: PF_PLUS_TECH },
+      { key: "pf_ql", label: "+Quality", color: "#047857", weights: PF_PLUS_QUALITY },
+    ],
+  },
+  {
+    key: "etf_mcap", label: "ETF (MCAP)", color: "#fbbf24",
+    stages: [
+      { key: "em_b",  label: "Base",   color: "#fde68a", weights: ETF_MCAP_BASE },
+      { key: "em_mv", label: "MinVar", color: "#fcd34d", weights: ETF_MCAP_MINVAR },
+      { key: "em_lq", label: "+Liq",   color: "#fbbf24", weights: ETF_MCAP_PLUS_LIQ },
+      { key: "em_tc", label: "+Tech",  color: "#f59e0b", weights: ETF_MCAP_PLUS_TECH },
+    ],
+  },
+  {
+    key: "etf_liq", label: "ETF (Liq)", color: "#38bdf8",
+    stages: [
+      { key: "el_b",  label: "Base",   color: "#bae6fd", weights: ETF_LIQ_BASE },
+      { key: "el_mv", label: "MinVar", color: "#7dd3fc", weights: ETF_LIQ_MINVAR },
+      { key: "el_lq", label: "+Liq",   color: "#38bdf8", weights: ETF_LIQ_PLUS_LIQ },
+      { key: "el_tc", label: "+Tech",  color: "#0ea5e9", weights: ETF_LIQ_PLUS_TECH },
+    ],
+  },
+  {
+    key: "onn", label: "1/N Equal", color: "#f472b6",
+    stages: [
+      { key: "onn_m", label: "MCAP", color: "#f472b6", weights: MCAP_1N_WEIGHTS },
+      { key: "onn_l", label: "Liq",  color: "#c084fc", weights: LIQ_1N_WEIGHTS },
+    ],
+  },
+];
+
+interface AssetBreakdownRow {
+  id: string;
+  name: string;
+  weightPct: number;
+  returnPct: number;
+  contribution: number;
+}
+
+function computeAssetBreakdown(
+  weights: Record<string, number>,
+  allAssets: Record<string, AssetData>,
+): AssetBreakdownRow[] {
+  const availableWeightSum = Object.entries(weights).reduce(
+    (sum, [id, w]) => sum + (allAssets[id] ? w : 0),
+    0,
+  );
+  if (availableWeightSum === 0) return [];
+  return Object.entries(weights)
+    .filter(([id, w]) => allAssets[id] && w > 0)
+    .map(([id, w]) => {
+      const normW = w / availableWeightSum;
+      const lastData = allAssets[id]?.dailyData.at(-1);
+      const returnPct = lastData ? (lastData.cumReturn - 1) * 100 : 0;
+      return {
+        id,
+        name: allAssets[id]?.displayName ?? id,
+        weightPct: parseFloat((normW * 100).toFixed(2)),
+        returnPct: parseFloat(returnPct.toFixed(2)),
+        contribution: parseFloat((normW * returnPct).toFixed(3)),
+      };
+    })
+    .sort((a, b) => b.weightPct - a.weightPct);
+}
+
 export default function PrivateFundDashboard({
   privateData,
   btcData,
@@ -134,6 +224,8 @@ export default function PrivateFundDashboard({
   const [lastFetched, setLastFetched] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [universeMode, setUniverseMode] = useState<UniverseMode>("mcap");
+  const [stratGroup, setStratGroup] = useState<StrategyGroup>("pf");
+  const [stratStage, setStratStage] = useState<string>("pf_ql");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -266,6 +358,23 @@ export default function PrivateFundDashboard({
     etfLBaseSeries, etfLMinvarSeries, etfLPlusLiqSeries, etfLPlusTechSeries,
     pfBaseSeries, pfPlusSizeSeries, pfPlusLiqSeries, pfPlusTechSeries, pfPlusQualSeries,
   ]);
+
+  // ── Asset breakdown for selected strategy ──────────────────────────────────
+  const activeStratWeights = useMemo(() => {
+    const group = STRAT_GROUPS.find((g) => g.key === stratGroup);
+    const stage = group?.stages.find((s) => s.key === stratStage) ?? group?.stages.at(-1);
+    return { weights: stage?.weights ?? {}, stage };
+  }, [stratGroup, stratStage]);
+
+  const assetBreakdown = useMemo(
+    () => computeAssetBreakdown(activeStratWeights.weights, allAssets),
+    [activeStratWeights.weights, allAssets],
+  );
+
+  const breakdownTotalReturn = useMemo(
+    () => parseFloat(assetBreakdown.reduce((s, r) => s + r.contribution, 0).toFixed(2)),
+    [assetBreakdown],
+  );
 
   // ── Chart data (all series pre-computed) ───────────────────────────────────
   const chartSeries = useMemo((): ChartPoint[] => {
@@ -611,6 +720,108 @@ export default function PrivateFundDashboard({
               </div>
               <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                 <PrivateFundIndexChart chartSeries={chartSeries} series={activeSeries} />
+              </div>
+            </section>
+
+            {/* Asset breakdown by strategy */}
+            <section>
+              <SectionHeader
+                title="Asset Breakdown by Strategy"
+                subtitle="individual weights and returns for each construction stage"
+              />
+              {/* Group + stage selector */}
+              <div className="flex flex-col gap-2 mb-3">
+                {/* Group row */}
+                <div className="flex gap-2 flex-wrap">
+                  {STRAT_GROUPS.map((g) => {
+                    const active = stratGroup === g.key;
+                    return (
+                      <button
+                        key={g.key}
+                        onClick={() => {
+                          setStratGroup(g.key);
+                          setStratStage(g.stages.at(-1)!.key);
+                        }}
+                        className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+                        style={{
+                          background: active ? `${g.color}30` : "#1a1d29",
+                          border: `1px solid ${active ? g.color : "#2d3144"}`,
+                          color: active ? g.color : "#6b7280",
+                        }}
+                      >
+                        {g.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Stage row */}
+                <div className="flex gap-1.5 flex-wrap">
+                  {STRAT_GROUPS.find((g) => g.key === stratGroup)?.stages.map((s) => {
+                    const active = stratStage === s.key;
+                    return (
+                      <button
+                        key={s.key}
+                        onClick={() => setStratStage(s.key)}
+                        className="px-3 py-1 rounded-md text-xs font-medium transition-all"
+                        style={{
+                          background: active ? `${s.color}25` : "transparent",
+                          border: `1px solid ${active ? s.color : "#2d3144"}`,
+                          color: active ? s.color : "#9ca3af",
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Breakdown table */}
+              <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#2d3144]">
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">#</th>
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Asset</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Weight</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Return (since May 1)</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Contribution</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assetBreakdown.map((row, i) => (
+                      <tr key={row.id} className="border-b border-[#2d3144] hover:bg-[#ffffff04]">
+                        <td className="px-4 py-2.5 text-gray-600 text-xs">{i + 1}</td>
+                        <td className="px-4 py-2.5 text-gray-200 font-medium">{row.name}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: activeStratWeights.stage?.color ?? "#9ca3af" }}>
+                          {row.weightPct.toFixed(2)}%
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-medium text-xs"
+                          style={{ color: row.returnPct >= 0 ? "#4ade80" : "#f87171" }}>
+                          {row.returnPct >= 0 ? "+" : ""}{row.returnPct.toFixed(2)}%
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs"
+                          style={{ color: row.contribution >= 0 ? "#86efac" : "#fca5a5" }}>
+                          {row.contribution >= 0 ? "+" : ""}{row.contribution.toFixed(3)}%
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-[#3d4166] bg-[#ffffff04]">
+                      <td className="px-4 py-2.5" />
+                      <td className="px-4 py-2.5 text-gray-300 font-semibold text-xs">Total</td>
+                      <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: activeStratWeights.stage?.color ?? "#9ca3af" }}>
+                        100.00%
+                      </td>
+                      <td className="px-4 py-2.5" />
+                      <td className="px-4 py-2.5 text-right font-mono font-bold text-xs"
+                        style={{ color: breakdownTotalReturn >= 0 ? "#4ade80" : "#f87171" }}>
+                        {breakdownTotalReturn >= 0 ? "+" : ""}{breakdownTotalReturn.toFixed(3)}%
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="px-4 py-2 border-t border-[#2d3144] text-xs text-gray-600">
+                  End-of-day returns · weights renormalized for any missing assets · Contribution = weight × return
+                </div>
               </div>
             </section>
 
