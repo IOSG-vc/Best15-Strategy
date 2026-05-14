@@ -5,12 +5,18 @@ import dynamic from "next/dynamic";
 import type { StrategyData, AssetData } from "@/lib/types";
 import type { PositionsData } from "@/lib/loadPositions";
 import type { ChartPoint, AssetPerfEntry, MetricsSummary } from "@/lib/privateFundTypes";
-import { MCAP_WEIGHTS, VOLUME_WEIGHTS, LIQUIDITY_WEIGHTS } from "@/lib/benchmarkWeights";
+import {
+  MCAP_UNIV_MCAP_WEIGHTS, MCAP_UNIV_1N_WEIGHTS,
+  MCAP_WEIGHTS, VOLUME_WEIGHTS, LIQUIDITY_WEIGHTS,
+  LIQ_ETF_WEIGHTS, LIQ_QUALITY_WEIGHTS, LIQ_RISK_WEIGHTS,
+} from "@/lib/benchmarkWeights";
 import Nav from "./Nav";
 import type { SeriesConfig } from "./PrivateFundIndexChart";
 
 const PrivateFundIndexChart = dynamic(() => import("./PrivateFundIndexChart"), { ssr: false });
 const PrivateFundAssetPerf = dynamic(() => import("./PrivateFundAssetPerf"), { ssr: false });
+
+type UniverseMode = "mcap" | "liquidity";
 
 interface Props {
   privateData: StrategyData | undefined;
@@ -26,16 +32,29 @@ interface Props {
 
 type PriceMap = Record<string, number>;
 
-const CHART_SERIES: SeriesConfig[] = [
-  { key: "index",     label: "Private Fund Index",    color: "#8b5cf6" },
-  { key: "combined",  label: "Index + Signal (50/50)", color: "#06b6d4" },
-  { key: "btc",       label: "Bitcoin",               color: "#f97316" },
-  { key: "etf",       label: "ETF Weights",           color: "#f59e0b" },
-  { key: "quality",   label: "Quality Factor",        color: "#10b981" },
-  { key: "risk",      label: "Risk Factor",           color: "#ef4444" },
-  { key: "mcap",      label: "MCAP Weighted",         color: "#3b82f6" },
-  { key: "volume",    label: "Liquidity Weighted",    color: "#84cc16" },
-  { key: "liquidity", label: "1/N Equal",             color: "#ec4899" },
+// Permanent series (always shown regardless of mode)
+const ALWAYS_SERIES: SeriesConfig[] = [
+  { key: "index",    label: "Private Fund Index",    color: "#8b5cf6" },
+  { key: "combined", label: "Index + Signal (50/50)", color: "#06b6d4" },
+  { key: "btc",      label: "Bitcoin",               color: "#f97316" },
+];
+
+// Benchmark series per universe
+const MCAP_UNIV_SERIES: SeriesConfig[] = [
+  { key: "etf",      label: "ETF Weights",           color: "#f59e0b" },
+  { key: "quality",  label: "Quality Factor",        color: "#10b981" },
+  { key: "risk",     label: "Risk Factor",           color: "#ef4444" },
+  { key: "mcap_u",   label: "MCAP Weighted",         color: "#3b82f6" },
+  { key: "onn_u",    label: "1/N Equal",             color: "#ec4899" },
+];
+
+const LIQ_UNIV_SERIES: SeriesConfig[] = [
+  { key: "etf_l",    label: "ETF Weights",           color: "#f59e0b" },
+  { key: "quality_l",label: "Quality Factor",        color: "#10b981" },
+  { key: "risk_l",   label: "Risk Factor",           color: "#ef4444" },
+  { key: "mcap_l",   label: "MCAP Weighted",         color: "#3b82f6" },
+  { key: "vol_l",    label: "Liquidity Weighted",    color: "#84cc16" },
+  { key: "onn_l",    label: "1/N Equal",             color: "#ec4899" },
 ];
 
 function fmtPrice(p: number): string {
@@ -48,7 +67,6 @@ function fmtUsd(n: number, decimals = 0): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-// Compute weighted portfolio cumReturn series from allAssets
 function computeWeightedSeries(
   weights: Record<string, number>,
   allAssets: Record<string, AssetData>,
@@ -75,6 +93,12 @@ function computeWeightedSeries(
   return result;
 }
 
+function lastReturn(series: Map<string, number>): number {
+  const maxDate = Array.from(series.keys()).sort().at(-1);
+  const last = maxDate ? (series.get(maxDate) ?? 1) : 1;
+  return (last - 1) * 100;
+}
+
 export default function PrivateFundDashboard({
   privateData,
   btcData,
@@ -90,6 +114,7 @@ export default function PrivateFundDashboard({
   const [loading, setLoading] = useState(false);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [universeMode, setUniverseMode] = useState<UniverseMode>("mcap");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -118,7 +143,6 @@ export default function PrivateFundDashboard({
     [positions],
   );
 
-  // Per-asset computation — live prices when available, cumReturn fallback
   const portfolioAssets = useMemo((): AssetPerfEntry[] => {
     return (privateData?.latestWeights ?? []).flatMap((w) => {
       const pos = positionMap.get(w.coin);
@@ -174,119 +198,95 @@ export default function PrivateFundDashboard({
     ? btcLive / btcPos.executionPrice - 1
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
-  // Pre-compute weighted benchmark series
-  const mcapSeries = useMemo(() => computeWeightedSeries(MCAP_WEIGHTS, allAssets), [allAssets]);
-  const volumeSeries = useMemo(() => computeWeightedSeries(VOLUME_WEIGHTS, allAssets), [allAssets]);
-  const liquiditySeries = useMemo(() => computeWeightedSeries(LIQUIDITY_WEIGHTS, allAssets), [allAssets]);
+  // ── MCAP Universe weighted series ──────────────────────────────────────────
+  const mcapUnivMcapSeries = useMemo(() => computeWeightedSeries(MCAP_UNIV_MCAP_WEIGHTS, allAssets), [allAssets]);
+  const mcapUniv1NSeries   = useMemo(() => computeWeightedSeries(MCAP_UNIV_1N_WEIGHTS,   allAssets), [allAssets]);
 
-  const mcapTotalReturn = useMemo(() => {
-    const maxDate = Array.from(mcapSeries.keys()).sort().at(-1);
-    const last = maxDate ? (mcapSeries.get(maxDate) ?? 1) : 1;
-    return (last - 1) * 100;
-  }, [mcapSeries]);
+  // ── Liquidity Universe weighted series ─────────────────────────────────────
+  const liqMcapSeries    = useMemo(() => computeWeightedSeries(MCAP_WEIGHTS,       allAssets), [allAssets]);
+  const liqVolSeries     = useMemo(() => computeWeightedSeries(VOLUME_WEIGHTS,     allAssets), [allAssets]);
+  const liqOnnSeries     = useMemo(() => computeWeightedSeries(LIQUIDITY_WEIGHTS,  allAssets), [allAssets]);
+  const liqEtfSeries     = useMemo(() => computeWeightedSeries(LIQ_ETF_WEIGHTS,    allAssets), [allAssets]);
+  const liqQualitySeries = useMemo(() => computeWeightedSeries(LIQ_QUALITY_WEIGHTS,allAssets), [allAssets]);
+  const liqRiskSeries    = useMemo(() => computeWeightedSeries(LIQ_RISK_WEIGHTS,   allAssets), [allAssets]);
 
-  const volumeTotalReturn = useMemo(() => {
-    const maxDate = Array.from(volumeSeries.keys()).sort().at(-1);
-    const last = maxDate ? (volumeSeries.get(maxDate) ?? 1) : 1;
-    return (last - 1) * 100;
-  }, [volumeSeries]);
-
-  const liquidityTotalReturn = useMemo(() => {
-    const maxDate = Array.from(liquiditySeries.keys()).sort().at(-1);
-    const last = maxDate ? (liquiditySeries.get(maxDate) ?? 1) : 1;
-    return (last - 1) * 100;
-  }, [liquiditySeries]);
-
-  // Primary metric cards
-  const primaryMetrics: MetricsSummary[] = [
-    {
-      label: "Private Fund Index",
-      color: "#8b5cf6",
-      totalReturn: parseFloat((portfolioLiveReturn * 100).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
-      annReturn: 0,
-      volatility: privateData?.metrics?.annVolatility ?? 0,
-    },
-    {
-      label: "Index + Signal (50/50)",
-      color: "#06b6d4",
-      totalReturn: parseFloat((portfolioLiveReturn * 50).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: 0,
-      annReturn: 0,
-      volatility: 0,
-    },
-    {
-      label: "Bitcoin",
-      color: "#f97316",
-      totalReturn: parseFloat((btcReturn * 100).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: 0,
-      annReturn: 0,
-      volatility: 0,
-    },
-  ];
-
-  // Benchmark metric cards
-  const benchmarkMetrics: MetricsSummary[] = [
+  // ── Benchmark metrics for each mode ────────────────────────────────────────
+  const mcapUnivMetrics: MetricsSummary[] = useMemo(() => [
     {
       label: "ETF Weights",
       color: "#f59e0b",
       totalReturn: parseFloat((((etfData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: etfData?.metrics?.maxDrawdown ?? 0,
-      annReturn: 0,
-      volatility: 0,
+      sharpe: null, maxDrawdown: etfData?.metrics?.maxDrawdown ?? 0, annReturn: 0, volatility: 0,
     },
     {
       label: "Quality Factor",
       color: "#10b981",
       totalReturn: parseFloat((((qualityData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: qualityData?.metrics?.maxDrawdown ?? 0,
-      annReturn: 0,
-      volatility: 0,
+      sharpe: null, maxDrawdown: qualityData?.metrics?.maxDrawdown ?? 0, annReturn: 0, volatility: 0,
     },
     {
       label: "Risk Factor",
       color: "#ef4444",
       totalReturn: parseFloat((((riskData?.dailyData.at(-1)?.cumReturn ?? 1) - 1) * 100).toFixed(2)),
-      sharpe: null,
-      maxDrawdown: riskData?.metrics?.maxDrawdown ?? 0,
-      annReturn: 0,
-      volatility: 0,
+      sharpe: null, maxDrawdown: riskData?.metrics?.maxDrawdown ?? 0, annReturn: 0, volatility: 0,
     },
     {
       label: "MCAP Weighted",
       color: "#3b82f6",
-      totalReturn: parseFloat(mcapTotalReturn.toFixed(2)),
-      sharpe: null,
-      maxDrawdown: 0,
-      annReturn: 0,
-      volatility: 0,
-    },
-    {
-      label: "Liquidity Weighted",
-      color: "#84cc16",
-      totalReturn: parseFloat(volumeTotalReturn.toFixed(2)),
-      sharpe: null,
-      maxDrawdown: 0,
-      annReturn: 0,
-      volatility: 0,
+      totalReturn: parseFloat(lastReturn(mcapUnivMcapSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
     },
     {
       label: "1/N Equal",
       color: "#ec4899",
-      totalReturn: parseFloat(liquidityTotalReturn.toFixed(2)),
-      sharpe: null,
-      maxDrawdown: 0,
-      annReturn: 0,
-      volatility: 0,
+      totalReturn: parseFloat(lastReturn(mcapUniv1NSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
     },
-  ];
+  ], [etfData, qualityData, riskData, mcapUnivMcapSeries, mcapUniv1NSeries]);
 
-  // Chart series: all strategies base-1000 from May 1
+  const liqUnivMetrics: MetricsSummary[] = useMemo(() => [
+    {
+      label: "ETF Weights",
+      color: "#f59e0b",
+      totalReturn: parseFloat(lastReturn(liqEtfSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+    {
+      label: "Quality Factor",
+      color: "#10b981",
+      totalReturn: parseFloat(lastReturn(liqQualitySeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+    {
+      label: "Risk Factor",
+      color: "#ef4444",
+      totalReturn: parseFloat(lastReturn(liqRiskSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+    {
+      label: "MCAP Weighted",
+      color: "#3b82f6",
+      totalReturn: parseFloat(lastReturn(liqMcapSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+    {
+      label: "Liquidity Weighted",
+      color: "#84cc16",
+      totalReturn: parseFloat(lastReturn(liqVolSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+    {
+      label: "1/N Equal",
+      color: "#ec4899",
+      totalReturn: parseFloat(lastReturn(liqOnnSeries).toFixed(2)),
+      sharpe: null, maxDrawdown: 0, annReturn: 0, volatility: 0,
+    },
+  ], [liqEtfSeries, liqQualitySeries, liqRiskSeries, liqMcapSeries, liqVolSeries, liqOnnSeries]);
+
+  const benchmarkMetrics = universeMode === "mcap" ? mcapUnivMetrics : liqUnivMetrics;
+  const benchmarkSeries  = universeMode === "mcap" ? MCAP_UNIV_SERIES : LIQ_UNIV_SERIES;
+
+  // ── Chart data (all series pre-computed) ───────────────────────────────────
   const chartSeries = useMemo((): ChartPoint[] => {
     const dateMap = new Map<string, ChartPoint>();
     dateMap.set("2026-05-01", {
@@ -311,6 +311,7 @@ export default function PrivateFundDashboard({
         dateMap.get(d.date)!.btc = parseFloat((d.cumReturn * 1000).toFixed(4));
       }
     }
+    // MCAP Universe pre-computed strategies
     if (etfData) {
       for (const d of etfData.dailyData) {
         if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
@@ -329,31 +330,63 @@ export default function PrivateFundDashboard({
         dateMap.get(d.date)!.risk = parseFloat((d.cumReturn * 1000).toFixed(4));
       }
     }
-    // Computed benchmark series from allAssets cumReturn
-    mcapSeries.forEach((cr, date) => {
+    // MCAP Universe computed
+    mcapUnivMcapSeries.forEach((cr, date) => {
       if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.mcap = parseFloat((cr * 1000).toFixed(4));
+      dateMap.get(date)!.mcap_u = parseFloat((cr * 1000).toFixed(4));
     });
-    volumeSeries.forEach((cr, date) => {
+    mcapUniv1NSeries.forEach((cr, date) => {
       if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.volume = parseFloat((cr * 1000).toFixed(4));
+      dateMap.get(date)!.onn_u = parseFloat((cr * 1000).toFixed(4));
     });
-    liquiditySeries.forEach((cr, date) => {
+    // Liquidity Universe computed
+    liqEtfSeries.forEach((cr, date) => {
       if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.liquidity = parseFloat((cr * 1000).toFixed(4));
+      dateMap.get(date)!.etf_l = parseFloat((cr * 1000).toFixed(4));
     });
-    // Live point for Private Fund and BTC
+    liqQualitySeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.quality_l = parseFloat((cr * 1000).toFixed(4));
+    });
+    liqRiskSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.risk_l = parseFloat((cr * 1000).toFixed(4));
+    });
+    liqMcapSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.mcap_l = parseFloat((cr * 1000).toFixed(4));
+    });
+    liqVolSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.vol_l = parseFloat((cr * 1000).toFixed(4));
+    });
+    liqOnnSeries.forEach((cr, date) => {
+      if (!dateMap.has(date)) dateMap.set(date, { date });
+      dateMap.get(date)!.onn_l = parseFloat((cr * 1000).toFixed(4));
+    });
+    // Live point for Private Fund + BTC
     if (isLive) {
       const today = new Date().toISOString().split("T")[0];
       if (!dateMap.has(today)) dateMap.set(today, { date: today });
       const pt = dateMap.get(today)!;
-      pt.index = parseFloat((1000 * (1 + portfolioLiveReturn)).toFixed(4));
+      pt.index    = parseFloat((1000 * (1 + portfolioLiveReturn)).toFixed(4));
       pt.combined = parseFloat((1000 * (1 + 0.5 * portfolioLiveReturn)).toFixed(4));
       if (btcPos && btcLive) pt.btc = parseFloat((1000 * (btcLive / btcPos.executionPrice)).toFixed(4));
     }
 
     return Array.from(dateMap.values()).sort((a, b) => (a.date as string).localeCompare(b.date as string));
-  }, [privateData, btcData, etfData, qualityData, riskData, mcapSeries, volumeSeries, liquiditySeries, isLive, portfolioLiveReturn, btcPos, btcLive]);
+  }, [
+    privateData, btcData, etfData, qualityData, riskData,
+    mcapUnivMcapSeries, mcapUniv1NSeries,
+    liqEtfSeries, liqQualitySeries, liqRiskSeries,
+    liqMcapSeries, liqVolSeries, liqOnnSeries,
+    isLive, portfolioLiveReturn, btcPos, btcLive,
+  ]);
+
+  const activeSeries = useMemo(
+    () => [...ALWAYS_SERIES, ...benchmarkSeries],
+    [benchmarkSeries],
+  );
 
   const topMovers = useMemo(
     () => [...portfolioAssets].sort((a, b) => b.totalReturn - a.totalReturn),
@@ -366,9 +399,7 @@ export default function PrivateFundDashboard({
     <div className="min-h-screen bg-[#0f1117] text-white">
       <header className="border-b border-[#2d3144] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Private Fund Strategy</h1>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Private Fund Strategy</h1>
           <div className="flex items-center gap-3">
             <div className="text-right text-sm">
               {lastFetched && (
@@ -378,9 +409,7 @@ export default function PrivateFundDashboard({
                 </div>
               )}
               {fetchError && <div className="text-red-400 text-xs">{fetchError}</div>}
-              {lastUpdated && (
-                <div className="text-gray-600 text-xs">Data updated {lastUpdated}</div>
-              )}
+              {lastUpdated && <div className="text-gray-600 text-xs">Data updated {lastUpdated}</div>}
             </div>
             <button
               onClick={refresh}
@@ -418,15 +447,11 @@ export default function PrivateFundDashboard({
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144] flex flex-wrap gap-6 items-end">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Deployed Capital</div>
-                    <div className="text-xl font-bold text-white font-mono">
-                      ${fmtUsd(totalDeployed)}
-                    </div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalDeployed)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Current Value</div>
-                    <div className="text-xl font-bold text-white font-mono">
-                      ${fmtUsd(totalDeployed + totalPnlDollar)}
-                    </div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalDeployed + totalPnlDollar)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Total P&amp;L</div>
@@ -440,9 +465,7 @@ export default function PrivateFundDashboard({
                       {totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%
                     </div>
                   </div>
-                  <div className="ml-auto text-xs text-gray-600 self-end">
-                    execution: {positions.executionDate}
-                  </div>
+                  <div className="ml-auto text-xs text-gray-600 self-end">execution: {positions.executionDate}</div>
                 </div>
               </section>
             )}
@@ -453,16 +476,63 @@ export default function PrivateFundDashboard({
                 title="Performance"
                 subtitle={`since ${positions?.executionDate ?? latestRebalanceDate} · ${isLive ? "live prices" : "end-of-day"}`}
               />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                {primaryMetrics.map((m) => (
-                  <MetricCard key={m.label} m={m} />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  {
+                    label: "Private Fund Index", color: "#8b5cf6",
+                    totalReturn: parseFloat((portfolioLiveReturn * 100).toFixed(2)),
+                    maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
+                  },
+                  {
+                    label: "Index + Signal (50/50)", color: "#06b6d4",
+                    totalReturn: parseFloat((portfolioLiveReturn * 50).toFixed(2)),
+                    maxDrawdown: 0,
+                  },
+                  {
+                    label: "Bitcoin", color: "#f97316",
+                    totalReturn: parseFloat((btcReturn * 100).toFixed(2)),
+                    maxDrawdown: 0,
+                  },
+                ].map((m) => (
+                  <MetricCard key={m.label} m={{ ...m, sharpe: null, annReturn: 0, volatility: 0 }} />
                 ))}
               </div>
-              {/* Benchmark cards */}
-              <div className="mb-2">
-                <span className="text-xs text-gray-500 uppercase tracking-wider">Benchmark Strategies</span>
+            </section>
+
+            {/* Benchmark section with universe toggle */}
+            <section>
+              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold">Benchmark Strategies</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {universeMode === "mcap" ? "MCAP Universe" : "Liquidity Universe"} ·{" "}
+                    {universeMode === "mcap"
+                      ? "BTC/ETH/BNB/SOL/XRP/ADA/LINK/XLM/UNI/LTC/ZEC/BCH"
+                      : "BTC/ETH/SOL/XRP/BNB/ADA/ZEC/LINK/LTC/HYPE/BCH/UNI"}
+                  </p>
+                </div>
+                {/* Universe toggle */}
+                <div className="flex items-center rounded-lg overflow-hidden border border-[#2d3144] text-xs font-medium">
+                  {(["mcap", "liquidity"] as UniverseMode[]).map((mode) => {
+                    const active = universeMode === mode;
+                    return (
+                      <button
+                        key={mode}
+                        onClick={() => setUniverseMode(mode)}
+                        className="px-4 py-2 transition-all"
+                        style={{
+                          background: active ? "#8b5cf6" : "#1a1d29",
+                          color: active ? "#fff" : "#6b7280",
+                        }}
+                      >
+                        {mode === "mcap" ? "MCAP Universe" : "Liquidity Universe"}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+
+              <div className={`grid gap-3 ${universeMode === "mcap" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"}`}>
                 {benchmarkMetrics.map((m) => (
                   <MetricCardSmall key={m.label} m={m} />
                 ))}
@@ -473,10 +543,10 @@ export default function PrivateFundDashboard({
             <section>
               <SectionHeader
                 title="Index Performance (Base 1000)"
-                subtitle="All strategies vs benchmarks · toggle to compare"
+                subtitle={`${universeMode === "mcap" ? "MCAP Universe" : "Liquidity Universe"} benchmarks · toggle series to compare`}
               />
               <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
-                <PrivateFundIndexChart chartSeries={chartSeries} series={CHART_SERIES} />
+                <PrivateFundIndexChart chartSeries={chartSeries} series={activeSeries} />
               </div>
             </section>
 
@@ -503,7 +573,7 @@ export default function PrivateFundDashboard({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { label: "Top Gainers", color: "#4ade80", data: topMovers.slice(0, 8) },
-                    { label: "Laggards", color: "#f87171", data: [...topMovers].reverse().slice(0, 8) },
+                    { label: "Laggards",    color: "#f87171", data: [...topMovers].reverse().slice(0, 8) },
                   ].map(({ label, color, data }) => (
                     <div key={label} className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
                       <div className="px-4 py-3 border-b border-[#2d3144] flex items-center gap-2">
