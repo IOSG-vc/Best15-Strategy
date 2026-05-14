@@ -1,37 +1,35 @@
 {
-  "date": "2026-05-13",
-  "btc_price": 80604.2734375,
-  "exposure": 0.5,
+  "date": "2026-05-14",
+  "btc_price": 79504.546875,
+  "exposure": 0.4,
   "direction": "BEARISH",
-  "composite": 0.02777777777777778,
+  "composite": 0.05092592592592593,
   "gate": 0.0,
-  "vol_z": -1.3205173080384354,
+  "vol_z": -1.272917691853433,
   "vol_regime": "LOW",
-  "bull_count": 17,
-  "neut_count": 31,
-  "bear_count": 11,
+  "bull_count": 15,
+  "neut_count": 32,
+  "bear_count": 12,
   "bull_signals": [
     "MVRV",
     "LTH_SOPR",
     "Exch_Reserve",
     "SOPR_Ratio",
-    "Dormancy",
     "Puell_Proxy",
     "RealVol_30",
     "LR_1Y",
     "LR_2Y_Z",
+    "SP500_Trend",
     "Gold_90d",
-    "MABreak_SMA_weekly_4_13_26_52",
     "SP500_SMA_50_200",
     "SP500_EMA_50_200",
     "GapPct_SMA365_365d",
     "FFR_vs_MA365",
-    "SOFR_IORB_Spread_Sign",
-    "RRP_Trend_90d"
+    "SOFR_IORB_Spread_Sign"
   ],
   "bear_signals": [
     "NVM",
-    "Exch_Netflow",
+    "MPI",
     "Lev_Ratio",
     "HY_Spread",
     "Zscore_SMA50_daily",
@@ -40,6 +38,7 @@
     "Zscore_EMA90_daily",
     "GapPct_SMA90_365d",
     "GapPct_EMA90_365d",
+    "RRP_Trend_90d",
     "PPI_vs_CPI"
   ],
   "neut_signals": [
@@ -48,9 +47,10 @@
     "STH_SOPR",
     "NVT",
     "S2F_Dev",
+    "Exch_Netflow",
     "Whale_Ratio",
-    "MPI",
     "Puell",
+    "Dormancy",
     "SSR",
     "Open_Interest",
     "Coinbase_Prem",
@@ -59,9 +59,9 @@
     "RealVol_90",
     "VIX",
     "DXY",
-    "SP500_Trend",
     "MABreak_SMA_daily_30_90_180_365",
     "MABreak_SMA_daily_50_100_200_365",
+    "MABreak_SMA_weekly_4_13_26_52",
     "MABreak_EMA_daily_30_90_180_365",
     "MABreak_EMA_daily_50_100_200_365",
     "MABreak_EMA_weekly_4_13_26_52",
@@ -75,7 +75,13 @@
     "GapPct_EMA200_365d",
     "GapPct_EMA365_365d"
   ],
-  "flips": [],
+  "flips": [
+    {
+      "signal": "Exch_Netflow",
+      "from": "BEAR",
+      "to": "NEUTRAL"
+    }
+  ],
   "dominant_pairs": [
     {
       "s1": "Zscore_SMA26_weekly",
@@ -161,32 +167,32 @@
   ],
   "cooldown_events": [
     {
-      "date": "2026-05-02",
-      "blocked_move": "40% \u2192 50%",
-      "reason": "direction reversal within 7d cooldown",
-      "remaining_days": 5
-    },
-    {
       "date": "2026-05-03",
-      "blocked_move": "40% \u2192 50%",
+      "blocked_move": "30% \u2192 50%",
       "reason": "direction reversal within 7d cooldown",
       "remaining_days": 4
     },
     {
       "date": "2026-05-04",
-      "blocked_move": "40% \u2192 50%",
+      "blocked_move": "30% \u2192 50%",
       "reason": "direction reversal within 7d cooldown",
       "remaining_days": 3
     },
     {
       "date": "2026-05-05",
-      "blocked_move": "40% \u2192 50%",
+      "blocked_move": "30% \u2192 50%",
       "reason": "direction reversal within 7d cooldown",
       "remaining_days": 2
     },
     {
       "date": "2026-05-06",
-      "blocked_move": "40% \u2192 50%",
+      "blocked_move": "30% \u2192 50%",
+      "reason": "direction reversal within 7d cooldown",
+      "remaining_days": 1
+    },
+    {
+      "date": "2026-05-13",
+      "blocked_move": "50% \u2192 40%",
       "reason": "direction reversal within 7d cooldown",
       "remaining_days": 1
     }
