@@ -283,8 +283,17 @@ export default function PrivateFundDashboard({
     },
   ], [liqEtfSeries, liqQualitySeries, liqRiskSeries, liqMcapSeries, liqVolSeries, liqOnnSeries]);
 
-  const benchmarkMetrics = universeMode === "mcap" ? mcapUnivMetrics : liqUnivMetrics;
-  const benchmarkSeries  = universeMode === "mcap" ? MCAP_UNIV_SERIES : LIQ_UNIV_SERIES;
+  const benchmarkSeries = universeMode === "mcap" ? MCAP_UNIV_SERIES : LIQ_UNIV_SERIES;
+
+  // Side-by-side comparison rows (both universes always visible)
+  const comparisonRows = useMemo(() => [
+    { label: "ETF Weights",        color: "#f59e0b", mcap: mcapUnivMetrics[0].totalReturn, liq: liqUnivMetrics[0].totalReturn },
+    { label: "Quality Factor",     color: "#10b981", mcap: mcapUnivMetrics[1].totalReturn, liq: liqUnivMetrics[1].totalReturn },
+    { label: "Risk Factor",        color: "#ef4444", mcap: mcapUnivMetrics[2].totalReturn, liq: liqUnivMetrics[2].totalReturn },
+    { label: "MCAP Weighted",      color: "#3b82f6", mcap: mcapUnivMetrics[3].totalReturn, liq: liqUnivMetrics[3].totalReturn },
+    { label: "Liquidity Weighted", color: "#84cc16", mcap: null,                           liq: liqUnivMetrics[4].totalReturn },
+    { label: "1/N Equal",          color: "#ec4899", mcap: mcapUnivMetrics[4].totalReturn, liq: liqUnivMetrics[5].totalReturn },
+  ], [mcapUnivMetrics, liqUnivMetrics]);
 
   // ── Chart data (all series pre-computed) ───────────────────────────────────
   const chartSeries = useMemo((): ChartPoint[] => {
@@ -499,19 +508,81 @@ export default function PrivateFundDashboard({
               </div>
             </section>
 
-            {/* Benchmark section with universe toggle */}
+            {/* Benchmark comparison table — both universes side by side */}
+            <section>
+              <SectionHeader
+                title="Benchmark Strategies"
+                subtitle="MCAP Universe vs Liquidity Universe · side-by-side"
+              />
+              <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#2d3144]">
+                      <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Strategy</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium" style={{ color: "#60a5fa" }}>MCAP Universe</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium" style={{ color: "#84cc16" }}>Liquidity Universe</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Δ</th>
+                      <th className="text-center px-4 py-3 text-gray-400 font-medium text-xs">Better</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonRows.map((row) => {
+                      const diff = row.mcap !== null && row.liq !== null ? row.liq - row.mcap : null;
+                      const liqWins = diff !== null && diff > 0;
+                      const mcapWins = diff !== null && diff < 0;
+                      return (
+                        <tr key={row.label} className="border-b border-[#2d3144] hover:bg-[#ffffff04]">
+                          <td className="px-4 py-3 flex items-center gap-2.5">
+                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: row.color }} />
+                            <span className="text-gray-200 font-medium">{row.label}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-medium"
+                            style={{ color: row.mcap !== null ? (row.mcap >= 0 ? "#4ade80" : "#f87171") : "#374151" }}>
+                            {row.mcap !== null ? `${row.mcap >= 0 ? "+" : ""}${row.mcap.toFixed(2)}%` : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-medium"
+                            style={{ color: row.liq !== null ? (row.liq >= 0 ? "#4ade80" : "#f87171") : "#374151" }}>
+                            {row.liq !== null ? `${row.liq >= 0 ? "+" : ""}${row.liq.toFixed(2)}%` : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-xs"
+                            style={{ color: diff === null ? "#374151" : diff >= 0 ? "#86efac" : "#fca5a5" }}>
+                            {diff !== null ? `${diff >= 0 ? "+" : ""}${diff.toFixed(2)}%` : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {liqWins && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                                style={{ background: "#84cc1620", color: "#84cc16", border: "1px solid #84cc1640" }}>
+                                Liq ↑
+                              </span>
+                            )}
+                            {mcapWins && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                                style={{ background: "#3b82f620", color: "#60a5fa", border: "1px solid #3b82f640" }}>
+                                MCAP ↑
+                              </span>
+                            )}
+                            {diff === 0 && <span className="text-gray-600 text-xs">Tie</span>}
+                            {diff === null && <span className="text-gray-700 text-xs">—</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="px-4 py-2 border-t border-[#2d3144] text-xs text-gray-600">
+                  MCAP Universe: BTC/ETH/BNB/SOL/XRP/ADA/LINK/XLM/UNI/LTC/ZEC/BCH ·
+                  Liquidity Universe: BTC/ETH/SOL/XRP/BNB/ADA/ZEC/LINK/LTC/HYPE/BCH/UNI
+                </div>
+              </div>
+            </section>
+
+            {/* Chart with universe toggle */}
             <section>
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold">Benchmark Strategies</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {universeMode === "mcap" ? "MCAP Universe" : "Liquidity Universe"} ·{" "}
-                    {universeMode === "mcap"
-                      ? "BTC/ETH/BNB/SOL/XRP/ADA/LINK/XLM/UNI/LTC/ZEC/BCH"
-                      : "BTC/ETH/SOL/XRP/BNB/ADA/ZEC/LINK/LTC/HYPE/BCH/UNI"}
-                  </p>
+                  <h2 className="text-lg font-semibold">Index Performance (Base 1000)</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">toggle series to compare · click legend to show/hide</p>
                 </div>
-                {/* Universe toggle */}
                 <div className="flex items-center rounded-lg overflow-hidden border border-[#2d3144] text-xs font-medium">
                   {(["mcap", "liquidity"] as UniverseMode[]).map((mode) => {
                     const active = universeMode === mode;
@@ -531,20 +602,6 @@ export default function PrivateFundDashboard({
                   })}
                 </div>
               </div>
-
-              <div className={`grid gap-3 ${universeMode === "mcap" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"}`}>
-                {benchmarkMetrics.map((m) => (
-                  <MetricCardSmall key={m.label} m={m} />
-                ))}
-              </div>
-            </section>
-
-            {/* Chart */}
-            <section>
-              <SectionHeader
-                title="Index Performance (Base 1000)"
-                subtitle={`${universeMode === "mcap" ? "MCAP Universe" : "Liquidity Universe"} benchmarks · toggle series to compare`}
-              />
               <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                 <PrivateFundIndexChart chartSeries={chartSeries} series={activeSeries} />
               </div>
