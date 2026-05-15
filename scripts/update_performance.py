@@ -467,12 +467,15 @@ def main():
         print(f"  ✓ {DISPLAY_NAMES[strat_key]}: {len(daily_data)} days")
 
     # ── Compute individual asset performance ──
-    all_strategy_assets = {
-        asset_id
-        for dates_dict in all_weights.values()
-        for w in dates_dict.values()
-        for asset_id in w.index
-    }
+    all_strategy_assets = (
+        {
+            asset_id
+            for dates_dict in all_weights.values()
+            for w in dates_dict.values()
+            for asset_id in w.index
+        }
+        | set(EXTRA_CRYPTO_ASSETS)
+    )
     common_start = pd.Timestamp(start_date)
     assets_out: dict = {}
     fallback_idx = 0
