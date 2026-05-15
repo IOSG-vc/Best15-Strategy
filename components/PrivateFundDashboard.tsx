@@ -688,7 +688,7 @@ export default function PrivateFundDashboard({
                 </table>
                 <div className="px-4 py-2 border-t border-[#2d3144] text-xs text-gray-600">
                   MCAP Universe: BTC/ETH/BNB/SOL/XRP/ADA/LINK/XLM/UNI/LTC/ZEC/BCH + COIN/HOOD/MSTR ·
-                  Liq Universe: replaces XLM with HYPE; ETF missing aave/sui (renormalized) · PF missing sky (renormalized)
+                  Liq Universe: replaces XLM with HYPE; ETF missing aave/sui (renormalized)
                 </div>
               </div>
             </section>
