@@ -1,23 +1,23 @@
 {
-  "date": "2026-05-17",
-  "btc_price": 78411.21875,
+  "date": "2026-05-18",
+  "btc_price": 77398.0078125,
   "exposure": 0.4,
   "direction": "BEARISH",
-  "composite": 0.030092592592592594,
+  "composite": 0.034722222222222224,
   "gate": 0.0,
-  "vol_z": -1.1604096414905658,
+  "vol_z": -1.2008760467710209,
   "vol_regime": "LOW",
-  "bull_count": 17,
-  "neut_count": 34,
-  "bear_count": 8,
+  "bull_count": 18,
+  "neut_count": 31,
+  "bear_count": 10,
   "bull_signals": [
     "MVRV",
-    "SOPR",
-    "SOPR_Adj",
+    "LTH_SOPR",
     "Exch_Reserve",
     "MPI",
+    "SOPR_Ratio",
     "Dormancy",
-    "NRPL",
+    "SSR",
     "RealVol_30",
     "LR_1Y",
     "LR_2Y_Z",
@@ -25,12 +25,15 @@
     "SP500_SMA_50_200",
     "SP500_EMA_50_200",
     "GapPct_SMA365_365d",
+    "GapPct_EMA365_365d",
     "FFR_vs_MA365",
     "SOFR_IORB_Spread_Sign",
     "RRP_Trend_90d"
   ],
   "bear_signals": [
+    "NVT",
     "NVM",
+    "Whale_Ratio",
     "Lev_Ratio",
     "Coinbase_Prem",
     "HY_Spread",
@@ -40,16 +43,14 @@
     "PPI_vs_CPI"
   ],
   "neut_signals": [
+    "SOPR",
+    "SOPR_Adj",
     "STH_SOPR",
-    "LTH_SOPR",
-    "NVT",
     "S2F_Dev",
     "Exch_Netflow",
-    "Whale_Ratio",
     "Puell",
-    "SOPR_Ratio",
-    "SSR",
     "Open_Interest",
+    "NRPL",
     "MVRV_Proxy",
     "Puell_Proxy",
     "RealVol_90",
@@ -72,16 +73,9 @@
     "Zscore_EMA26_weekly",
     "GapPct_SMA200_365d",
     "GapPct_EMA90_365d",
-    "GapPct_EMA200_365d",
-    "GapPct_EMA365_365d"
+    "GapPct_EMA200_365d"
   ],
-  "flips": [
-    {
-      "signal": "GapPct_EMA365_365d",
-      "from": "BULL",
-      "to": "NEUTRAL"
-    }
-  ],
+  "flips": [],
   "dominant_pairs": [
     {
       "s1": "Zscore_SMA26_weekly",
@@ -167,12 +161,6 @@
   ],
   "cooldown_events": [
     {
-      "date": "2026-05-06",
-      "blocked_move": "30% \u2192 50%",
-      "reason": "direction reversal within 7d cooldown",
-      "remaining_days": 1
-    },
-    {
       "date": "2026-05-13",
       "blocked_move": "50% \u2192 40%",
       "reason": "direction reversal within 7d cooldown",
@@ -195,6 +183,12 @@
       "blocked_move": "40% \u2192 50%",
       "reason": "direction reversal within 7d cooldown",
       "remaining_days": 4
+    },
+    {
+      "date": "2026-05-18",
+      "blocked_move": "40% \u2192 50%",
+      "reason": "direction reversal within 7d cooldown",
+      "remaining_days": 3
     }
   ],
   "risk_level": "MEDIUM",
