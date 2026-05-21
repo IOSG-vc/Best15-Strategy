@@ -1,15 +1,15 @@
 {
-  "date": "2026-05-20",
-  "btc_price": 77317.1796875,
+  "date": "2026-05-21",
+  "btc_price": 77145.171875,
   "exposure": 0.4,
   "direction": "BEARISH",
   "composite": 0.055555555555555566,
   "gate": 0.0,
-  "vol_z": -1.4049868407513826,
+  "vol_z": -1.398130587392859,
   "vol_regime": "LOW",
-  "bull_count": 18,
-  "neut_count": 31,
-  "bear_count": 10,
+  "bull_count": 17,
+  "neut_count": 33,
+  "bear_count": 9,
   "bull_signals": [
     "MVRV",
     "SOPR",
@@ -17,7 +17,6 @@
     "LTH_SOPR",
     "Exch_Reserve",
     "SOPR_Ratio",
-    "SSR",
     "NRPL",
     "RealVol_30",
     "LR_1Y",
@@ -37,7 +36,6 @@
     "Puell_Proxy",
     "HY_Spread",
     "Zscore_SMA90_daily",
-    "Zscore_EMA90_daily",
     "GapPct_SMA90_365d",
     "RRP_Trend_90d",
     "PPI_vs_CPI"
@@ -51,6 +49,7 @@
     "MPI",
     "Puell",
     "Dormancy",
+    "SSR",
     "Open_Interest",
     "MVRV_Proxy",
     "RealVol_90",
@@ -68,6 +67,7 @@
     "Zscore_SMA365_daily",
     "Zscore_SMA26_weekly",
     "Zscore_EMA50_daily",
+    "Zscore_EMA90_daily",
     "Zscore_EMA200_daily",
     "Zscore_EMA365_daily",
     "Zscore_EMA26_weekly",
@@ -77,9 +77,14 @@
   ],
   "flips": [
     {
+      "signal": "SP500_Trend",
+      "from": "BULL",
+      "to": "NEUTRAL"
+    },
+    {
       "signal": "Zscore_EMA90_daily",
-      "from": "NEUTRAL",
-      "to": "BEAR"
+      "from": "BEAR",
+      "to": "NEUTRAL"
     }
   ],
   "dominant_pairs": [
