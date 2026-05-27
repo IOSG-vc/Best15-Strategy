@@ -1,9 +1,7 @@
-import { loadPerformanceData } from "@/lib/loadData";
-import Dashboard from "@/components/Dashboard";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-static";
 
 export default function Home() {
-  const data = loadPerformanceData();
-  return <Dashboard data={data} />;
+  redirect("/private-fund");
 }
