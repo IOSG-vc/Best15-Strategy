@@ -30,4 +30,6 @@ __pycache__/
 *.py[cod]
 .venv/
 scripts/cache/
+scripts/outputs/
+scripts/v3_production_0428/v3_experiment_v2/cache/
 scripts/*.png

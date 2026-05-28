@@ -21,9 +21,9 @@ function CustomTooltip({ active, label, payload }: {
       {payload.map((p) => (
         <div key={p.name} className="flex items-center gap-2 mb-1">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-          <span className="text-gray-300 w-20">{p.name}</span>
+          <span className="text-gray-300 w-28">{p.name}</span>
           <span className="font-mono ml-auto">
-            {p.name === "Exposure" ? `${(p.value * 100).toFixed(0)}%` : p.value?.toFixed(3)}
+            {p.value != null ? `${(p.value * 100).toFixed(0)}%` : "—"}
           </span>
         </div>
       ))}
@@ -39,7 +39,11 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     return (range === "ALL" ? history : history.filter((p) => new Date(p.date) >= cutoff))
-      .map((p) => ({ ...p, Exposure: p.exposure, Composite: p.combo }));
+      .map((p) => ({
+        ...p,
+        Strategy: p.exposure,
+        V3: p.v3_exposure ?? null,
+      }));
   }, [history, range]);
 
   return (
@@ -77,29 +81,20 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
               minTickGap={40}
             />
             <YAxis
-              yAxisId="exp"
               domain={[0, 1]}
               tick={{ fill: "#6b7280", fontSize: 11 }}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
               width={42}
             />
-            <YAxis
-              yAxisId="combo"
-              orientation="right"
-              domain={[-1, 1]}
-              tick={{ fill: "#6b7280", fontSize: 11 }}
-              width={36}
-            />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine yAxisId="exp" y={0.5} stroke="#4b5563" strokeDasharray="4 4" />
-            <ReferenceLine yAxisId="combo" y={0} stroke="#4b5563" strokeDasharray="4 4" />
+            <ReferenceLine y={0.5} stroke="#4b5563" strokeDasharray="4 4" />
             <Area
-              yAxisId="exp" type="stepAfter" dataKey="Exposure"
+              type="stepAfter" dataKey="Strategy"
               stroke="#6c5ce7" fill="#6c5ce7" fillOpacity={0.12}
               dot={false} strokeWidth={2} connectNulls
             />
             <Line
-              yAxisId="combo" type="monotone" dataKey="Composite"
+              type="stepAfter" dataKey="V3"
               stroke="#f59e0b" dot={false} strokeWidth={1.5}
               connectNulls activeDot={{ r: 3, strokeWidth: 0 }}
             />
@@ -109,10 +104,10 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
 
       <div className="flex gap-5 mt-3 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-[#6c5ce7] inline-block rounded" /> Exposure (left axis)
+          <span className="w-3 h-0.5 bg-[#6c5ce7] inline-block rounded" /> Strategy exposure (V3 + K3)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-[#f59e0b] inline-block rounded" /> Composite score (right axis)
+          <span className="w-3 h-0.5 bg-[#f59e0b] inline-block rounded" /> V3 base exposure
         </span>
       </div>
     </div>

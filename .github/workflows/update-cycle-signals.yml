@@ -26,26 +26,33 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Cache yfinance/script cache
+      - name: Cache V3 API data
+        uses: actions/cache@v4
+        with:
+          path: scripts/v3_production_0428/v3_experiment_v2/cache
+          key: v3-cache-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            v3-cache-${{ runner.os }}-
+
+      - name: Cache K3 selected motifs
         uses: actions/cache@v4
         with:
           path: scripts/cache
-          key: cycle-signals-cache-${{ runner.os }}-${{ github.run_id }}
+          key: k3-cache-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            cycle-signals-cache-${{ runner.os }}-
+            k3-cache-${{ runner.os }}-
 
       - name: Run cycle signals report
         env:
           CRYPTOQUANT_KEY: ${{ secrets.CRYPTOQUANT_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        run: python scripts/cs_morning_report_v2_2_2.py
+        run: python scripts/Production_v3_k3_one_step_10_90_add20_138.py
 
       - name: Commit updated cycle data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/cycle_state.json data/cycle_history.json \
-                  data/combo_v2_vol_regime.csv data/exposure_v2_vol_regime.csv
+          git add data/cycle_state.json data/cycle_history.json
           git diff --cached --quiet && echo "No changes to commit" || \
             git commit -m "chore: update cycle signals $(date -u +%Y-%m-%d)"
 

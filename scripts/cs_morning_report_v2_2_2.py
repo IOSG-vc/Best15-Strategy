@@ -53,9 +53,8 @@ SIG_FLOOR_SIGMA      = 1.0
 ACTIVITY_THRESHOLD   = 0.05
 GATE_THRESHOLD_LOOKBACK = 3
 HELD_OUT_SPLIT       = 0.70
-# API keys: prefer environment variables; fall back to hardcoded values
-CQ_KEY   = os.environ.get("CRYPTOQUANT_KEY",  "9XqAcsD2L69JiFZyPIjB9rvlobokQA9yquYUi6R5")
-FRED_KEY = os.environ.get("FRED_API_KEY",     "786fe852241222b4df0e26f5416e4007")
+CQ_KEY   = os.environ.get("CRYPTOQUANT_KEY", "")
+FRED_KEY = os.environ.get("FRED_API_KEY", "")
 RETRY_MAX            = 300
 RETRY_WAIT           = 3
 RETRY_WAIT_JITTER    = 2

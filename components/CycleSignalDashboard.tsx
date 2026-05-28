@@ -1,32 +1,28 @@
+"use client";
+
 import type { CycleSignalData } from "@/lib/types";
 import dynamic from "next/dynamic";
 import Nav from "./Nav";
 
 const ExposureHistoryChart = dynamic(() => import("./ExposureHistoryChart"), { ssr: false });
 const Btc90ExposureChart = dynamic(() => import("./Btc90ExposureChart"), { ssr: false });
-const SignalBreakdownChart = dynamic(() => import("./SignalBreakdownChart"), { ssr: false });
-const DominantPairsChart = dynamic(() => import("./DominantPairsChart"), { ssr: false });
 
 function dirColor(d: string) {
   if (d === "BULLISH") return "#00b894";
   if (d === "BEARISH") return "#e17055";
   return "#9ca3af";
 }
-function riskColor(r: string) {
-  if (r === "LOW") return "#00b894";
-  if (r === "HIGH") return "#e17055";
-  return "#fdcb6e";
-}
-function volColor(r: string) {
-  if (r === "LOW") return "#74b9ff";
-  if (r === "HIGH") return "#fdcb6e";
-  if (r === "EXTREME") return "#e17055";
-  return "#9ca3af";
-}
+
 function expColor(e: number) {
   if (e >= 0.65) return "#00b894";
   if (e <= 0.35) return "#e17055";
   return "#fdcb6e";
+}
+
+function deltaColor(d: number) {
+  if (d > 0.005) return "#00b894";
+  if (d < -0.005) return "#e17055";
+  return "#9ca3af";
 }
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -34,6 +30,30 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
     <div className="flex items-baseline gap-2 mb-4">
       <h2 className="text-lg font-semibold">{title}</h2>
       {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
+    </div>
+  );
+}
+
+function MetricRow({
+  label,
+  value,
+  color,
+  mono = true,
+}: {
+  label: string;
+  value: string;
+  color?: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-[#2d3144]/50 last:border-0">
+      <span className="text-sm text-gray-400">{label}</span>
+      <span
+        className={`text-sm font-semibold ${mono ? "font-mono" : ""}`}
+        style={color ? { color } : undefined}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -48,7 +68,7 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Cycle Signal</h1>
             <p className="text-gray-400 text-sm mt-0.5">
-              BTC On-Chain · Technical Regime Model
+              V3 + K3 · one-step 10/90 +20% / -20% · universe 138
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -68,8 +88,12 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           <div className="text-center py-24">
             <p className="text-gray-400 text-lg">No CycleSignal data yet.</p>
             <p className="text-gray-600 text-sm mt-2">
-              Run <code className="text-gray-400">cs_morning_report_v2_2_2.py</code> and save
-              output to <code className="text-gray-400">data/cycle_state.json</code>.
+              Run{" "}
+              <code className="text-gray-400">
+                Production_v3_k3_one_step_10_90_add20_138.py
+              </code>{" "}
+              and save output to{" "}
+              <code className="text-gray-400">data/cycle_state.json</code>.
             </p>
           </div>
         ) : (
@@ -77,9 +101,13 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
             {/* Cache / data warnings */}
             {state.cache_warnings.length > 0 && (
               <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-lg px-4 py-3">
-                <div className="text-yellow-400 text-xs font-semibold mb-1">Data Source Warnings</div>
+                <div className="text-yellow-400 text-xs font-semibold mb-1">
+                  Data Source Warnings
+                </div>
                 {state.cache_warnings.map((w, i) => (
-                  <div key={i} className="text-yellow-300/80 text-xs">{w}</div>
+                  <div key={i} className="text-yellow-300/80 text-xs">
+                    {w}
+                  </div>
                 ))}
               </div>
             )}
@@ -87,54 +115,97 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
             {/* Status cards */}
             <section>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]" style={{ borderLeftWidth: 3, borderLeftColor: "#f7931a" }}>
+                {/* BTC Price */}
+                <div
+                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                  style={{ borderLeftWidth: 3, borderLeftColor: "#f7931a" }}
+                >
                   <div className="text-xs text-gray-400 mb-1">BTC Price</div>
                   <div className="text-2xl font-bold font-mono text-[#f7931a]">
                     ${state.btc_price.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{ borderLeftWidth: 3, borderLeftColor: expColor(state.exposure) }}>
-                  <div className="text-xs text-gray-400 mb-1">BTC Exposure</div>
-                  <div className="text-2xl font-bold font-mono" style={{ color: expColor(state.exposure) }}>
+                {/* Strategy Exposure */}
+                <div
+                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: expColor(state.exposure),
+                  }}
+                >
+                  <div className="text-xs text-gray-400 mb-1">
+                    Strategy Exposure
+                  </div>
+                  <div
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: expColor(state.exposure) }}
+                  >
                     {(state.exposure * 100).toFixed(0)}%
                   </div>
-                  <div className="text-xs mt-1 font-medium" style={{ color: dirColor(state.direction) }}>
+                  <div
+                    className="text-xs mt-1 font-medium"
+                    style={{ color: dirColor(state.direction) }}
+                  >
                     {state.direction}
                   </div>
                 </div>
 
-                <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{ borderLeftWidth: 3, borderLeftColor: state.composite < 0 ? "#00b894" : state.composite > 0 ? "#e17055" : "#4b5563" }}>
-                  <div className="text-xs text-gray-400 mb-1">Composite</div>
-                  <div className="text-2xl font-bold font-mono"
-                    style={{ color: state.composite < 0 ? "#00b894" : state.composite > 0 ? "#e17055" : "#9ca3af" }}>
-                    {state.composite >= 0 ? "+" : ""}{state.composite.toFixed(3)}
+                {/* V3 Exposure */}
+                <div
+                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: expColor(state.v3_exposure),
+                  }}
+                >
+                  <div className="text-xs text-gray-400 mb-1">V3 Exposure</div>
+                  <div
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: expColor(state.v3_exposure) }}
+                  >
+                    {(state.v3_exposure * 100).toFixed(0)}%
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Gate: {state.gate.toFixed(3)}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Base signal
+                  </div>
                 </div>
 
-                <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{ borderLeftWidth: 3, borderLeftColor: volColor(state.vol_regime) }}>
-                  <div className="text-xs text-gray-400 mb-1">Vol Regime</div>
-                  <div className="text-xl font-bold" style={{ color: volColor(state.vol_regime) }}>
-                    {state.vol_regime}
+                {/* K3 Overlay Delta */}
+                <div
+                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                  style={{
+                    borderLeftWidth: 3,
+                    borderLeftColor: deltaColor(state.overlay_delta),
+                  }}
+                >
+                  <div className="text-xs text-gray-400 mb-1">
+                    K3 Overlay Δ
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 font-mono">z = {state.vol_z.toFixed(2)}</div>
+                  <div
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: deltaColor(state.overlay_delta) }}
+                  >
+                    {state.overlay_delta >= 0 ? "+" : ""}
+                    {(state.overlay_delta * 100).toFixed(0)}%
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 font-mono">
+                    rank {state.k3_rank.toFixed(3)}
+                  </div>
                 </div>
 
-                <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{ borderLeftWidth: 3, borderLeftColor: riskColor(state.risk_level) }}>
-                  <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                  <div className="text-xl font-bold" style={{ color: riskColor(state.risk_level) }}>
-                    {state.risk_level}
+                {/* K3 Score */}
+                <div
+                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                  style={{ borderLeftWidth: 3, borderLeftColor: "#6c5ce7" }}
+                >
+                  <div className="text-xs text-gray-400 mb-1">K3 Score</div>
+                  <div className="text-2xl font-bold font-mono text-[#a78bfa]">
+                    {state.k3_score.toFixed(3)}
                   </div>
-                  {state.risk_factors[0] && (
-                    <div className="text-xs text-gray-500 mt-1 leading-tight line-clamp-2">
-                      {state.risk_factors[0]}
-                    </div>
-                  )}
+                  <div className="text-xs text-gray-500 mt-1 font-mono">
+                    E = {state.k3_E.toFixed(3)}
+                  </div>
                 </div>
               </div>
             </section>
@@ -142,141 +213,77 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
             {/* 90-day BTC + Exposure chart */}
             {history.length > 0 && (
               <section>
-                <SectionHeader title="Last 90 Days" subtitle="exposure · BTC price" />
+                <SectionHeader
+                  title="Last 90 Days"
+                  subtitle="strategy exposure · BTC price"
+                />
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                   <Btc90ExposureChart history={history} />
                 </div>
               </section>
             )}
 
-            {/* Signal breakdown + Dominant pairs */}
+            {/* Backtest Metrics */}
             <section>
+              <SectionHeader
+                title="Backtest Metrics"
+                subtitle="since 2020-01-01"
+              />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <SectionHeader
-                    title="Signal Breakdown"
-                    subtitle={`${state.bull_count + state.neut_count + state.bear_count} signals`}
+                {/* Strategy vs V3 */}
+                <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
+                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-3">
+                    Sharpe Ratio
+                  </div>
+                  <MetricRow
+                    label="Strategy (V3 + K3)"
+                    value={state.strategy_sharpe.toFixed(4)}
+                    color="#a78bfa"
                   />
-                  <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
-                    <SignalBreakdownChart
-                      bullCount={state.bull_count}
-                      neutCount={state.neut_count}
-                      bearCount={state.bear_count}
-                      bullSignals={state.bull_signals}
-                      bearSignals={state.bear_signals}
-                    />
-                  </div>
+                  <MetricRow
+                    label="V3 Original"
+                    value={state.v3_sharpe.toFixed(4)}
+                    color="#9ca3af"
+                  />
+                  <MetricRow
+                    label="Delta vs V3"
+                    value={`${state.sharpe_delta >= 0 ? "+" : ""}${state.sharpe_delta.toFixed(4)}`}
+                    color={state.sharpe_delta >= 0 ? "#00b894" : "#e17055"}
+                  />
                 </div>
-                <div>
-                  <SectionHeader title="Dominant Signal Pairs" subtitle="hover for details · brighter = both windows" />
-                  <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
-                    <DominantPairsChart pairs={state.dominant_pairs} />
+
+                {/* Performance */}
+                <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
+                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-3">
+                    Performance
                   </div>
+                  <MetricRow
+                    label="Annual Return"
+                    value={`${(state.annual_return * 100).toFixed(2)}%`}
+                    color="#00b894"
+                  />
+                  <MetricRow
+                    label="Max Drawdown"
+                    value={`${(state.max_drawdown * 100).toFixed(2)}%`}
+                    color="#e17055"
+                  />
+                  <MetricRow
+                    label="Avg Exposure"
+                    value={`${(state.avg_exposure * 100).toFixed(1)}%`}
+                  />
                 </div>
               </div>
             </section>
 
-            {/* Historical exposure + composite */}
+            {/* Historical exposure */}
             {history.length > 0 && (
               <section>
-                <SectionHeader title="Historical Exposure & Composite" />
+                <SectionHeader
+                  title="Historical Exposure"
+                  subtitle="strategy vs V3 base"
+                />
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                   <ExposureHistoryChart history={history} />
-                </div>
-              </section>
-            )}
-
-            {/* Signal flips */}
-            {state.flips.length > 0 && (
-              <section>
-                <SectionHeader title="Signal Flips Today" subtitle={`${state.flips.length} changed`} />
-                <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-                  <div className="grid grid-cols-3 px-4 py-2 text-xs text-gray-500 border-b border-[#2d3144] font-medium uppercase tracking-wide">
-                    <span>Signal</span><span>From</span><span>To</span>
-                  </div>
-                  {state.flips.map((f, i) => (
-                    <div key={i} className="grid grid-cols-3 px-4 py-2.5 text-sm border-b border-[#2d3144]/40 last:border-0 hover:bg-[#2d3144]/30">
-                      <span className="text-gray-300 font-mono text-xs">{f.signal}</span>
-                      <span className="text-xs" style={{ color: f.from === "BULL" ? "#00b894" : f.from === "BEAR" ? "#e17055" : "#6b7280" }}>
-                        {f.from}
-                      </span>
-                      <span className="text-xs font-medium" style={{ color: f.to === "BULL" ? "#00b894" : f.to === "BEAR" ? "#e17055" : "#6b7280" }}>
-                        → {f.to}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Individual signal lists (if enriched state) */}
-            {(state.bull_signals?.length || state.bear_signals?.length) && (
-              <section>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {state.bull_signals && state.bull_signals.length > 0 && (
-                    <div>
-                      <SectionHeader title="Bullish Signals" subtitle={`${state.bull_signals.length}`} />
-                      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-                        <div className="grid grid-cols-2 gap-1 p-3 max-h-56 overflow-y-auto">
-                          {state.bull_signals.map((s) => (
-                            <div key={s} className="text-xs font-mono text-green-400/80 px-1.5 py-0.5 rounded bg-green-900/20 truncate">
-                              {s}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {state.bear_signals && state.bear_signals.length > 0 && (
-                    <div>
-                      <SectionHeader title="Bearish Signals" subtitle={`${state.bear_signals.length}`} />
-                      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-                        <div className="grid grid-cols-2 gap-1 p-3 max-h-56 overflow-y-auto">
-                          {state.bear_signals.map((s) => (
-                            <div key={s} className="text-xs font-mono text-red-400/80 px-1.5 py-0.5 rounded bg-red-900/20 truncate">
-                              {s}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Cooldowns + Risk factors */}
-            {(state.cooldown_events.length > 0 || state.risk_factors.length > 0) && (
-              <section>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {state.cooldown_events.length > 0 && (
-                    <div>
-                      <SectionHeader title="Active Cooldowns" />
-                      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-                        {state.cooldown_events.map((cd, i) => (
-                          <div key={i} className="px-4 py-3 border-b border-[#2d3144]/40 last:border-0">
-                            <div className="flex justify-between items-start gap-2">
-                              <div className="text-sm text-gray-200">{cd.blocked_move}</div>
-                              <div className="text-xs text-yellow-400 shrink-0">{cd.remaining_days}d left</div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-0.5">{cd.date}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {state.risk_factors.length > 0 && (
-                    <div>
-                      <SectionHeader title="Risk Factors" />
-                      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-                        {state.risk_factors.map((rf, i) => (
-                          <div key={i} className="px-4 py-3 border-b border-[#2d3144]/40 last:border-0 text-sm text-yellow-300/80">
-                            {rf}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </section>
             )}

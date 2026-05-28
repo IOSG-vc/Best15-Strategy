@@ -58,54 +58,31 @@ export interface PerformanceData {
   assets: Record<string, AssetData>;
 }
 
-export interface DominantPair {
-  s1: string;
-  s2: string;
-  power: number;
-  windows: string[];
-}
-
-export interface SignalFlip {
-  signal: string;
-  from: string;
-  to: string;
-}
-
-export interface CooldownEvent {
-  date: string;
-  blocked_move: string;
-  reason: string;
-  remaining_days: number;
-}
-
 export interface CycleSignalState {
   date: string;
   btc_price: number;
   exposure: number;
+  v3_exposure: number;
+  overlay_delta: number;
   direction: "BULLISH" | "BEARISH" | "NEUTRAL";
-  composite: number;
-  gate: number;
-  vol_z: number;
-  vol_regime: "LOW" | "NORMAL" | "HIGH" | "EXTREME";
-  bull_count: number;
-  neut_count: number;
-  bear_count: number;
-  bull_signals?: string[];
-  bear_signals?: string[];
-  neut_signals?: string[];
-  flips: SignalFlip[];
-  dominant_pairs: DominantPair[];
-  cooldown_events: CooldownEvent[];
-  risk_level: "LOW" | "MEDIUM" | "HIGH";
-  risk_factors: string[];
+  k3_rank: number;
+  k3_E: number;
+  k3_score: number;
+  strategy_sharpe: number;
+  v3_sharpe: number;
+  sharpe_delta: number;
+  annual_return: number;
+  max_drawdown: number;
+  avg_exposure: number;
   cache_warnings: string[];
 }
 
 export interface CycleHistoryPoint {
   date: string;
-  combo: number | null;
   exposure: number | null;
+  v3_exposure?: number | null;
   btc_price?: number | null;
+  k3_rank?: number | null;
 }
 
 export interface CycleSignalData {
