@@ -1,20 +1,20 @@
 {
-  "annual_return": 0.6243980241709362,
-  "avg_exposure": 0.7437900128040974,
-  "btc_price": 73734.2265625,
+  "annual_return": 0.6200277795677591,
+  "avg_exposure": 0.7436860068259387,
+  "btc_price": 71401.4921875,
   "cache_warnings": [
     "\u26a0\ufe0f CACHED: FRED macro data from cache"
   ],
-  "date": "2026-05-31",
+  "date": "2026-06-01",
   "direction": "NEUTRAL",
   "exposure": 0.5,
-  "k3_E": 0.2127782032920574,
-  "k3_rank": 0.24099204492278894,
-  "k3_score": 0.6063891016460287,
+  "k3_E": 0.20600490018628442,
+  "k3_rank": 0.2392982456140351,
+  "k3_score": 0.6030024500931422,
   "max_drawdown": -0.48204184802321404,
   "overlay_delta": 0.0,
-  "sharpe_delta": 0.07398016463614665,
-  "strategy_sharpe": 1.4011600420904964,
+  "sharpe_delta": 0.07389213467676936,
+  "strategy_sharpe": 1.3915007376555546,
   "v3_exposure": 0.5,
-  "v3_sharpe": 1.3271798774543497
+  "v3_sharpe": 1.3176086029787852
 }
