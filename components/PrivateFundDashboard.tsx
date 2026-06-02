@@ -313,7 +313,7 @@ export default function PrivateFundDashboard({
 
   // ── Comparison table ────────────────────────────────────────────────────
   const comparisonRows = useMemo((): CompRow[] => {
-    const btcPct = parseFloat((btcReturn * 100).toFixed(2));
+    const btcPct = parseFloat(btcInceptionReturn.toFixed(2));
     const r = (key: string) => parseFloat(lastCumReturn(allStrategies[key]).toFixed(2));
     return [
       { type: "section", label: "Simple Benchmarks",        color: "#6b7280" },
