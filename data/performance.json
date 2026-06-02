@@ -1,10 +1,350 @@
 {
-  "lastUpdated": "2026-06-01",
-  "latestRebalanceDate": "2026-05-01",
+  "lastUpdated": "2026-06-02",
+  "latestRebalanceDate": "2026-06-01",
   "rebalanceDates": [
-    "2026-05-01"
+    "2026-05-01",
+    "2026-06-01"
   ],
   "strategies": {
+    "private": {
+      "displayName": "Private Fund",
+      "color": "#8b5cf6",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006757,
+          "cumReturn": 1.006757
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.002805,
+          "cumReturn": 1.009581
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.027402,
+          "cumReturn": 1.037245
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.016644,
+          "cumReturn": 1.054509
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.010733,
+          "cumReturn": 1.065827
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.024157,
+          "cumReturn": 1.04008
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.021035,
+          "cumReturn": 1.061958
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002762,
+          "cumReturn": 1.064891
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.012866,
+          "cumReturn": 1.078591
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.015419,
+          "cumReturn": 1.095222
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.02637,
+          "cumReturn": 1.066342
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019219,
+          "cumReturn": 1.045848
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.034023,
+          "cumReturn": 1.081431
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.040116,
+          "cumReturn": 1.038048
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.013647,
+          "cumReturn": 1.023882
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.003857,
+          "cumReturn": 1.027831
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.015716,
+          "cumReturn": 1.011678
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.004718,
+          "cumReturn": 1.006905
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.020509,
+          "cumReturn": 1.027556
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.009052,
+          "cumReturn": 1.036857
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.028384,
+          "cumReturn": 1.007427
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.011154,
+          "cumReturn": 1.018663
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.004357,
+          "cumReturn": 1.023101
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.002294,
+          "cumReturn": 1.025448
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.019467,
+          "cumReturn": 1.005486
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.01728,
+          "cumReturn": 0.988111
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.003526,
+          "cumReturn": 0.991595
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.018273,
+          "cumReturn": 1.009714
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.012696,
+          "cumReturn": 1.022533
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.004486,
+          "cumReturn": 1.02712
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031959,
+          "cumReturn": 0.994295
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011912,
+          "cumReturn": 0.982451
+        }
+      ],
+      "metrics": {
+        "totalReturn": -1.75,
+        "annReturn": -18.82,
+        "annVolatility": 35.59,
+        "sharpe": -0.5288,
+        "sortino": -1.0189,
+        "maxDrawdown": -10.3,
+        "calmar": -1.8275,
+        "winRate": 62.5,
+        "bestDay": 3.4,
+        "worstDay": -4.01,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 36.78
+        },
+        {
+          "coin": "mstr",
+          "weight": 14.57
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 9.71
+        },
+        {
+          "coin": "coin",
+          "weight": 5.71
+        },
+        {
+          "coin": "hood",
+          "weight": 5.58
+        },
+        {
+          "coin": "ethereum",
+          "weight": 4.89
+        },
+        {
+          "coin": "sky",
+          "weight": 4.63
+        },
+        {
+          "coin": "uniswap",
+          "weight": 3.48
+        },
+        {
+          "coin": "crcl",
+          "weight": 3.27
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.04
+        },
+        {
+          "coin": "morpho",
+          "weight": 2.19
+        },
+        {
+          "coin": "solana",
+          "weight": 2.07
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.07
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 2.71
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.35
+        }
+      ]
+    },
+    "private_liq": {
+      "displayName": "Private Fund (Liq)",
+      "color": "#7c3aed",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.031041,
+          "cumReturn": 0.968959
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011966,
+          "cumReturn": 0.957364
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 36.5
+        },
+        {
+          "coin": "mstr",
+          "weight": 13.15
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 9.64
+        },
+        {
+          "coin": "coin",
+          "weight": 6.7
+        },
+        {
+          "coin": "hood",
+          "weight": 5.96
+        },
+        {
+          "coin": "ethereum",
+          "weight": 5.58
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.53
+        },
+        {
+          "coin": "sky",
+          "weight": 4.35
+        },
+        {
+          "coin": "crcl",
+          "weight": 3.11
+        },
+        {
+          "coin": "morpho",
+          "weight": 2.48
+        },
+        {
+          "coin": "uniswap",
+          "weight": 2.2
+        },
+        {
+          "coin": "solana",
+          "weight": 2.03
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.76
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.26
+        }
+      ]
+    },
     "etf": {
       "displayName": "ETF",
       "color": "#3b82f6",
@@ -161,83 +501,88 @@
         },
         {
           "date": "2026-06-01",
-          "return": -0.018622,
-          "cumReturn": 0.946714
+          "return": -0.027858,
+          "cumReturn": 0.937804
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012797,
+          "cumReturn": 0.925803
         }
       ],
       "metrics": {
-        "totalReturn": -5.33,
-        "annReturn": -48.64,
-        "annVolatility": 32.19,
-        "sharpe": -1.5111,
-        "sortino": -2.3423,
-        "maxDrawdown": -12.81,
-        "calmar": -3.7955,
-        "winRate": 54.8,
+        "totalReturn": -7.42,
+        "annReturn": -59.66,
+        "annVolatility": 32.6,
+        "sharpe": -1.83,
+        "sortino": -2.8592,
+        "maxDrawdown": -13.57,
+        "calmar": -4.3954,
+        "winRate": 53.1,
         "bestDay": 3.34,
         "worstDay": -3.73,
-        "numDays": 31
+        "numDays": 32
       },
       "latestWeights": [
         {
           "coin": "bitcoin",
-          "weight": 45.6
-        },
-        {
-          "coin": "mstr",
-          "weight": 15.0
-        },
-        {
-          "coin": "bitcoin-cash",
-          "weight": 8.14
-        },
-        {
-          "coin": "coin",
-          "weight": 7.84
-        },
-        {
-          "coin": "hood",
-          "weight": 6.41
+          "weight": 24.8
         },
         {
           "coin": "binancecoin",
-          "weight": 3.49
+          "weight": 20.0
         },
         {
-          "coin": "ripple",
-          "weight": 2.29
+          "coin": "mstr",
+          "weight": 14.35
         },
         {
-          "coin": "litecoin",
-          "weight": 2.24
+          "coin": "hood",
+          "weight": 8.3
+        },
+        {
+          "coin": "coin",
+          "weight": 7.16
         },
         {
           "coin": "ethereum",
-          "weight": 2.12
+          "weight": 5.2
         },
         {
           "coin": "hyperliquid",
-          "weight": 1.4
+          "weight": 3.69
         },
         {
-          "coin": "stellar",
-          "weight": 1.18
+          "coin": "litecoin",
+          "weight": 3.1
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 2.95
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 2.64
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 2.09
+        },
+        {
+          "coin": "ripple",
+          "weight": 1.92
         },
         {
           "coin": "solana",
-          "weight": 1.09
-        },
-        {
-          "coin": "zcash",
-          "weight": 1.08
+          "weight": 1.43
         },
         {
           "coin": "chainlink",
-          "weight": 1.07
+          "weight": 1.39
         },
         {
-          "coin": "cardano",
-          "weight": 1.05
+          "coin": "zcash",
+          "weight": 1.0
         }
       ],
       "monthlyReturns": [
@@ -249,7 +594,93 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -1.86
+          "return": -4.03
+        }
+      ]
+    },
+    "etf_liq": {
+      "displayName": "ETF (Liq)",
+      "color": "#60a5fa",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.031804,
+          "cumReturn": 0.968196
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012795,
+          "cumReturn": 0.955807
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 26.98
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "hood",
+          "weight": 8.26
+        },
+        {
+          "coin": "coin",
+          "weight": 6.74
+        },
+        {
+          "coin": "litecoin",
+          "weight": 6.59
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.44
+        },
+        {
+          "coin": "ethereum",
+          "weight": 3.02
+        },
+        {
+          "coin": "ripple",
+          "weight": 2.06
+        },
+        {
+          "coin": "solana",
+          "weight": 1.32
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.25
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.2
+        },
+        {
+          "coin": "aave",
+          "weight": 1.13
+        },
+        {
+          "coin": "sui",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.42
         }
       ]
     },
@@ -409,82 +840,87 @@
         },
         {
           "date": "2026-06-01",
-          "return": -0.014567,
-          "cumReturn": 0.999585
+          "return": -0.028776,
+          "cumReturn": 0.985172
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011599,
+          "cumReturn": 0.973745
         }
       ],
       "metrics": {
-        "totalReturn": -0.04,
-        "annReturn": -0.5,
-        "annVolatility": 33.74,
-        "sharpe": -0.0149,
-        "sortino": -0.0295,
-        "maxDrawdown": -10.89,
-        "calmar": -0.0462,
-        "winRate": 64.5,
+        "totalReturn": -2.63,
+        "annReturn": -26.89,
+        "annVolatility": 34.47,
+        "sharpe": -0.7802,
+        "sortino": -1.5499,
+        "maxDrawdown": -11.04,
+        "calmar": -2.4357,
+        "winRate": 62.5,
         "bestDay": 3.04,
         "worstDay": -4.01,
-        "numDays": 31
+        "numDays": 32
       },
       "latestWeights": [
         {
           "coin": "bitcoin",
-          "weight": 34.19
+          "weight": 32.14
         },
         {
           "coin": "ethereum",
-          "weight": 15.85
+          "weight": 14.57
         },
         {
           "coin": "hood",
-          "weight": 8.13
-        },
-        {
-          "coin": "mstr",
-          "weight": 7.24
+          "weight": 8.99
         },
         {
           "coin": "coin",
-          "weight": 7.1
+          "weight": 7.19
+        },
+        {
+          "coin": "mstr",
+          "weight": 7.19
         },
         {
           "coin": "solana",
-          "weight": 6.0
+          "weight": 6.1
         },
         {
           "coin": "binancecoin",
-          "weight": 5.18
+          "weight": 5.79
         },
         {
           "coin": "crcl",
-          "weight": 4.79
+          "weight": 5.13
         },
         {
           "coin": "hyperliquid",
-          "weight": 3.1
-        },
-        {
-          "coin": "chainlink",
-          "weight": 2.14
+          "weight": 3.95
         },
         {
           "coin": "zcash",
-          "weight": 1.87
+          "weight": 2.22
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.15
         },
         {
           "coin": "uniswap",
-          "weight": 1.41
+          "weight": 1.37
         },
         {
-          "coin": "ether-fi",
-          "weight": 1.0
-        },
-        {
-          "coin": "ethena",
-          "weight": 1.0
+          "coin": "sky",
+          "weight": 1.14
         },
         {
           "coin": "morpho",
+          "weight": 1.06
+        },
+        {
+          "coin": "venice-token",
           "weight": 1.0
         }
       ],
@@ -497,7 +933,93 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -1.46
+          "return": -4.0
+        }
+      ]
+    },
+    "quality_liq": {
+      "displayName": "Quality (Liq)",
+      "color": "#34d399",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.02882,
+          "cumReturn": 0.97118
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011581,
+          "cumReturn": 0.959933
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 32.25
+        },
+        {
+          "coin": "ethereum",
+          "weight": 14.59
+        },
+        {
+          "coin": "hood",
+          "weight": 9.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 7.2
+        },
+        {
+          "coin": "coin",
+          "weight": 7.19
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 5.86
+        },
+        {
+          "coin": "solana",
+          "weight": 5.85
+        },
+        {
+          "coin": "crcl",
+          "weight": 5.14
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.95
+        },
+        {
+          "coin": "zcash",
+          "weight": 2.24
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.16
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.37
+        },
+        {
+          "coin": "sky",
+          "weight": 1.14
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.06
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.01
         }
       ]
     },
@@ -657,79 +1179,84 @@
         },
         {
           "date": "2026-06-01",
-          "return": -0.012741,
-          "cumReturn": 1.008777
+          "return": -0.025863,
+          "cumReturn": 0.995369
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.01148,
+          "cumReturn": 0.983942
         }
       ],
       "metrics": {
-        "totalReturn": 0.88,
-        "annReturn": 11.22,
-        "annVolatility": 37.7,
-        "sharpe": 0.2975,
-        "sortino": 0.5238,
+        "totalReturn": -1.61,
+        "annReturn": -17.35,
+        "annVolatility": 38.09,
+        "sharpe": -0.4555,
+        "sortino": -0.8293,
         "maxDrawdown": -12.62,
-        "calmar": 0.889,
-        "winRate": 61.3,
+        "calmar": -1.3752,
+        "winRate": 59.4,
         "bestDay": 3.87,
         "worstDay": -4.18,
-        "numDays": 31
+        "numDays": 32
       },
       "latestWeights": [
         {
           "coin": "mstr",
-          "weight": 16.94
-        },
-        {
-          "coin": "coin",
-          "weight": 14.75
+          "weight": 14.8
         },
         {
           "coin": "hood",
-          "weight": 14.14
+          "weight": 13.3
         },
         {
-          "coin": "bitcoin",
-          "weight": 9.72
+          "coin": "coin",
+          "weight": 13.25
         },
         {
           "coin": "binancecoin",
-          "weight": 9.7
+          "weight": 9.36
         },
         {
-          "coin": "bitcoin-cash",
-          "weight": 7.3
+          "coin": "bitcoin",
+          "weight": 8.75
         },
         {
           "coin": "litecoin",
-          "weight": 5.76
+          "weight": 6.82
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 5.95
         },
         {
           "coin": "ripple",
-          "weight": 5.07
+          "weight": 4.97
         },
         {
-          "coin": "ethereum",
-          "weight": 4.3
-        },
-        {
-          "coin": "solana",
-          "weight": 3.46
-        },
-        {
-          "coin": "stellar",
-          "weight": 2.65
+          "coin": "the-open-network",
+          "weight": 4.43
         },
         {
           "coin": "hyperliquid",
-          "weight": 2.44
+          "weight": 4.33
+        },
+        {
+          "coin": "ethereum",
+          "weight": 4.07
+        },
+        {
+          "coin": "solana",
+          "weight": 3.66
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 2.76
         },
         {
           "coin": "chainlink",
-          "weight": 1.56
-        },
-        {
-          "coin": "cardano",
-          "weight": 1.21
+          "weight": 2.56
         },
         {
           "coin": "zcash",
@@ -745,242 +1272,582 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -1.27
+          "return": -3.7
         }
       ]
     },
-    "private": {
-      "displayName": "Private Fund",
-      "color": "#8b5cf6",
+    "risk_liq": {
+      "displayName": "Risk (Liq)",
+      "color": "#fbbf24",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.029956,
+          "cumReturn": 0.970044
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.010935,
+          "cumReturn": 0.959437
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "hood",
+          "weight": 13.58
+        },
+        {
+          "coin": "coin",
+          "weight": 13.45
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.18
+        },
+        {
+          "coin": "bitcoin",
+          "weight": 9.74
+        },
+        {
+          "coin": "litecoin",
+          "weight": 7.95
+        },
+        {
+          "coin": "ripple",
+          "weight": 6.16
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 5.57
+        },
+        {
+          "coin": "ethereum",
+          "weight": 5.2
+        },
+        {
+          "coin": "solana",
+          "weight": 4.92
+        },
+        {
+          "coin": "chainlink",
+          "weight": 3.5
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.75
+        },
+        {
+          "coin": "sui",
+          "weight": 1.0
+        },
+        {
+          "coin": "aave",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.06
+        }
+      ]
+    },
+    "pf_b": {
+      "displayName": "PF Base",
+      "color": "#6ee7b7",
       "dailyData": [
         {
           "date": "2026-05-02",
-          "return": 0.006757,
-          "cumReturn": 1.006757
+          "return": 0.007046,
+          "cumReturn": 1.007046
         },
         {
           "date": "2026-05-03",
-          "return": 0.002805,
-          "cumReturn": 1.009581
+          "return": 0.003652,
+          "cumReturn": 1.010724
         },
         {
           "date": "2026-05-04",
-          "return": 0.027402,
-          "cumReturn": 1.037245
+          "return": 0.030059,
+          "cumReturn": 1.041106
         },
         {
           "date": "2026-05-05",
-          "return": 0.016644,
-          "cumReturn": 1.054509
+          "return": 0.010631,
+          "cumReturn": 1.052174
         },
         {
           "date": "2026-05-06",
-          "return": 0.010733,
-          "cumReturn": 1.065827
+          "return": 0.008761,
+          "cumReturn": 1.061392
         },
         {
           "date": "2026-05-07",
-          "return": -0.024157,
-          "cumReturn": 1.04008
+          "return": -0.025808,
+          "cumReturn": 1.033999
         },
         {
           "date": "2026-05-08",
-          "return": 0.021035,
-          "cumReturn": 1.061958
+          "return": 0.019891,
+          "cumReturn": 1.054566
         },
         {
           "date": "2026-05-09",
-          "return": 0.002762,
-          "cumReturn": 1.064891
+          "return": 0.003519,
+          "cumReturn": 1.058276
         },
         {
           "date": "2026-05-10",
-          "return": 0.012866,
-          "cumReturn": 1.078591
+          "return": 0.011615,
+          "cumReturn": 1.070568
         },
         {
           "date": "2026-05-11",
-          "return": 0.015419,
-          "cumReturn": 1.095222
+          "return": 0.019832,
+          "cumReturn": 1.0918
         },
         {
           "date": "2026-05-12",
-          "return": -0.02637,
-          "cumReturn": 1.066342
+          "return": -0.029224,
+          "cumReturn": 1.059893
         },
         {
           "date": "2026-05-13",
-          "return": -0.019219,
-          "cumReturn": 1.045848
+          "return": -0.018916,
+          "cumReturn": 1.039845
         },
         {
           "date": "2026-05-14",
-          "return": 0.034023,
-          "cumReturn": 1.081431
+          "return": 0.032045,
+          "cumReturn": 1.073166
         },
         {
           "date": "2026-05-15",
-          "return": -0.040116,
-          "cumReturn": 1.038048
+          "return": -0.041344,
+          "cumReturn": 1.028797
         },
         {
           "date": "2026-05-16",
-          "return": -0.013647,
-          "cumReturn": 1.023882
+          "return": -0.012713,
+          "cumReturn": 1.015718
         },
         {
           "date": "2026-05-17",
-          "return": 0.003857,
-          "cumReturn": 1.027831
+          "return": 0.003197,
+          "cumReturn": 1.018965
         },
         {
           "date": "2026-05-18",
-          "return": -0.015716,
-          "cumReturn": 1.011678
+          "return": -0.016823,
+          "cumReturn": 1.001823
         },
         {
           "date": "2026-05-19",
-          "return": -0.004718,
-          "cumReturn": 1.006905
+          "return": -0.007441,
+          "cumReturn": 0.994368
         },
         {
           "date": "2026-05-20",
-          "return": 0.020509,
-          "cumReturn": 1.027556
+          "return": 0.01754,
+          "cumReturn": 1.011809
         },
         {
           "date": "2026-05-21",
-          "return": 0.009052,
-          "cumReturn": 1.036857
+          "return": 0.008015,
+          "cumReturn": 1.019919
         },
         {
           "date": "2026-05-22",
-          "return": -0.028384,
-          "cumReturn": 1.007427
+          "return": -0.029238,
+          "cumReturn": 0.990098
         },
         {
           "date": "2026-05-23",
-          "return": 0.011154,
-          "cumReturn": 1.018663
+          "return": 0.01121,
+          "cumReturn": 1.001196
         },
         {
           "date": "2026-05-24",
-          "return": 0.004357,
-          "cumReturn": 1.023101
+          "return": 0.001184,
+          "cumReturn": 1.002382
         },
         {
           "date": "2026-05-25",
-          "return": 0.002294,
-          "cumReturn": 1.025448
+          "return": 0.001993,
+          "cumReturn": 1.00438
         },
         {
           "date": "2026-05-26",
-          "return": -0.019467,
-          "cumReturn": 1.005486
+          "return": -0.019918,
+          "cumReturn": 0.984374
         },
         {
           "date": "2026-05-27",
-          "return": -0.01728,
-          "cumReturn": 0.988111
+          "return": -0.016465,
+          "cumReturn": 0.968167
         },
         {
           "date": "2026-05-28",
-          "return": 0.003526,
-          "cumReturn": 0.991595
+          "return": 0.011376,
+          "cumReturn": 0.97918
         },
         {
           "date": "2026-05-29",
-          "return": 0.018273,
-          "cumReturn": 1.009714
+          "return": 0.023488,
+          "cumReturn": 1.002179
         },
         {
           "date": "2026-05-30",
-          "return": 0.012696,
-          "cumReturn": 1.022533
+          "return": 0.005758,
+          "cumReturn": 1.00795
         },
         {
           "date": "2026-05-31",
-          "return": 0.004486,
-          "cumReturn": 1.02712
+          "return": 0.003644,
+          "cumReturn": 1.011623
         },
         {
           "date": "2026-06-01",
-          "return": -0.01579,
-          "cumReturn": 1.010902
+          "return": -0.029297,
+          "cumReturn": 0.981985
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.010669,
+          "cumReturn": 0.971508
         }
       ],
       "metrics": {
-        "totalReturn": 1.09,
-        "annReturn": 14.1,
-        "annVolatility": 34.6,
-        "sharpe": 0.4076,
-        "sortino": 0.8011,
-        "maxDrawdown": -9.78,
-        "calmar": 1.4419,
-        "winRate": 64.5,
-        "bestDay": 3.4,
-        "worstDay": -4.01,
-        "numDays": 31
+        "totalReturn": -2.85,
+        "annReturn": -28.85,
+        "annVolatility": 35.87,
+        "sharpe": -0.8043,
+        "sortino": -1.5519,
+        "maxDrawdown": -11.32,
+        "calmar": -2.5475,
+        "winRate": 62.5,
+        "bestDay": 3.2,
+        "worstDay": -4.13,
+        "numDays": 32
       },
       "latestWeights": [
         {
           "coin": "bitcoin",
-          "weight": 46.4
-        },
-        {
-          "coin": "mstr",
-          "weight": 9.28
-        },
-        {
-          "coin": "coin",
-          "weight": 7.3
-        },
-        {
-          "coin": "hood",
-          "weight": 6.69
-        },
-        {
-          "coin": "hyperliquid",
-          "weight": 5.14
-        },
-        {
-          "coin": "crcl",
-          "weight": 4.58
-        },
-        {
-          "coin": "binancecoin",
-          "weight": 4.46
-        },
-        {
-          "coin": "uniswap",
-          "weight": 3.09
+          "weight": 31.09
         },
         {
           "coin": "ethereum",
-          "weight": 2.65
+          "weight": 16.38
         },
         {
-          "coin": "morpho",
-          "weight": 2.4
+          "coin": "hood",
+          "weight": 10.24
+        },
+        {
+          "coin": "mstr",
+          "weight": 9.03
+        },
+        {
+          "coin": "coin",
+          "weight": 8.47
         },
         {
           "coin": "solana",
-          "weight": 1.95
+          "weight": 6.4
+        },
+        {
+          "coin": "crcl",
+          "weight": 5.55
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.7
         },
         {
           "coin": "chainlink",
-          "weight": 1.94
+          "weight": 1.98
         },
         {
-          "coin": "ethena",
-          "weight": 1.9
+          "coin": "uniswap",
+          "weight": 1.75
         },
         {
           "coin": "zcash",
-          "weight": 1.22
+          "weight": 1.32
         },
         {
-          "coin": "ether-fi",
+          "coin": "sky",
+          "weight": 1.2
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.2
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 0.68
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 1.16
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -3.97
+        }
+      ]
+    },
+    "pf_sz": {
+      "displayName": "PF +Size",
+      "color": "#34d399",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006158,
+          "cumReturn": 1.006158
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.001784,
+          "cumReturn": 1.007953
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.025632,
+          "cumReturn": 1.033789
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011856,
+          "cumReturn": 1.046046
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009114,
+          "cumReturn": 1.055579
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.022618,
+          "cumReturn": 1.031704
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.020679,
+          "cumReturn": 1.053038
+        },
+        {
+          "date": "2026-05-09",
+          "return": -7.1e-05,
+          "cumReturn": 1.052963
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.010263,
+          "cumReturn": 1.06377
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.01397,
+          "cumReturn": 1.078631
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.023371,
+          "cumReturn": 1.053423
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018898,
+          "cumReturn": 1.033515
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.029902,
+          "cumReturn": 1.064419
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037564,
+          "cumReturn": 1.024435
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.012723,
+          "cumReturn": 1.011401
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001891,
+          "cumReturn": 1.013313
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.016876,
+          "cumReturn": 0.996212
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005375,
+          "cumReturn": 0.990857
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.016729,
+          "cumReturn": 1.007433
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.008587,
+          "cumReturn": 1.016084
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.025693,
+          "cumReturn": 0.989979
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.0088,
+          "cumReturn": 0.998691
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002648,
+          "cumReturn": 1.001335
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.002817,
+          "cumReturn": 1.004157
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.016259,
+          "cumReturn": 0.98783
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.018924,
+          "cumReturn": 0.969137
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.005284,
+          "cumReturn": 0.974257
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019852,
+          "cumReturn": 0.993598
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.014979,
+          "cumReturn": 1.008481
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.006108,
+          "cumReturn": 1.014641
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031627,
+          "cumReturn": 0.98255
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011033,
+          "cumReturn": 0.97171
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.83,
+        "annReturn": -28.67,
+        "annVolatility": 33.21,
+        "sharpe": -0.8635,
+        "sortino": -1.4781,
+        "maxDrawdown": -10.15,
+        "calmar": -2.8246,
+        "winRate": 59.4,
+        "bestDay": 2.99,
+        "worstDay": -3.76,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 37.84
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "sky",
+          "weight": 8.23
+        },
+        {
+          "coin": "hood",
+          "weight": 7.07
+        },
+        {
+          "coin": "coin",
+          "weight": 5.71
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.29
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.22
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.16
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.82
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.64
+        },
+        {
+          "coin": "solana",
+          "weight": 1.6
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.41
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
           "weight": 1.0
         }
       ],
@@ -988,12 +1855,4906 @@
         {
           "year": 2026,
           "month": 5,
-          "return": 2.71
+          "return": 1.46
         },
         {
           "year": 2026,
           "month": 6,
-          "return": -1.58
+          "return": -4.23
+        }
+      ]
+    },
+    "pf_lq": {
+      "displayName": "PF +Liquidity",
+      "color": "#10b981",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006229,
+          "cumReturn": 1.006229
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.00248,
+          "cumReturn": 1.008725
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.026344,
+          "cumReturn": 1.035298
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011823,
+          "cumReturn": 1.047539
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009492,
+          "cumReturn": 1.057482
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023318,
+          "cumReturn": 1.032823
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.019491,
+          "cumReturn": 1.052954
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.001632,
+          "cumReturn": 1.054673
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.011411,
+          "cumReturn": 1.066707
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.016275,
+          "cumReturn": 1.084068
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.02383,
+          "cumReturn": 1.058234
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.01771,
+          "cumReturn": 1.039493
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.030562,
+          "cumReturn": 1.071262
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038025,
+          "cumReturn": 1.030527
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.012254,
+          "cumReturn": 1.017899
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001236,
+          "cumReturn": 1.019158
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.017178,
+          "cumReturn": 1.001651
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005354,
+          "cumReturn": 0.996289
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.015733,
+          "cumReturn": 1.011964
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.007491,
+          "cumReturn": 1.019545
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.026217,
+          "cumReturn": 0.992815
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009056,
+          "cumReturn": 1.001806
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002653,
+          "cumReturn": 1.004463
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003036,
+          "cumReturn": 1.007513
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.016956,
+          "cumReturn": 0.990429
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017714,
+          "cumReturn": 0.972884
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.005011,
+          "cumReturn": 0.977759
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019472,
+          "cumReturn": 0.996799
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.015619,
+          "cumReturn": 1.012367
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003922,
+          "cumReturn": 1.016338
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.032775,
+          "cumReturn": 0.983028
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011837,
+          "cumReturn": 0.971392
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.86,
+        "annReturn": -28.95,
+        "annVolatility": 33.58,
+        "sharpe": -0.862,
+        "sortino": -1.6564,
+        "maxDrawdown": -10.39,
+        "calmar": -2.7851,
+        "winRate": 62.5,
+        "bestDay": 3.06,
+        "worstDay": -3.8,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 41.08
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "hood",
+          "weight": 6.98
+        },
+        {
+          "coin": "coin",
+          "weight": 5.78
+        },
+        {
+          "coin": "sky",
+          "weight": 4.57
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.43
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.24
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.19
+        },
+        {
+          "coin": "solana",
+          "weight": 1.85
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.78
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.66
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.43
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.01
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 1.63
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.42
+        }
+      ]
+    },
+    "pf_tc": {
+      "displayName": "PF +Tech",
+      "color": "#059669",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006213,
+          "cumReturn": 1.006213
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.002623,
+          "cumReturn": 1.008852
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.02679,
+          "cumReturn": 1.03588
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011736,
+          "cumReturn": 1.048036
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009097,
+          "cumReturn": 1.05757
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023617,
+          "cumReturn": 1.032594
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.018123,
+          "cumReturn": 1.051307
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002258,
+          "cumReturn": 1.053681
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.011536,
+          "cumReturn": 1.065837
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.016586,
+          "cumReturn": 1.083515
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.024023,
+          "cumReturn": 1.057486
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018095,
+          "cumReturn": 1.03835
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.030161,
+          "cumReturn": 1.069668
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038877,
+          "cumReturn": 1.028082
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011245,
+          "cumReturn": 1.016521
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.00027,
+          "cumReturn": 1.016796
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.017461,
+          "cumReturn": 0.999042
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005195,
+          "cumReturn": 0.993851
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.014389,
+          "cumReturn": 1.008152
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.006363,
+          "cumReturn": 1.014567
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.026658,
+          "cumReturn": 0.98752
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009058,
+          "cumReturn": 0.996465
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002578,
+          "cumReturn": 0.999034
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003054,
+          "cumReturn": 1.002085
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01736,
+          "cumReturn": 0.984689
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017644,
+          "cumReturn": 0.967315
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.004297,
+          "cumReturn": 0.971471
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.018842,
+          "cumReturn": 0.989776
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.011834,
+          "cumReturn": 1.001489
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003109,
+          "cumReturn": 1.004603
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.03044,
+          "cumReturn": 0.974023
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012239,
+          "cumReturn": 0.962103
+        }
+      ],
+      "metrics": {
+        "totalReturn": -3.79,
+        "annReturn": -36.55,
+        "annVolatility": 33.09,
+        "sharpe": -1.1045,
+        "sortino": -2.0953,
+        "maxDrawdown": -11.21,
+        "calmar": -3.2616,
+        "winRate": 62.5,
+        "bestDay": 3.02,
+        "worstDay": -3.89,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 37.87
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 9.59
+        },
+        {
+          "coin": "hood",
+          "weight": 6.93
+        },
+        {
+          "coin": "coin",
+          "weight": 5.64
+        },
+        {
+          "coin": "sky",
+          "weight": 3.29
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.13
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.11
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.84
+        },
+        {
+          "coin": "solana",
+          "weight": 1.37
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.23
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.0
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 0.46
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.23
+        }
+      ]
+    },
+    "pf_ql": {
+      "displayName": "PF +Quality",
+      "color": "#047857",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.00672,
+          "cumReturn": 1.00672
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.002799,
+          "cumReturn": 1.009538
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.027671,
+          "cumReturn": 1.037473
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.013629,
+          "cumReturn": 1.051612
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.007262,
+          "cumReturn": 1.059249
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023604,
+          "cumReturn": 1.034247
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.018368,
+          "cumReturn": 1.053244
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.001946,
+          "cumReturn": 1.055294
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.010892,
+          "cumReturn": 1.066788
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.014686,
+          "cumReturn": 1.082455
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025687,
+          "cumReturn": 1.054651
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019802,
+          "cumReturn": 1.033767
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.034447,
+          "cumReturn": 1.069377
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038399,
+          "cumReturn": 1.028313
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.013013,
+          "cumReturn": 1.014932
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.005255,
+          "cumReturn": 1.020265
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.015466,
+          "cumReturn": 1.004486
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.004338,
+          "cumReturn": 1.000129
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.020385,
+          "cumReturn": 1.020516
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.009605,
+          "cumReturn": 1.030319
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.02825,
+          "cumReturn": 1.001212
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.011214,
+          "cumReturn": 1.01244
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.00558,
+          "cumReturn": 1.018089
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.001837,
+          "cumReturn": 1.019959
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.019157,
+          "cumReturn": 1.00042
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017904,
+          "cumReturn": 0.982508
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.006081,
+          "cumReturn": 0.988483
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.01963,
+          "cumReturn": 1.007887
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.008608,
+          "cumReturn": 1.016562
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.006873,
+          "cumReturn": 1.023549
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031067,
+          "cumReturn": 0.991751
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011975,
+          "cumReturn": 0.979875
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.01,
+        "annReturn": -21.29,
+        "annVolatility": 34.75,
+        "sharpe": -0.6126,
+        "sortino": -1.1975,
+        "maxDrawdown": -9.48,
+        "calmar": -2.2464,
+        "winRate": 62.5,
+        "bestDay": 3.44,
+        "worstDay": -3.84,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 36.5
+        },
+        {
+          "coin": "mstr",
+          "weight": 13.14
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 9.64
+        },
+        {
+          "coin": "coin",
+          "weight": 6.7
+        },
+        {
+          "coin": "hood",
+          "weight": 5.96
+        },
+        {
+          "coin": "ethereum",
+          "weight": 5.59
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.42
+        },
+        {
+          "coin": "sky",
+          "weight": 4.3
+        },
+        {
+          "coin": "crcl",
+          "weight": 3.11
+        },
+        {
+          "coin": "morpho",
+          "weight": 2.45
+        },
+        {
+          "coin": "solana",
+          "weight": 2.24
+        },
+        {
+          "coin": "uniswap",
+          "weight": 2.19
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.75
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 2.35
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.27
+        }
+      ]
+    },
+    "pf_b_l": {
+      "displayName": "PF Base (Liq)",
+      "color": "#a7f3d0",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.007046,
+          "cumReturn": 1.007046
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003652,
+          "cumReturn": 1.010724
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.030059,
+          "cumReturn": 1.041106
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.010631,
+          "cumReturn": 1.052174
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.008761,
+          "cumReturn": 1.061392
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.025808,
+          "cumReturn": 1.033999
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.019891,
+          "cumReturn": 1.054566
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.003519,
+          "cumReturn": 1.058276
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.011615,
+          "cumReturn": 1.070568
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.019832,
+          "cumReturn": 1.0918
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.029224,
+          "cumReturn": 1.059893
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018916,
+          "cumReturn": 1.039845
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.032045,
+          "cumReturn": 1.073166
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.041344,
+          "cumReturn": 1.028797
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.012713,
+          "cumReturn": 1.015718
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.003197,
+          "cumReturn": 1.018965
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.016823,
+          "cumReturn": 1.001823
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.007441,
+          "cumReturn": 0.994368
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.01754,
+          "cumReturn": 1.011809
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.008015,
+          "cumReturn": 1.019919
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.029238,
+          "cumReturn": 0.990098
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.01121,
+          "cumReturn": 1.001196
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.001184,
+          "cumReturn": 1.002382
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.001993,
+          "cumReturn": 1.00438
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.019918,
+          "cumReturn": 0.984374
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.016465,
+          "cumReturn": 0.968167
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.011376,
+          "cumReturn": 0.97918
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.023488,
+          "cumReturn": 1.002179
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.005758,
+          "cumReturn": 1.00795
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003644,
+          "cumReturn": 1.011623
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.029417,
+          "cumReturn": 0.981864
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.010597,
+          "cumReturn": 0.97146
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.85,
+        "annReturn": -28.89,
+        "annVolatility": 35.87,
+        "sharpe": -0.8053,
+        "sortino": -1.5516,
+        "maxDrawdown": -11.32,
+        "calmar": -2.5512,
+        "winRate": 62.5,
+        "bestDay": 3.2,
+        "worstDay": -4.13,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 31.34
+        },
+        {
+          "coin": "ethereum",
+          "weight": 16.52
+        },
+        {
+          "coin": "hood",
+          "weight": 10.32
+        },
+        {
+          "coin": "mstr",
+          "weight": 9.1
+        },
+        {
+          "coin": "coin",
+          "weight": 8.54
+        },
+        {
+          "coin": "solana",
+          "weight": 5.64
+        },
+        {
+          "coin": "crcl",
+          "weight": 5.59
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.74
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.0
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.76
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.33
+        },
+        {
+          "coin": "sky",
+          "weight": 1.21
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.21
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 0.69
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 1.16
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -3.97
+        }
+      ]
+    },
+    "pf_sz_l": {
+      "displayName": "PF +Size (Liq)",
+      "color": "#6ee7b7",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006158,
+          "cumReturn": 1.006158
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.001784,
+          "cumReturn": 1.007953
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.025632,
+          "cumReturn": 1.033789
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011856,
+          "cumReturn": 1.046046
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009114,
+          "cumReturn": 1.055579
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.022618,
+          "cumReturn": 1.031704
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.020679,
+          "cumReturn": 1.053038
+        },
+        {
+          "date": "2026-05-09",
+          "return": -7.1e-05,
+          "cumReturn": 1.052963
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.010263,
+          "cumReturn": 1.06377
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.01397,
+          "cumReturn": 1.078631
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.023371,
+          "cumReturn": 1.053423
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018898,
+          "cumReturn": 1.033515
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.029902,
+          "cumReturn": 1.064419
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037564,
+          "cumReturn": 1.024435
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.012723,
+          "cumReturn": 1.011401
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001891,
+          "cumReturn": 1.013313
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.016876,
+          "cumReturn": 0.996212
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005375,
+          "cumReturn": 0.990857
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.016729,
+          "cumReturn": 1.007433
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.008587,
+          "cumReturn": 1.016084
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.025693,
+          "cumReturn": 0.989979
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.0088,
+          "cumReturn": 0.998691
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002648,
+          "cumReturn": 1.001335
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.002817,
+          "cumReturn": 1.004157
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.016259,
+          "cumReturn": 0.98783
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.018924,
+          "cumReturn": 0.969137
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.005284,
+          "cumReturn": 0.974257
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019852,
+          "cumReturn": 0.993598
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.014979,
+          "cumReturn": 1.008481
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.006108,
+          "cumReturn": 1.014641
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031627,
+          "cumReturn": 0.98255
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011033,
+          "cumReturn": 0.97171
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.83,
+        "annReturn": -28.67,
+        "annVolatility": 33.21,
+        "sharpe": -0.8635,
+        "sortino": -1.4781,
+        "maxDrawdown": -10.15,
+        "calmar": -2.8246,
+        "winRate": 59.4,
+        "bestDay": 2.99,
+        "worstDay": -3.76,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 37.84
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "sky",
+          "weight": 8.23
+        },
+        {
+          "coin": "hood",
+          "weight": 7.07
+        },
+        {
+          "coin": "coin",
+          "weight": 5.71
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.29
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.22
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.16
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.82
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.64
+        },
+        {
+          "coin": "solana",
+          "weight": 1.6
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.41
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 1.46
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.23
+        }
+      ]
+    },
+    "pf_lq_l": {
+      "displayName": "PF +Liquidity (Liq)",
+      "color": "#34d399",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006229,
+          "cumReturn": 1.006229
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.00248,
+          "cumReturn": 1.008725
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.026344,
+          "cumReturn": 1.035298
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011823,
+          "cumReturn": 1.047539
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009492,
+          "cumReturn": 1.057482
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023318,
+          "cumReturn": 1.032823
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.019491,
+          "cumReturn": 1.052954
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.001632,
+          "cumReturn": 1.054673
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.011411,
+          "cumReturn": 1.066707
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.016275,
+          "cumReturn": 1.084068
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.02383,
+          "cumReturn": 1.058234
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.01771,
+          "cumReturn": 1.039493
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.030562,
+          "cumReturn": 1.071262
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038025,
+          "cumReturn": 1.030527
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.012254,
+          "cumReturn": 1.017899
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001236,
+          "cumReturn": 1.019158
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.017178,
+          "cumReturn": 1.001651
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005354,
+          "cumReturn": 0.996289
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.015733,
+          "cumReturn": 1.011964
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.007491,
+          "cumReturn": 1.019545
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.026217,
+          "cumReturn": 0.992815
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009056,
+          "cumReturn": 1.001806
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002653,
+          "cumReturn": 1.004463
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003036,
+          "cumReturn": 1.007513
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.016956,
+          "cumReturn": 0.990429
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017714,
+          "cumReturn": 0.972884
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.005011,
+          "cumReturn": 0.977759
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019472,
+          "cumReturn": 0.996799
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.015619,
+          "cumReturn": 1.012367
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003922,
+          "cumReturn": 1.016338
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.032775,
+          "cumReturn": 0.983028
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011837,
+          "cumReturn": 0.971392
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.86,
+        "annReturn": -28.95,
+        "annVolatility": 33.58,
+        "sharpe": -0.862,
+        "sortino": -1.6564,
+        "maxDrawdown": -10.39,
+        "calmar": -2.7851,
+        "winRate": 62.5,
+        "bestDay": 3.06,
+        "worstDay": -3.8,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 41.08
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "hood",
+          "weight": 6.98
+        },
+        {
+          "coin": "coin",
+          "weight": 5.78
+        },
+        {
+          "coin": "sky",
+          "weight": 4.57
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.43
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.24
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.19
+        },
+        {
+          "coin": "solana",
+          "weight": 1.85
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.78
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.66
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.43
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.01
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 1.63
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.42
+        }
+      ]
+    },
+    "pf_tc_l": {
+      "displayName": "PF +Tech (Liq)",
+      "color": "#10b981",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.006213,
+          "cumReturn": 1.006213
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.002623,
+          "cumReturn": 1.008852
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.02679,
+          "cumReturn": 1.03588
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.011736,
+          "cumReturn": 1.048036
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.009097,
+          "cumReturn": 1.05757
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023617,
+          "cumReturn": 1.032594
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.018123,
+          "cumReturn": 1.051307
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002258,
+          "cumReturn": 1.053681
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.011536,
+          "cumReturn": 1.065837
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.016586,
+          "cumReturn": 1.083515
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.024023,
+          "cumReturn": 1.057486
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018095,
+          "cumReturn": 1.03835
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.030161,
+          "cumReturn": 1.069668
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038877,
+          "cumReturn": 1.028082
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011245,
+          "cumReturn": 1.016521
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.00027,
+          "cumReturn": 1.016796
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.017461,
+          "cumReturn": 0.999042
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.005195,
+          "cumReturn": 0.993851
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.014389,
+          "cumReturn": 1.008152
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.006363,
+          "cumReturn": 1.014567
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.026658,
+          "cumReturn": 0.98752
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009058,
+          "cumReturn": 0.996465
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.002578,
+          "cumReturn": 0.999034
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003054,
+          "cumReturn": 1.002085
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01736,
+          "cumReturn": 0.984689
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017644,
+          "cumReturn": 0.967315
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.004297,
+          "cumReturn": 0.971471
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.018842,
+          "cumReturn": 0.989776
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.011834,
+          "cumReturn": 1.001489
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003109,
+          "cumReturn": 1.004603
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.03044,
+          "cumReturn": 0.974023
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012239,
+          "cumReturn": 0.962103
+        }
+      ],
+      "metrics": {
+        "totalReturn": -3.79,
+        "annReturn": -36.55,
+        "annVolatility": 33.09,
+        "sharpe": -1.1045,
+        "sortino": -2.0953,
+        "maxDrawdown": -11.21,
+        "calmar": -3.2616,
+        "winRate": 62.5,
+        "bestDay": 3.02,
+        "worstDay": -3.89,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 37.87
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 10.0
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 9.59
+        },
+        {
+          "coin": "hood",
+          "weight": 6.93
+        },
+        {
+          "coin": "coin",
+          "weight": 5.64
+        },
+        {
+          "coin": "sky",
+          "weight": 3.29
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.13
+        },
+        {
+          "coin": "crcl",
+          "weight": 2.11
+        },
+        {
+          "coin": "morpho",
+          "weight": 1.84
+        },
+        {
+          "coin": "solana",
+          "weight": 1.37
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.23
+        },
+        {
+          "coin": "uniswap",
+          "weight": 1.0
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 0.46
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.23
+        }
+      ]
+    },
+    "pf_ql_l": {
+      "displayName": "PF +Quality (Liq)",
+      "color": "#059669",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.00672,
+          "cumReturn": 1.00672
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.002799,
+          "cumReturn": 1.009538
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.027671,
+          "cumReturn": 1.037473
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.013629,
+          "cumReturn": 1.051612
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.007262,
+          "cumReturn": 1.059249
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023604,
+          "cumReturn": 1.034247
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.018368,
+          "cumReturn": 1.053244
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.001946,
+          "cumReturn": 1.055294
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.010892,
+          "cumReturn": 1.066788
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.014686,
+          "cumReturn": 1.082455
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025687,
+          "cumReturn": 1.054651
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019802,
+          "cumReturn": 1.033767
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.034447,
+          "cumReturn": 1.069377
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038399,
+          "cumReturn": 1.028313
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.013013,
+          "cumReturn": 1.014932
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.005255,
+          "cumReturn": 1.020265
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.015466,
+          "cumReturn": 1.004486
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.004338,
+          "cumReturn": 1.000129
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.020385,
+          "cumReturn": 1.020516
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.009605,
+          "cumReturn": 1.030319
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.02825,
+          "cumReturn": 1.001212
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.011214,
+          "cumReturn": 1.01244
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.00558,
+          "cumReturn": 1.018089
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.001837,
+          "cumReturn": 1.019959
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.019157,
+          "cumReturn": 1.00042
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017904,
+          "cumReturn": 0.982508
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.006081,
+          "cumReturn": 0.988483
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.01963,
+          "cumReturn": 1.007887
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.008608,
+          "cumReturn": 1.016562
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.006873,
+          "cumReturn": 1.023549
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031037,
+          "cumReturn": 0.991781
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.011966,
+          "cumReturn": 0.979914
+        }
+      ],
+      "metrics": {
+        "totalReturn": -2.01,
+        "annReturn": -21.25,
+        "annVolatility": 34.75,
+        "sharpe": -0.6116,
+        "sortino": -1.1957,
+        "maxDrawdown": -9.47,
+        "calmar": -2.2433,
+        "winRate": 62.5,
+        "bestDay": 3.44,
+        "worstDay": -3.84,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 36.5
+        },
+        {
+          "coin": "mstr",
+          "weight": 13.15
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 9.64
+        },
+        {
+          "coin": "coin",
+          "weight": 6.7
+        },
+        {
+          "coin": "hood",
+          "weight": 5.96
+        },
+        {
+          "coin": "ethereum",
+          "weight": 5.58
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.53
+        },
+        {
+          "coin": "sky",
+          "weight": 4.35
+        },
+        {
+          "coin": "crcl",
+          "weight": 3.11
+        },
+        {
+          "coin": "morpho",
+          "weight": 2.48
+        },
+        {
+          "coin": "uniswap",
+          "weight": 2.2
+        },
+        {
+          "coin": "solana",
+          "weight": 2.03
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.76
+        },
+        {
+          "coin": "venice-token",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 2.35
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.26
+        }
+      ]
+    },
+    "em_b": {
+      "displayName": "ETF MCAP Base",
+      "color": "#fde68a",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.007158,
+          "cumReturn": 1.007158
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.004338,
+          "cumReturn": 1.011527
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.013208,
+          "cumReturn": 1.024888
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.017792,
+          "cumReturn": 1.043123
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.007563,
+          "cumReturn": 1.051012
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.021417,
+          "cumReturn": 1.028502
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.020963,
+          "cumReturn": 1.050062
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.003098,
+          "cumReturn": 1.053316
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.016666,
+          "cumReturn": 1.07087
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.005872,
+          "cumReturn": 1.077159
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.023302,
+          "cumReturn": 1.052059
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.017949,
+          "cumReturn": 1.033175
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.033088,
+          "cumReturn": 1.067361
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.036005,
+          "cumReturn": 1.028931
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.015006,
+          "cumReturn": 1.013491
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.000929,
+          "cumReturn": 1.014432
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.017121,
+          "cumReturn": 0.997065
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.009259,
+          "cumReturn": 0.987833
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.016091,
+          "cumReturn": 1.003728
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.006555,
+          "cumReturn": 1.010307
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.027198,
+          "cumReturn": 0.982829
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.010656,
+          "cumReturn": 0.993302
+        },
+        {
+          "date": "2026-05-24",
+          "return": -0.00111,
+          "cumReturn": 0.992199
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003634,
+          "cumReturn": 0.995804
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01712,
+          "cumReturn": 0.978755
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.013817,
+          "cumReturn": 0.965232
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.004961,
+          "cumReturn": 0.97002
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.018014,
+          "cumReturn": 0.987494
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.013115,
+          "cumReturn": 1.000445
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.004822,
+          "cumReturn": 1.005269
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.025196,
+          "cumReturn": 0.97994
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.013964,
+          "cumReturn": 0.966257
+        }
+      ],
+      "metrics": {
+        "totalReturn": -3.37,
+        "annReturn": -33.25,
+        "annVolatility": 32.0,
+        "sharpe": -1.0388,
+        "sortino": -2.0041,
+        "maxDrawdown": -10.39,
+        "calmar": -3.1995,
+        "winRate": 59.4,
+        "bestDay": 3.31,
+        "worstDay": -3.6,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 32.0
+        },
+        {
+          "coin": "ethereum",
+          "weight": 12.96
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 8.14
+        },
+        {
+          "coin": "ripple",
+          "weight": 7.57
+        },
+        {
+          "coin": "hood",
+          "weight": 7.06
+        },
+        {
+          "coin": "mstr",
+          "weight": 5.88
+        },
+        {
+          "coin": "solana",
+          "weight": 5.75
+        },
+        {
+          "coin": "coin",
+          "weight": 5.31
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.33
+        },
+        {
+          "coin": "zcash",
+          "weight": 2.56
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.15
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 2.05
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 1.87
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 1.7
+        },
+        {
+          "coin": "litecoin",
+          "weight": 1.67
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 0.53
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -3.88
+        }
+      ]
+    },
+    "em_mv": {
+      "displayName": "ETF MCAP MinVar",
+      "color": "#fcd34d",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.004938,
+          "cumReturn": 1.004938
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003119,
+          "cumReturn": 1.008072
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.018823,
+          "cumReturn": 1.027047
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.015396,
+          "cumReturn": 1.04286
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.005422,
+          "cumReturn": 1.048515
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.022883,
+          "cumReturn": 1.024521
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.019324,
+          "cumReturn": 1.044319
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002372,
+          "cumReturn": 1.046796
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.012962,
+          "cumReturn": 1.060364
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.012178,
+          "cumReturn": 1.073277
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.026041,
+          "cumReturn": 1.045327
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019963,
+          "cumReturn": 1.02446
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.03561,
+          "cumReturn": 1.060941
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037478,
+          "cumReturn": 1.021179
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.01133,
+          "cumReturn": 1.00961
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.000472,
+          "cumReturn": 1.010086
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.023172,
+          "cumReturn": 0.986681
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.007064,
+          "cumReturn": 0.979711
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.013009,
+          "cumReturn": 0.992456
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.00556,
+          "cumReturn": 0.997975
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.027499,
+          "cumReturn": 0.970532
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.006233,
+          "cumReturn": 0.976581
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.000868,
+          "cumReturn": 0.977429
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003212,
+          "cumReturn": 0.980569
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.015321,
+          "cumReturn": 0.965545
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.015838,
+          "cumReturn": 0.950253
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.002278,
+          "cumReturn": 0.952417
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.023527,
+          "cumReturn": 0.974825
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.007863,
+          "cumReturn": 0.982489
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.004942,
+          "cumReturn": 0.987345
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.028184,
+          "cumReturn": 0.959517
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.013213,
+          "cumReturn": 0.946839
+        }
+      ],
+      "metrics": {
+        "totalReturn": -5.32,
+        "annReturn": -47.44,
+        "annVolatility": 33.21,
+        "sharpe": -1.4285,
+        "sortino": -2.9007,
+        "maxDrawdown": -11.78,
+        "calmar": -4.0268,
+        "winRate": 62.5,
+        "bestDay": 3.56,
+        "worstDay": -3.75,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 27.63
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 13.86
+        },
+        {
+          "coin": "hood",
+          "weight": 7.91
+        },
+        {
+          "coin": "coin",
+          "weight": 6.96
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 4.29
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 3.55
+        },
+        {
+          "coin": "litecoin",
+          "weight": 3.26
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 2.78
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.37
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 1.97
+        },
+        {
+          "coin": "ripple",
+          "weight": 1.73
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.35
+        },
+        {
+          "coin": "solana",
+          "weight": 1.34
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": -1.27
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.1
+        }
+      ]
+    },
+    "em_lq": {
+      "displayName": "ETF MCAP +Liq",
+      "color": "#fbbf24",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.00514,
+          "cumReturn": 1.00514
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003177,
+          "cumReturn": 1.008334
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.018898,
+          "cumReturn": 1.027389
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.014901,
+          "cumReturn": 1.042698
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.00592,
+          "cumReturn": 1.048871
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.022685,
+          "cumReturn": 1.025077
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.0197,
+          "cumReturn": 1.045271
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002472,
+          "cumReturn": 1.047855
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.013006,
+          "cumReturn": 1.061484
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.012716,
+          "cumReturn": 1.074981
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025705,
+          "cumReturn": 1.047349
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019584,
+          "cumReturn": 1.026838
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.0352,
+          "cumReturn": 1.062983
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037368,
+          "cumReturn": 1.023261
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011259,
+          "cumReturn": 1.01174
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.00013,
+          "cumReturn": 1.011872
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.022292,
+          "cumReturn": 0.989315
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.007093,
+          "cumReturn": 0.982297
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.012596,
+          "cumReturn": 0.994671
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.005113,
+          "cumReturn": 0.999757
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.027206,
+          "cumReturn": 0.972558
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.006824,
+          "cumReturn": 0.979195
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.00079,
+          "cumReturn": 0.979968
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003291,
+          "cumReturn": 0.983193
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.015133,
+          "cumReturn": 0.968314
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.015749,
+          "cumReturn": 0.953064
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.003385,
+          "cumReturn": 0.956291
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.023128,
+          "cumReturn": 0.978408
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.009389,
+          "cumReturn": 0.987593
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.004466,
+          "cumReturn": 0.992004
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.029099,
+          "cumReturn": 0.963137
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012921,
+          "cumReturn": 0.950692
+        }
+      ],
+      "metrics": {
+        "totalReturn": -4.93,
+        "annReturn": -44.86,
+        "annVolatility": 33.1,
+        "sharpe": -1.3553,
+        "sortino": -2.731,
+        "maxDrawdown": -11.56,
+        "calmar": -3.8803,
+        "winRate": 62.5,
+        "bestDay": 3.52,
+        "worstDay": -3.74,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 27.63
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.01
+        },
+        {
+          "coin": "mstr",
+          "weight": 14.24
+        },
+        {
+          "coin": "hood",
+          "weight": 8.42
+        },
+        {
+          "coin": "coin",
+          "weight": 7.26
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 3.38
+        },
+        {
+          "coin": "litecoin",
+          "weight": 3.21
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 2.98
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 2.74
+        },
+        {
+          "coin": "ethereum",
+          "weight": 2.38
+        },
+        {
+          "coin": "ripple",
+          "weight": 1.97
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 1.87
+        },
+        {
+          "coin": "solana",
+          "weight": 1.47
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.43
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": -0.8
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.16
+        }
+      ]
+    },
+    "em_tc": {
+      "displayName": "ETF MCAP +Tech",
+      "color": "#f59e0b",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.004485,
+          "cumReturn": 1.004485
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003079,
+          "cumReturn": 1.007578
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.018319,
+          "cumReturn": 1.026036
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.016005,
+          "cumReturn": 1.042457
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.005646,
+          "cumReturn": 1.048343
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.023246,
+          "cumReturn": 1.023974
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.018537,
+          "cumReturn": 1.042955
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.002334,
+          "cumReturn": 1.045389
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.01345,
+          "cumReturn": 1.05945
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.011078,
+          "cumReturn": 1.071187
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025717,
+          "cumReturn": 1.043639
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019651,
+          "cumReturn": 1.02313
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.033427,
+          "cumReturn": 1.05733
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037314,
+          "cumReturn": 1.017878
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011193,
+          "cumReturn": 1.006484
+        },
+        {
+          "date": "2026-05-17",
+          "return": -0.001014,
+          "cumReturn": 1.005463
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.025833,
+          "cumReturn": 0.979489
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.007416,
+          "cumReturn": 0.972226
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.011703,
+          "cumReturn": 0.983603
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.005091,
+          "cumReturn": 0.98861
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.02711,
+          "cumReturn": 0.961809
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.003999,
+          "cumReturn": 0.965655
+        },
+        {
+          "date": "2026-05-24",
+          "return": -0.000646,
+          "cumReturn": 0.965032
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003551,
+          "cumReturn": 0.968459
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.015335,
+          "cumReturn": 0.953607
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.016659,
+          "cumReturn": 0.937721
+        },
+        {
+          "date": "2026-05-28",
+          "return": -0.004047,
+          "cumReturn": 0.933926
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.021826,
+          "cumReturn": 0.95431
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.007213,
+          "cumReturn": 0.961194
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003625,
+          "cumReturn": 0.964678
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.027858,
+          "cumReturn": 0.937804
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012797,
+          "cumReturn": 0.925803
+        }
+      ],
+      "metrics": {
+        "totalReturn": -7.42,
+        "annReturn": -59.66,
+        "annVolatility": 32.6,
+        "sharpe": -1.83,
+        "sortino": -2.8592,
+        "maxDrawdown": -13.57,
+        "calmar": -4.3954,
+        "winRate": 53.1,
+        "bestDay": 3.34,
+        "worstDay": -3.73,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 24.8
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 14.35
+        },
+        {
+          "coin": "hood",
+          "weight": 8.3
+        },
+        {
+          "coin": "coin",
+          "weight": 7.16
+        },
+        {
+          "coin": "ethereum",
+          "weight": 5.2
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.69
+        },
+        {
+          "coin": "litecoin",
+          "weight": 3.1
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 2.95
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 2.64
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 2.09
+        },
+        {
+          "coin": "ripple",
+          "weight": 1.92
+        },
+        {
+          "coin": "solana",
+          "weight": 1.43
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.39
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": -3.53
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.03
+        }
+      ]
+    },
+    "el_b": {
+      "displayName": "ETF Liq Base",
+      "color": "#bae6fd",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.007765,
+          "cumReturn": 1.007765
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.004568,
+          "cumReturn": 1.012368
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.013686,
+          "cumReturn": 1.026223
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.017552,
+          "cumReturn": 1.044235
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.007824,
+          "cumReturn": 1.052405
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.021232,
+          "cumReturn": 1.03006
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.022018,
+          "cumReturn": 1.05274
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.004039,
+          "cumReturn": 1.056992
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.020129,
+          "cumReturn": 1.078269
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.006145,
+          "cumReturn": 1.084895
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.02352,
+          "cumReturn": 1.059378
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.018178,
+          "cumReturn": 1.040121
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.03319,
+          "cumReturn": 1.074642
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.03689,
+          "cumReturn": 1.034999
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.015158,
+          "cumReturn": 1.01931
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001355,
+          "cumReturn": 1.020691
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.014932,
+          "cumReturn": 1.00545
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.008818,
+          "cumReturn": 0.996584
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.016573,
+          "cumReturn": 1.0131
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.006433,
+          "cumReturn": 1.019618
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.028058,
+          "cumReturn": 0.99101
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.011838,
+          "cumReturn": 1.002741
+        },
+        {
+          "date": "2026-05-24",
+          "return": -0.001194,
+          "cumReturn": 1.001544
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003376,
+          "cumReturn": 1.004925
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.017394,
+          "cumReturn": 0.987446
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.01633,
+          "cumReturn": 0.971321
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.001598,
+          "cumReturn": 0.972874
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.013894,
+          "cumReturn": 0.986391
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.014882,
+          "cumReturn": 1.00107
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.002508,
+          "cumReturn": 1.003581
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.027003,
+          "cumReturn": 0.976481
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.013847,
+          "cumReturn": 0.96296
+        }
+      ],
+      "metrics": {
+        "totalReturn": -3.7,
+        "annReturn": -35.88,
+        "annVolatility": 32.64,
+        "sharpe": -1.0994,
+        "sortino": -2.0792,
+        "maxDrawdown": -11.24,
+        "calmar": -3.1923,
+        "winRate": 59.4,
+        "bestDay": 3.32,
+        "worstDay": -3.69,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 32.48
+        },
+        {
+          "coin": "ethereum",
+          "weight": 13.16
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 8.27
+        },
+        {
+          "coin": "ripple",
+          "weight": 7.68
+        },
+        {
+          "coin": "hood",
+          "weight": 7.17
+        },
+        {
+          "coin": "mstr",
+          "weight": 5.97
+        },
+        {
+          "coin": "solana",
+          "weight": 5.83
+        },
+        {
+          "coin": "coin",
+          "weight": 5.39
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.38
+        },
+        {
+          "coin": "zcash",
+          "weight": 2.59
+        },
+        {
+          "coin": "chainlink",
+          "weight": 2.18
+        },
+        {
+          "coin": "litecoin",
+          "weight": 1.69
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.66
+        },
+        {
+          "coin": "sui",
+          "weight": 1.6
+        },
+        {
+          "coin": "aave",
+          "weight": 0.94
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 0.36
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.05
+        }
+      ]
+    },
+    "el_mv": {
+      "displayName": "ETF Liq MinVar",
+      "color": "#7dd3fc",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.005929,
+          "cumReturn": 1.005929
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003561,
+          "cumReturn": 1.009512
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.019119,
+          "cumReturn": 1.028813
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.015136,
+          "cumReturn": 1.044384
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.006068,
+          "cumReturn": 1.050721
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.0221,
+          "cumReturn": 1.0275
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.021305,
+          "cumReturn": 1.049391
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.003016,
+          "cumReturn": 1.052556
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.015291,
+          "cumReturn": 1.068651
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.012842,
+          "cumReturn": 1.082375
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025975,
+          "cumReturn": 1.05426
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019954,
+          "cumReturn": 1.033223
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.03683,
+          "cumReturn": 1.071277
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037908,
+          "cumReturn": 1.030667
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011829,
+          "cumReturn": 1.018475
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001699,
+          "cumReturn": 1.020205
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.01889,
+          "cumReturn": 1.000933
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.006518,
+          "cumReturn": 0.99441
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.014428,
+          "cumReturn": 1.008757
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.005322,
+          "cumReturn": 1.014125
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.028137,
+          "cumReturn": 0.985591
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009122,
+          "cumReturn": 0.994582
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.001646,
+          "cumReturn": 0.99622
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.002775,
+          "cumReturn": 0.998984
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01547,
+          "cumReturn": 0.98353
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017654,
+          "cumReturn": 0.966167
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.002659,
+          "cumReturn": 0.968736
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019924,
+          "cumReturn": 0.988037
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.011665,
+          "cumReturn": 0.999562
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.003245,
+          "cumReturn": 1.002806
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.032543,
+          "cumReturn": 0.970172
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012943,
+          "cumReturn": 0.957615
+        }
+      ],
+      "metrics": {
+        "totalReturn": -4.24,
+        "annReturn": -39.95,
+        "annVolatility": 34.04,
+        "sharpe": -1.1735,
+        "sortino": -2.3094,
+        "maxDrawdown": -11.53,
+        "calmar": -3.4656,
+        "winRate": 62.5,
+        "bestDay": 3.68,
+        "worstDay": -3.79,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 28.41
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "hood",
+          "weight": 8.28
+        },
+        {
+          "coin": "litecoin",
+          "weight": 7.3
+        },
+        {
+          "coin": "coin",
+          "weight": 6.72
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.64
+        },
+        {
+          "coin": "ripple",
+          "weight": 1.92
+        },
+        {
+          "coin": "ethereum",
+          "weight": 1.59
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.32
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.29
+        },
+        {
+          "coin": "solana",
+          "weight": 1.27
+        },
+        {
+          "coin": "aave",
+          "weight": 1.26
+        },
+        {
+          "coin": "sui",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 0.28
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.51
+        }
+      ]
+    },
+    "el_lq": {
+      "displayName": "ETF Liq +Liq",
+      "color": "#38bdf8",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.005924,
+          "cumReturn": 1.005924
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.00351,
+          "cumReturn": 1.009454
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.019102,
+          "cumReturn": 1.028737
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.014708,
+          "cumReturn": 1.043867
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.006613,
+          "cumReturn": 1.050771
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.02219,
+          "cumReturn": 1.027455
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.021314,
+          "cumReturn": 1.049354
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.003112,
+          "cumReturn": 1.052619
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.015532,
+          "cumReturn": 1.068968
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.013196,
+          "cumReturn": 1.083074
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025659,
+          "cumReturn": 1.055283
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019482,
+          "cumReturn": 1.034724
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.035605,
+          "cumReturn": 1.071565
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037937,
+          "cumReturn": 1.030913
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011615,
+          "cumReturn": 1.018939
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.000689,
+          "cumReturn": 1.01964
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.019236,
+          "cumReturn": 1.000027
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.006803,
+          "cumReturn": 0.993224
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.01335,
+          "cumReturn": 1.006483
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.004756,
+          "cumReturn": 1.01127
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.027706,
+          "cumReturn": 0.983252
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.008724,
+          "cumReturn": 0.99183
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.000919,
+          "cumReturn": 0.992741
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.003036,
+          "cumReturn": 0.995755
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01524,
+          "cumReturn": 0.980579
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017651,
+          "cumReturn": 0.963271
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.002022,
+          "cumReturn": 0.965219
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019504,
+          "cumReturn": 0.984045
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.012575,
+          "cumReturn": 0.996419
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.002459,
+          "cumReturn": 0.99887
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.032765,
+          "cumReturn": 0.966142
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012822,
+          "cumReturn": 0.953754
+        }
+      ],
+      "metrics": {
+        "totalReturn": -4.62,
+        "annReturn": -42.74,
+        "annVolatility": 33.74,
+        "sharpe": -1.2666,
+        "sortino": -2.4744,
+        "maxDrawdown": -11.94,
+        "calmar": -3.5792,
+        "winRate": 62.5,
+        "bestDay": 3.56,
+        "worstDay": -3.79,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 30.27
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "hood",
+          "weight": 8.25
+        },
+        {
+          "coin": "coin",
+          "weight": 6.75
+        },
+        {
+          "coin": "litecoin",
+          "weight": 5.07
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 3.4
+        },
+        {
+          "coin": "ripple",
+          "weight": 2.33
+        },
+        {
+          "coin": "ethereum",
+          "weight": 1.61
+        },
+        {
+          "coin": "solana",
+          "weight": 1.45
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.36
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.3
+        },
+        {
+          "coin": "aave",
+          "weight": 1.21
+        },
+        {
+          "coin": "sui",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": -0.11
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.52
+        }
+      ]
+    },
+    "el_tc": {
+      "displayName": "ETF Liq +Tech",
+      "color": "#0ea5e9",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.005876,
+          "cumReturn": 1.005876
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.003578,
+          "cumReturn": 1.009474
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.019126,
+          "cumReturn": 1.028782
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.014638,
+          "cumReturn": 1.043842
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.006875,
+          "cumReturn": 1.051018
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.022137,
+          "cumReturn": 1.027751
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.021259,
+          "cumReturn": 1.0496
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.003088,
+          "cumReturn": 1.052841
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.01538,
+          "cumReturn": 1.069034
+        },
+        {
+          "date": "2026-05-11",
+          "return": 0.013238,
+          "cumReturn": 1.083185
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.025402,
+          "cumReturn": 1.055671
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.019307,
+          "cumReturn": 1.035289
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.035017,
+          "cumReturn": 1.071541
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.037861,
+          "cumReturn": 1.030972
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.011472,
+          "cumReturn": 1.019145
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.000273,
+          "cumReturn": 1.019423
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.019382,
+          "cumReturn": 0.999664
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.006817,
+          "cumReturn": 0.992849
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.012951,
+          "cumReturn": 1.005708
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.004419,
+          "cumReturn": 1.010152
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.027558,
+          "cumReturn": 0.982315
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.008574,
+          "cumReturn": 0.990737
+        },
+        {
+          "date": "2026-05-24",
+          "return": 0.00067,
+          "cumReturn": 0.9914
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.00312,
+          "cumReturn": 0.994494
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.01523,
+          "cumReturn": 0.979348
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.017613,
+          "cumReturn": 0.962099
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.001732,
+          "cumReturn": 0.963765
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.019303,
+          "cumReturn": 0.982369
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.012823,
+          "cumReturn": 0.994966
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.002194,
+          "cumReturn": 0.997148
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.031804,
+          "cumReturn": 0.965435
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.012795,
+          "cumReturn": 0.953082
+        }
+      ],
+      "metrics": {
+        "totalReturn": -4.69,
+        "annReturn": -43.21,
+        "annVolatility": 33.45,
+        "sharpe": -1.2917,
+        "sortino": -2.5396,
+        "maxDrawdown": -12.01,
+        "calmar": -3.5974,
+        "winRate": 62.5,
+        "bestDay": 3.5,
+        "worstDay": -3.79,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 26.98
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 20.0
+        },
+        {
+          "coin": "mstr",
+          "weight": 15.0
+        },
+        {
+          "coin": "hood",
+          "weight": 8.26
+        },
+        {
+          "coin": "coin",
+          "weight": 6.74
+        },
+        {
+          "coin": "litecoin",
+          "weight": 6.59
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 4.44
+        },
+        {
+          "coin": "ethereum",
+          "weight": 3.02
+        },
+        {
+          "coin": "ripple",
+          "weight": 2.06
+        },
+        {
+          "coin": "solana",
+          "weight": 1.32
+        },
+        {
+          "coin": "chainlink",
+          "weight": 1.25
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 1.2
+        },
+        {
+          "coin": "aave",
+          "weight": 1.13
+        },
+        {
+          "coin": "sui",
+          "weight": 1.0
+        },
+        {
+          "coin": "zcash",
+          "weight": 1.0
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": -0.29
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.42
+        }
+      ]
+    },
+    "onn_m": {
+      "displayName": "1/N MCAP",
+      "color": "#f472b6",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.007667,
+          "cumReturn": 1.007667
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.0065,
+          "cumReturn": 1.014217
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.00377,
+          "cumReturn": 1.01804
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.038808,
+          "cumReturn": 1.057548
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.018873,
+          "cumReturn": 1.077507
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.016574,
+          "cumReturn": 1.059648
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.038779,
+          "cumReturn": 1.10074
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.000849,
+          "cumReturn": 1.101675
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.026904,
+          "cumReturn": 1.131314
+        },
+        {
+          "date": "2026-05-11",
+          "return": -0.010986,
+          "cumReturn": 1.118886
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.020329,
+          "cumReturn": 1.096139
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.021695,
+          "cumReturn": 1.072359
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.029606,
+          "cumReturn": 1.104106
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.038649,
+          "cumReturn": 1.061434
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.021895,
+          "cumReturn": 1.038194
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.001011,
+          "cumReturn": 1.039244
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.016179,
+          "cumReturn": 1.022429
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.011647,
+          "cumReturn": 1.010521
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.026751,
+          "cumReturn": 1.037554
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.007673,
+          "cumReturn": 1.045515
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.028608,
+          "cumReturn": 1.015605
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.009059,
+          "cumReturn": 1.024805
+        },
+        {
+          "date": "2026-05-24",
+          "return": -0.008268,
+          "cumReturn": 1.016332
+        },
+        {
+          "date": "2026-05-25",
+          "return": 0.002913,
+          "cumReturn": 1.019293
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.024626,
+          "cumReturn": 0.994191
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.006276,
+          "cumReturn": 0.987951
+        },
+        {
+          "date": "2026-05-28",
+          "return": 0.002933,
+          "cumReturn": 0.990849
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.015172,
+          "cumReturn": 1.005882
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.009895,
+          "cumReturn": 1.015835
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.014589,
+          "cumReturn": 1.030655
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.001324,
+          "cumReturn": 1.029291
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.018981,
+          "cumReturn": 1.009753
+        }
+      ],
+      "metrics": {
+        "totalReturn": 0.98,
+        "annReturn": 12.11,
+        "annVolatility": 37.64,
+        "sharpe": 0.3216,
+        "sortino": 0.654,
+        "maxDrawdown": -12.67,
+        "calmar": 0.9554,
+        "winRate": 56.2,
+        "bestDay": 3.88,
+        "worstDay": -3.86,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "ethereum",
+          "weight": 6.67
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "ripple",
+          "weight": 6.67
+        },
+        {
+          "coin": "solana",
+          "weight": 6.67
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 6.67
+        },
+        {
+          "coin": "zcash",
+          "weight": 6.67
+        },
+        {
+          "coin": "chainlink",
+          "weight": 6.67
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 6.67
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 6.67
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 6.67
+        },
+        {
+          "coin": "litecoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 6.67
+        },
+        {
+          "coin": "sui",
+          "weight": 6.67
+        },
+        {
+          "coin": "near",
+          "weight": 6.67
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 3.07
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -2.03
+        }
+      ]
+    },
+    "mcap_m": {
+      "displayName": "MCAP Weighted",
+      "color": "#fb7185",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.028379,
+          "cumReturn": 0.971621
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.017676,
+          "cumReturn": 0.954446
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 73.59
+        },
+        {
+          "coin": "ethereum",
+          "weight": 12.07
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 4.77
+        },
+        {
+          "coin": "ripple",
+          "weight": 4.12
+        },
+        {
+          "coin": "solana",
+          "weight": 2.37
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 0.8
+        },
+        {
+          "coin": "zcash",
+          "weight": 0.47
+        },
+        {
+          "coin": "chainlink",
+          "weight": 0.33
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 0.3
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 0.25
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 0.21
+        },
+        {
+          "coin": "litecoin",
+          "weight": 0.2
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 0.19
+        },
+        {
+          "coin": "sui",
+          "weight": 0.18
+        },
+        {
+          "coin": "near",
+          "weight": 0.15
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.56
+        }
+      ]
+    },
+    "liq_m": {
+      "displayName": "Liq Weighted",
+      "color": "#f43f5e",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.02394,
+          "cumReturn": 0.97606
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.01676,
+          "cumReturn": 0.959702
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 60.67
+        },
+        {
+          "coin": "ethereum",
+          "weight": 25.45
+        },
+        {
+          "coin": "solana",
+          "weight": 5.17
+        },
+        {
+          "coin": "ripple",
+          "weight": 3.21
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 1.48
+        },
+        {
+          "coin": "zcash",
+          "weight": 0.67
+        },
+        {
+          "coin": "sui",
+          "weight": 0.6
+        },
+        {
+          "coin": "chainlink",
+          "weight": 0.52
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 0.48
+        },
+        {
+          "coin": "litecoin",
+          "weight": 0.47
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 0.37
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 0.31
+        },
+        {
+          "coin": "near",
+          "weight": 0.31
+        },
+        {
+          "coin": "the-open-network",
+          "weight": 0.18
+        },
+        {
+          "coin": "hedera-hashgraph",
+          "weight": 0.11
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.03
+        }
+      ]
+    },
+    "onn_l": {
+      "displayName": "1/N Liq",
+      "color": "#c084fc",
+      "dailyData": [
+        {
+          "date": "2026-05-02",
+          "return": 0.008237,
+          "cumReturn": 1.008237
+        },
+        {
+          "date": "2026-05-03",
+          "return": 0.007742,
+          "cumReturn": 1.016043
+        },
+        {
+          "date": "2026-05-04",
+          "return": 0.005569,
+          "cumReturn": 1.021702
+        },
+        {
+          "date": "2026-05-05",
+          "return": 0.041664,
+          "cumReturn": 1.064269
+        },
+        {
+          "date": "2026-05-06",
+          "return": 0.015768,
+          "cumReturn": 1.08105
+        },
+        {
+          "date": "2026-05-07",
+          "return": -0.015734,
+          "cumReturn": 1.064041
+        },
+        {
+          "date": "2026-05-08",
+          "return": 0.037563,
+          "cumReturn": 1.104009
+        },
+        {
+          "date": "2026-05-09",
+          "return": 0.000446,
+          "cumReturn": 1.104502
+        },
+        {
+          "date": "2026-05-10",
+          "return": 0.023282,
+          "cumReturn": 1.130216
+        },
+        {
+          "date": "2026-05-11",
+          "return": -0.012216,
+          "cumReturn": 1.116409
+        },
+        {
+          "date": "2026-05-12",
+          "return": -0.02047,
+          "cumReturn": 1.093557
+        },
+        {
+          "date": "2026-05-13",
+          "return": -0.023041,
+          "cumReturn": 1.06836
+        },
+        {
+          "date": "2026-05-14",
+          "return": 0.03844,
+          "cumReturn": 1.109428
+        },
+        {
+          "date": "2026-05-15",
+          "return": -0.034292,
+          "cumReturn": 1.071384
+        },
+        {
+          "date": "2026-05-16",
+          "return": -0.024347,
+          "cumReturn": 1.045298
+        },
+        {
+          "date": "2026-05-17",
+          "return": 0.009833,
+          "cumReturn": 1.055577
+        },
+        {
+          "date": "2026-05-18",
+          "return": -0.012351,
+          "cumReturn": 1.042539
+        },
+        {
+          "date": "2026-05-19",
+          "return": -0.007866,
+          "cumReturn": 1.034339
+        },
+        {
+          "date": "2026-05-20",
+          "return": 0.03737,
+          "cumReturn": 1.072992
+        },
+        {
+          "date": "2026-05-21",
+          "return": 0.011902,
+          "cumReturn": 1.085763
+        },
+        {
+          "date": "2026-05-22",
+          "return": -0.031296,
+          "cumReturn": 1.051782
+        },
+        {
+          "date": "2026-05-23",
+          "return": 0.011111,
+          "cumReturn": 1.063469
+        },
+        {
+          "date": "2026-05-24",
+          "return": -0.001509,
+          "cumReturn": 1.061864
+        },
+        {
+          "date": "2026-05-25",
+          "return": 6.9e-05,
+          "cumReturn": 1.061938
+        },
+        {
+          "date": "2026-05-26",
+          "return": -0.025822,
+          "cumReturn": 1.034516
+        },
+        {
+          "date": "2026-05-27",
+          "return": -0.015624,
+          "cumReturn": 1.018353
+        },
+        {
+          "date": "2026-05-28",
+          "return": -0.016429,
+          "cumReturn": 1.001623
+        },
+        {
+          "date": "2026-05-29",
+          "return": 0.00261,
+          "cumReturn": 1.004237
+        },
+        {
+          "date": "2026-05-30",
+          "return": 0.020139,
+          "cumReturn": 1.024461
+        },
+        {
+          "date": "2026-05-31",
+          "return": 0.011008,
+          "cumReturn": 1.035739
+        },
+        {
+          "date": "2026-06-01",
+          "return": -0.009491,
+          "cumReturn": 1.025908
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.017172,
+          "cumReturn": 1.008292
+        }
+      ],
+      "metrics": {
+        "totalReturn": 0.83,
+        "annReturn": 10.21,
+        "annVolatility": 40.22,
+        "sharpe": 0.2539,
+        "sortino": 0.6026,
+        "maxDrawdown": -11.38,
+        "calmar": 0.8974,
+        "winRate": 53.1,
+        "bestDay": 4.17,
+        "worstDay": -3.43,
+        "numDays": 32
+      },
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "ethereum",
+          "weight": 6.67
+        },
+        {
+          "coin": "solana",
+          "weight": 6.67
+        },
+        {
+          "coin": "ripple",
+          "weight": 6.67
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "zcash",
+          "weight": 6.67
+        },
+        {
+          "coin": "sui",
+          "weight": 6.67
+        },
+        {
+          "coin": "chainlink",
+          "weight": 6.67
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 6.67
+        },
+        {
+          "coin": "litecoin",
+          "weight": 6.67
+        },
+        {
+          "coin": "aave",
+          "weight": 6.67
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 6.67
+        },
+        {
+          "coin": "bittensor",
+          "weight": 6.67
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 6.67
+        },
+        {
+          "coin": "near",
+          "weight": 6.67
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 5,
+          "return": 3.57
+        },
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -2.65
+        }
+      ]
+    },
+    "mcap_l": {
+      "displayName": "MCAP Weighted (Liq)",
+      "color": "#a855f7",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.028714,
+          "cumReturn": 0.971286
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.0176,
+          "cumReturn": 0.954191
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 73.81
+        },
+        {
+          "coin": "ethereum",
+          "weight": 12.1
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 4.78
+        },
+        {
+          "coin": "ripple",
+          "weight": 4.13
+        },
+        {
+          "coin": "solana",
+          "weight": 2.38
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 0.8
+        },
+        {
+          "coin": "zcash",
+          "weight": 0.47
+        },
+        {
+          "coin": "chainlink",
+          "weight": 0.33
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 0.3
+        },
+        {
+          "coin": "litecoin",
+          "weight": 0.2
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 0.19
+        },
+        {
+          "coin": "sui",
+          "weight": 0.18
+        },
+        {
+          "coin": "near",
+          "weight": 0.15
+        },
+        {
+          "coin": "bittensor",
+          "weight": 0.12
+        },
+        {
+          "coin": "aave",
+          "weight": 0.06
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.58
+        }
+      ]
+    },
+    "liq_l": {
+      "displayName": "Liq Weighted (Liq)",
+      "color": "#9333ea",
+      "dailyData": [
+        {
+          "date": "2026-06-01",
+          "return": -0.024167,
+          "cumReturn": 0.975833
+        },
+        {
+          "date": "2026-06-02",
+          "return": -0.016732,
+          "cumReturn": 0.959504
+        }
+      ],
+      "metrics": null,
+      "latestWeights": [
+        {
+          "coin": "bitcoin",
+          "weight": 60.4
+        },
+        {
+          "coin": "ethereum",
+          "weight": 25.34
+        },
+        {
+          "coin": "solana",
+          "weight": 5.14
+        },
+        {
+          "coin": "ripple",
+          "weight": 3.19
+        },
+        {
+          "coin": "binancecoin",
+          "weight": 1.47
+        },
+        {
+          "coin": "zcash",
+          "weight": 0.66
+        },
+        {
+          "coin": "sui",
+          "weight": 0.6
+        },
+        {
+          "coin": "chainlink",
+          "weight": 0.51
+        },
+        {
+          "coin": "hyperliquid",
+          "weight": 0.48
+        },
+        {
+          "coin": "litecoin",
+          "weight": 0.46
+        },
+        {
+          "coin": "aave",
+          "weight": 0.42
+        },
+        {
+          "coin": "avalanche-2",
+          "weight": 0.37
+        },
+        {
+          "coin": "bittensor",
+          "weight": 0.34
+        },
+        {
+          "coin": "bitcoin-cash",
+          "weight": 0.31
+        },
+        {
+          "coin": "near",
+          "weight": 0.31
+        }
+      ],
+      "monthlyReturns": [
+        {
+          "year": 2026,
+          "month": 6,
+          "return": -4.05
         }
       ]
     }
@@ -1130,7 +6891,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.877457
+          "cumReturn": 0.869943
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.843792
+        }
+      ]
+    },
+    "avalanche-2": {
+      "displayName": "AVAX",
+      "type": "crypto",
+      "color": "#e84142",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.012165
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 1.009307
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 1.010281
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.035934
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.055412
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 1.039706
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.095132
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.09736
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.130815
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.1171
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.085934
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.073393
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.099162
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.050697
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.022781
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 1.015203
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 1.0136
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 0.998235
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.019167
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.038977
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 1.014431
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.034297
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 1.00857
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 1.021733
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 1.003324
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 0.993139
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 0.978856
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 0.968057
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 0.981901
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 0.985128
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 0.979534
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.958532
         }
       ]
     },
@@ -1265,7 +7169,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.125777
+          "cumReturn": 1.126828
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.107982
         }
       ]
     },
@@ -1400,7 +7308,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.922998
+          "cumReturn": 0.913108
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.896241
         }
       ]
     },
@@ -1535,7 +7447,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.629483
+          "cumReturn": 0.644942
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.637826
+        }
+      ]
+    },
+    "bittensor": {
+      "displayName": "TAO",
+      "type": "crypto",
+      "color": "#8b8b8b",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.060715
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 1.075962
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 1.062855
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.094503
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.136708
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 1.109916
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.167166
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.144311
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.186184
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.190674
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.150938
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.098056
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.137825
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.055403
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.011662
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 0.978305
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 0.965256
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 0.950305
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.008388
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.038608
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 0.999691
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.034728
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 1.012024
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 1.036908
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 1.033244
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 0.988922
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 0.960885
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 0.92505
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 0.937189
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 0.951033
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 0.9342
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.927347
         }
       ]
     },
@@ -1670,7 +7725,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.929669
+          "cumReturn": 0.928165
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.902644
         }
       ]
     },
@@ -1805,7 +7864,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.990176
+          "cumReturn": 0.992584
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.973204
         }
       ]
     },
@@ -1940,7 +8003,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.988392
+          "cumReturn": 0.954824
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.954824
         }
       ]
     },
@@ -2075,7 +8142,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.1334
+          "cumReturn": 1.052859
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.052859
         }
       ]
     },
@@ -2210,7 +8281,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.844275
+          "cumReturn": 0.862005
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.838729
         }
       ]
     },
@@ -2345,7 +8420,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.893114
+          "cumReturn": 0.934335
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.915554
         }
       ]
     },
@@ -2480,7 +8559,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.866398
+          "cumReturn": 0.87333
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.863327
+        }
+      ]
+    },
+    "hedera-hashgraph": {
+      "displayName": "HBAR",
+      "type": "crypto",
+      "color": "#9b59b6",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.005468
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 0.999018
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 0.991839
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.025344
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.032788
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 1.017446
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.050837
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.054837
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.10849
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.095998
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.064682
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.06335
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.082509
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.051641
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.03426
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 1.021839
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 1.016108
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 0.99911
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.006691
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.017265
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 1.004376
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.020149
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 0.996371
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 0.998069
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 0.979372
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 0.968366
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 1.033572
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 1.068265
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 1.076659
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 1.099059
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 1.047346
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.026042
         }
       ]
     },
@@ -2615,7 +8837,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.280206
+          "cumReturn": 1.23174
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.23174
         }
       ]
     },
@@ -2750,7 +8976,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.804284
+          "cumReturn": 1.799291
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.764384
         }
       ]
     },
@@ -2885,7 +9115,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.920306
+          "cumReturn": 0.914316
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.891985
         }
       ]
     },
@@ -3020,7 +9254,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.011397
+          "cumReturn": 1.048118
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.018862
         }
       ]
     },
@@ -3155,7 +9393,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.897951
+          "cumReturn": 0.845403
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.845403
+        }
+      ]
+    },
+    "near": {
+      "displayName": "NEAR",
+      "type": "crypto",
+      "color": "#00ec97",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.010589
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 0.994455
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 0.979177
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.012587
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.156314
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 1.135592
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.234692
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.215216
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.231837
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.206189
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.250097
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.223179
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.234519
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.196748
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.16163
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 1.174819
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 1.250606
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 1.251866
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.314834
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.50825
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 1.618086
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.864537
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 1.869932
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 2.148033
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 2.044436
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 1.971002
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 1.896076
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 1.860031
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 1.755852
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 1.816342
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 2.084287
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 2.026684
         }
       ]
     },
@@ -3290,7 +9671,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.940435
+          "cumReturn": 0.937155
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.915554
         }
       ]
     },
@@ -3425,7 +9810,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.860969
+          "cumReturn": 0.831219
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.834392
         }
       ]
     },
@@ -3560,7 +9949,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.96505
+          "cumReturn": 0.970166
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.951215
         }
       ]
     },
@@ -3695,7 +10088,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.661185
+          "cumReturn": 1.530767
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.432882
         }
       ]
     },
@@ -3830,7 +10227,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.953269
+          "cumReturn": 0.953848
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.92677
+        }
+      ]
+    },
+    "the-open-network": {
+      "displayName": "TON",
+      "type": "crypto",
+      "color": "#0088cc",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.019553
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 1.025901
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 1.213512
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.506094
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.858909
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 2.024449
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.931351
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.855712
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.845707
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.859418
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.764063
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.594016
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.623403
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.480717
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.444778
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 1.476277
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 1.518183
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 1.50818
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.536693
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.559702
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 1.427135
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.374931
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 1.328616
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 1.466982
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 1.477167
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 1.388129
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 1.337218
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 1.322441
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 1.373651
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 1.430573
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 1.610114
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.538949
         }
       ]
     },
@@ -3965,7 +10505,150 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 0.92457
+          "cumReturn": 0.927915
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 0.908076
+        }
+      ]
+    },
+    "venice-token": {
+      "displayName": "VVV",
+      "type": "crypto",
+      "color": "#7c5cbf",
+      "dailyData": [
+        {
+          "date": "2026-05-01",
+          "cumReturn": 1.0
+        },
+        {
+          "date": "2026-05-02",
+          "cumReturn": 1.018588
+        },
+        {
+          "date": "2026-05-03",
+          "cumReturn": 1.037456
+        },
+        {
+          "date": "2026-05-04",
+          "cumReturn": 1.002927
+        },
+        {
+          "date": "2026-05-05",
+          "cumReturn": 1.122812
+        },
+        {
+          "date": "2026-05-06",
+          "cumReturn": 1.319806
+        },
+        {
+          "date": "2026-05-07",
+          "cumReturn": 1.341074
+        },
+        {
+          "date": "2026-05-08",
+          "cumReturn": 1.489976
+        },
+        {
+          "date": "2026-05-09",
+          "cumReturn": 1.765527
+        },
+        {
+          "date": "2026-05-10",
+          "cumReturn": 1.610164
+        },
+        {
+          "date": "2026-05-11",
+          "cumReturn": 1.866744
+        },
+        {
+          "date": "2026-05-12",
+          "cumReturn": 1.766161
+        },
+        {
+          "date": "2026-05-13",
+          "cumReturn": 1.571077
+        },
+        {
+          "date": "2026-05-14",
+          "cumReturn": 1.598446
+        },
+        {
+          "date": "2026-05-15",
+          "cumReturn": 1.501237
+        },
+        {
+          "date": "2026-05-16",
+          "cumReturn": 1.446843
+        },
+        {
+          "date": "2026-05-17",
+          "cumReturn": 1.580896
+        },
+        {
+          "date": "2026-05-18",
+          "cumReturn": 1.584415
+        },
+        {
+          "date": "2026-05-19",
+          "cumReturn": 1.78145
+        },
+        {
+          "date": "2026-05-20",
+          "cumReturn": 1.818183
+        },
+        {
+          "date": "2026-05-21",
+          "cumReturn": 1.953046
+        },
+        {
+          "date": "2026-05-22",
+          "cumReturn": 1.89584
+        },
+        {
+          "date": "2026-05-23",
+          "cumReturn": 1.998339
+        },
+        {
+          "date": "2026-05-24",
+          "cumReturn": 2.069735
+        },
+        {
+          "date": "2026-05-25",
+          "cumReturn": 1.914301
+        },
+        {
+          "date": "2026-05-26",
+          "cumReturn": 1.86587
+        },
+        {
+          "date": "2026-05-27",
+          "cumReturn": 1.780627
+        },
+        {
+          "date": "2026-05-28",
+          "cumReturn": 1.762998
+        },
+        {
+          "date": "2026-05-29",
+          "cumReturn": 1.704366
+        },
+        {
+          "date": "2026-05-30",
+          "cumReturn": 1.835809
+        },
+        {
+          "date": "2026-05-31",
+          "cumReturn": 1.998123
+        },
+        {
+          "date": "2026-06-01",
+          "cumReturn": 2.042526
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.927223
         }
       ]
     },
@@ -4100,7 +10783,11 @@
         },
         {
           "date": "2026-06-01",
-          "cumReturn": 1.417635
+          "cumReturn": 1.415339
+        },
+        {
+          "date": "2026-06-02",
+          "cumReturn": 1.444926
         }
       ]
     }
