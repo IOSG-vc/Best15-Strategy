@@ -490,20 +490,23 @@ export default function PrivateFundDashboard({
                   {
                     label: "Private Fund Index", color: "#8b5cf6",
                     totalReturn: parseFloat(privateFundInceptionReturn.toFixed(2)),
+                    sharpe: privateData?.metrics?.sharpe ?? null,
                     maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
                   },
                   {
                     label: "Index + Signal (50/50)", color: "#06b6d4",
                     totalReturn: parseFloat(combinedInceptionReturn.toFixed(2)),
+                    sharpe: null,
                     maxDrawdown: 0,
                   },
                   {
                     label: "Bitcoin", color: "#f97316",
                     totalReturn: parseFloat(btcInceptionReturn.toFixed(2)),
+                    sharpe: null,
                     maxDrawdown: 0,
                   },
                 ].map((m) => (
-                  <MetricCard key={m.label} m={{ ...m, sharpe: null, annReturn: 0, volatility: 0 }} />
+                  <MetricCard key={m.label} m={{ ...m, annReturn: 0, volatility: 0 }} />
                 ))}
               </div>
             </section>
@@ -887,12 +890,14 @@ function MetricCard({ m }: { m: MetricsSummary }) {
       <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
         <div>
           <div className="text-gray-500">Sharpe</div>
-          <div className="text-gray-500 font-mono">— <span className="text-gray-700">(30d min)</span></div>
+          <div className="font-mono" style={{ color: m.sharpe === null ? "#6b7280" : m.sharpe >= 0 ? "#4ade80" : "#f87171" }}>
+            {m.sharpe === null ? "—" : m.sharpe.toFixed(2)}
+          </div>
         </div>
         <div>
           <div className="text-gray-500">Max DD</div>
-          <div className="text-red-400 font-mono">
-            {m.maxDrawdown > 0 ? `-${m.maxDrawdown.toFixed(2)}%` : "0%"}
+          <div className="font-mono" style={{ color: m.maxDrawdown < 0 ? "#f87171" : "#6b7280" }}>
+            {m.maxDrawdown < 0 ? `${m.maxDrawdown.toFixed(2)}%` : "—"}
           </div>
         </div>
       </div>
