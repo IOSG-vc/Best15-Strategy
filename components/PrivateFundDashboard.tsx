@@ -235,6 +235,26 @@ export default function PrivateFundDashboard({
     ? btcLive / btcPos.executionPrice - 1
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
+  // ── From-inception returns (May 1 start) for metric cards ─────────────
+  const inceptionStartDate = privateData?.dailyData[0]?.date ?? latestRebalanceDate;
+
+  const privateFundInceptionReturn = useMemo(() => {
+    if (!privateData?.dailyData.length) return 0;
+    return (privateData.dailyData[privateData.dailyData.length - 1].cumReturn - 1) * 100;
+  }, [privateData]);
+
+  const btcInceptionReturn = useMemo(() => {
+    if (!btcData?.dailyData.length) return 0;
+    return (btcData.dailyData[btcData.dailyData.length - 1].cumReturn - 1) * 100;
+  }, [btcData]);
+
+  const combinedInceptionReturn = useMemo(() => {
+    if (!privateData?.dailyData.length) return 0;
+    let val = 1;
+    for (const d of privateData.dailyData) val *= 1 + 0.5 * d.return;
+    return (val - 1) * 100;
+  }, [privateData]);
+
   // ── Comparison table ────────────────────────────────────────────────────
   const comparisonRows = useMemo((): CompRow[] => {
     const btcPct = parseFloat((btcReturn * 100).toFixed(2));
@@ -456,23 +476,23 @@ export default function PrivateFundDashboard({
             <section>
               <SectionHeader
                 title="Performance"
-                subtitle={`since ${positions?.executionDate ?? latestRebalanceDate} · ${isLive ? "live prices" : "end-of-day"}`}
+                subtitle={`since ${inceptionStartDate} · end-of-day`}
               />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   {
                     label: "Private Fund Index", color: "#8b5cf6",
-                    totalReturn: parseFloat((portfolioLiveReturn * 100).toFixed(2)),
+                    totalReturn: parseFloat(privateFundInceptionReturn.toFixed(2)),
                     maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
                   },
                   {
                     label: "Index + Signal (50/50)", color: "#06b6d4",
-                    totalReturn: parseFloat((portfolioLiveReturn * 50).toFixed(2)),
+                    totalReturn: parseFloat(combinedInceptionReturn.toFixed(2)),
                     maxDrawdown: 0,
                   },
                   {
                     label: "Bitcoin", color: "#f97316",
-                    totalReturn: parseFloat((btcReturn * 100).toFixed(2)),
+                    totalReturn: parseFloat(btcInceptionReturn.toFixed(2)),
                     maxDrawdown: 0,
                   },
                 ].map((m) => (
