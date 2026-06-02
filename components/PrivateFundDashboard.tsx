@@ -5,12 +5,6 @@ import dynamic from "next/dynamic";
 import type { StrategyData, AssetData } from "@/lib/types";
 import type { PositionsData } from "@/lib/loadPositions";
 import type { ChartPoint, AssetPerfEntry, MetricsSummary } from "@/lib/privateFundTypes";
-import {
-  MCAP_1N_WEIGHTS, LIQ_1N_WEIGHTS,
-  ETF_MCAP_BASE, ETF_MCAP_MINVAR, ETF_MCAP_PLUS_LIQ, ETF_MCAP_PLUS_TECH,
-  ETF_LIQ_BASE, ETF_LIQ_MINVAR, ETF_LIQ_PLUS_LIQ, ETF_LIQ_PLUS_TECH,
-  PF_BASE, PF_PLUS_SIZE, PF_PLUS_LIQ, PF_PLUS_TECH, PF_PLUS_QUALITY,
-} from "@/lib/benchmarkWeights";
 import Nav from "./Nav";
 import type { SeriesConfig } from "./PrivateFundIndexChart";
 
@@ -23,9 +17,7 @@ interface Props {
   privateData: StrategyData | undefined;
   btcData: AssetData | undefined;
   allAssets: Record<string, AssetData>;
-  etfData: StrategyData | undefined;
-  qualityData: StrategyData | undefined;
-  riskData: StrategyData | undefined;
+  allStrategies: Record<string, StrategyData>;
   positions: PositionsData | null;
   lastUpdated: string;
   latestRebalanceDate: string;
@@ -33,38 +25,34 @@ interface Props {
 
 type PriceMap = Record<string, number>;
 
-// Permanent series (always shown regardless of mode)
 const ALWAYS_SERIES: SeriesConfig[] = [
   { key: "index",    label: "Private Fund Index",    color: "#8b5cf6" },
   { key: "combined", label: "Index + Signal (50/50)", color: "#06b6d4" },
   { key: "btc",      label: "Bitcoin",               color: "#f97316" },
 ];
 
-// PF family — same data in both modes, same colors
 const PF_SERIES: SeriesConfig[] = [
-  { key: "pf_b",  label: "PF Base",        color: "#6ee7b7" },
-  { key: "pf_sz", label: "PF +Size",       color: "#34d399" },
-  { key: "pf_lq", label: "PF +Liquidity",  color: "#10b981" },
-  { key: "pf_tc", label: "PF +Tech",       color: "#059669" },
-  { key: "pf_ql", label: "PF +Quality",    color: "#047857" },
+  { key: "pf_b",  label: "PF Base",       color: "#6ee7b7" },
+  { key: "pf_sz", label: "PF +Size",      color: "#34d399" },
+  { key: "pf_lq", label: "PF +Liquidity", color: "#10b981" },
+  { key: "pf_tc", label: "PF +Tech",      color: "#059669" },
+  { key: "pf_ql", label: "PF +Quality",   color: "#047857" },
 ];
 
-// ETF MCAP universe benchmarks
 const ETF_MCAP_SERIES: SeriesConfig[] = [
-  { key: "em_b",  label: "ETF Base",       color: "#fde68a" },
-  { key: "em_mv", label: "ETF MinVar",     color: "#fcd34d" },
-  { key: "em_lq", label: "ETF +Liq",       color: "#fbbf24" },
-  { key: "em_tc", label: "ETF +Tech",      color: "#f59e0b" },
-  { key: "onn_m", label: "1/N (MCAP)",     color: "#f472b6" },
+  { key: "em_b",  label: "ETF Base",   color: "#fde68a" },
+  { key: "em_mv", label: "ETF MinVar", color: "#fcd34d" },
+  { key: "em_lq", label: "ETF +Liq",  color: "#fbbf24" },
+  { key: "em_tc", label: "ETF +Tech", color: "#f59e0b" },
+  { key: "onn_m", label: "1/N (MCAP)", color: "#f472b6" },
 ];
 
-// ETF Liquidity universe benchmarks
 const ETF_LIQ_SERIES: SeriesConfig[] = [
-  { key: "el_b",  label: "ETF Base",       color: "#bae6fd" },
-  { key: "el_mv", label: "ETF MinVar",     color: "#7dd3fc" },
-  { key: "el_lq", label: "ETF +Liq",       color: "#38bdf8" },
-  { key: "el_tc", label: "ETF +Tech",      color: "#0ea5e9" },
-  { key: "onn_l", label: "1/N (Liq)",      color: "#c084fc" },
+  { key: "el_b",  label: "ETF Base",   color: "#bae6fd" },
+  { key: "el_mv", label: "ETF MinVar", color: "#7dd3fc" },
+  { key: "el_lq", label: "ETF +Liq",  color: "#38bdf8" },
+  { key: "el_tc", label: "ETF +Tech", color: "#0ea5e9" },
+  { key: "onn_l", label: "1/N (Liq)", color: "#c084fc" },
 ];
 
 function fmtPrice(p: number): string {
@@ -77,51 +65,14 @@ function fmtUsd(n: number, decimals = 0): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-// Normalizes by available-weight sum so missing assets don't bias the result
-function computeWeightedSeries(
-  weights: Record<string, number>,
-  allAssets: Record<string, AssetData>,
-): Map<string, number> {
-  const result = new Map<string, number>();
-  const assetDateMap = new Map<string, Map<string, number>>();
-
-  const availableWeightSum = Object.entries(weights).reduce(
-    (sum, [id, w]) => sum + (allAssets[id] ? w : 0),
-    0,
-  );
-  if (availableWeightSum === 0) return result;
-
-  for (const id of Object.keys(weights)) {
-    const data = allAssets[id];
-    if (!data) continue;
-    const m = new Map<string, number>();
-    for (const dp of data.dailyData) m.set(dp.date, dp.cumReturn);
-    assetDateMap.set(id, m);
-  }
-  const dates = new Set<string>();
-  Array.from(assetDateMap.values()).forEach((m) => m.forEach((_, d) => dates.add(d)));
-  Array.from(dates).forEach((date) => {
-    let val = 0;
-    for (const [id, w] of Object.entries(weights)) {
-      const cr = assetDateMap.get(id)?.get(date);
-      if (cr !== undefined) val += (w / availableWeightSum) * cr;
-    }
-    result.set(date, val);
-  });
-  return result;
-}
-
-function lastReturn(series: Map<string, number>): number {
-  const maxDate = Array.from(series.keys()).sort().at(-1);
-  const last = maxDate ? (series.get(maxDate) ?? 1) : 1;
-  return (last - 1) * 100;
+function lastCumReturn(strat: StrategyData | undefined): number {
+  if (!strat?.dailyData.length) return 0;
+  return (strat.dailyData[strat.dailyData.length - 1].cumReturn - 1) * 100;
 }
 
 type CompRow =
   | { type: "section"; label: string; color: string }
   | { type: "data"; label: string; color: string; mcap: number; liq: number };
-
-// ── Asset Breakdown helpers ────────────────────────────────────────────────────
 
 type StrategyGroup = "pf" | "etf_mcap" | "etf_liq" | "onn";
 
@@ -129,7 +80,6 @@ interface StrategyStage {
   key: string;
   label: string;
   color: string;
-  weights: Record<string, number>;
 }
 
 interface StrategyGroupDef {
@@ -143,36 +93,36 @@ const STRAT_GROUPS: StrategyGroupDef[] = [
   {
     key: "pf", label: "PF Family", color: "#10b981",
     stages: [
-      { key: "pf_b",  label: "Base",     color: "#6ee7b7", weights: PF_BASE },
-      { key: "pf_sz", label: "+Size",    color: "#34d399", weights: PF_PLUS_SIZE },
-      { key: "pf_lq", label: "+Liq",     color: "#10b981", weights: PF_PLUS_LIQ },
-      { key: "pf_tc", label: "+Tech",    color: "#059669", weights: PF_PLUS_TECH },
-      { key: "pf_ql", label: "+Quality", color: "#047857", weights: PF_PLUS_QUALITY },
+      { key: "pf_b",  label: "Base",     color: "#6ee7b7" },
+      { key: "pf_sz", label: "+Size",    color: "#34d399" },
+      { key: "pf_lq", label: "+Liq",    color: "#10b981" },
+      { key: "pf_tc", label: "+Tech",   color: "#059669" },
+      { key: "pf_ql", label: "+Quality", color: "#047857" },
     ],
   },
   {
     key: "etf_mcap", label: "ETF (MCAP)", color: "#fbbf24",
     stages: [
-      { key: "em_b",  label: "Base",   color: "#fde68a", weights: ETF_MCAP_BASE },
-      { key: "em_mv", label: "MinVar", color: "#fcd34d", weights: ETF_MCAP_MINVAR },
-      { key: "em_lq", label: "+Liq",   color: "#fbbf24", weights: ETF_MCAP_PLUS_LIQ },
-      { key: "em_tc", label: "+Tech",  color: "#f59e0b", weights: ETF_MCAP_PLUS_TECH },
+      { key: "em_b",  label: "Base",   color: "#fde68a" },
+      { key: "em_mv", label: "MinVar", color: "#fcd34d" },
+      { key: "em_lq", label: "+Liq",  color: "#fbbf24" },
+      { key: "em_tc", label: "+Tech", color: "#f59e0b" },
     ],
   },
   {
     key: "etf_liq", label: "ETF (Liq)", color: "#38bdf8",
     stages: [
-      { key: "el_b",  label: "Base",   color: "#bae6fd", weights: ETF_LIQ_BASE },
-      { key: "el_mv", label: "MinVar", color: "#7dd3fc", weights: ETF_LIQ_MINVAR },
-      { key: "el_lq", label: "+Liq",   color: "#38bdf8", weights: ETF_LIQ_PLUS_LIQ },
-      { key: "el_tc", label: "+Tech",  color: "#0ea5e9", weights: ETF_LIQ_PLUS_TECH },
+      { key: "el_b",  label: "Base",   color: "#bae6fd" },
+      { key: "el_mv", label: "MinVar", color: "#7dd3fc" },
+      { key: "el_lq", label: "+Liq",  color: "#38bdf8" },
+      { key: "el_tc", label: "+Tech", color: "#0ea5e9" },
     ],
   },
   {
     key: "onn", label: "1/N Equal", color: "#f472b6",
     stages: [
-      { key: "onn_m", label: "MCAP", color: "#f472b6", weights: MCAP_1N_WEIGHTS },
-      { key: "onn_l", label: "Liq",  color: "#c084fc", weights: LIQ_1N_WEIGHTS },
+      { key: "onn_m", label: "MCAP", color: "#f472b6" },
+      { key: "onn_l", label: "Liq",  color: "#c084fc" },
     ],
   },
 ];
@@ -180,41 +130,17 @@ const STRAT_GROUPS: StrategyGroupDef[] = [
 interface AssetBreakdownRow {
   id: string;
   name: string;
-  weightPct: number;           // raw weight from CSV × 100 (matches source file)
-  returnPct: number | null;    // null when asset not in performance data
-  contribution: number | null; // raw weight × return (null when return unavailable)
+  weightPct: number;
+  returnPct: number | null;
+  contribution: number | null;
   available: boolean;
-}
-
-// Uses raw (non-normalized) weights so numbers match the source CSV directly.
-// Missing assets (e.g. sky, aave, sui) appear as grayed-out rows.
-function computeAssetBreakdown(
-  weights: Record<string, number>,
-  allAssets: Record<string, AssetData>,
-): AssetBreakdownRow[] {
-  return Object.entries(weights)
-    .filter(([, w]) => w > 0)
-    .map(([id, w]) => {
-      const asset = allAssets[id];
-      const lastData = asset?.dailyData.at(-1);
-      const returnPct = lastData ? parseFloat(((lastData.cumReturn - 1) * 100).toFixed(2)) : null;
-      const weightPct = parseFloat((w * 100).toFixed(2));
-      return {
-        id,
-        name: asset?.displayName ?? id,
-        weightPct,
-        returnPct,
-        contribution: returnPct !== null ? parseFloat((w * returnPct).toFixed(3)) : null,
-        available: !!asset,
-      };
-    })
-    .sort((a, b) => b.weightPct - a.weightPct);
 }
 
 export default function PrivateFundDashboard({
   privateData,
   btcData,
   allAssets,
+  allStrategies,
   positions,
   lastUpdated,
   latestRebalanceDate,
@@ -309,85 +235,81 @@ export default function PrivateFundDashboard({
     ? btcLive / btcPos.executionPrice - 1
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
-  // ── 1/N series ─────────────────────────────────────────────────────────────
-  const mcapOnnSeries = useMemo(() => computeWeightedSeries(MCAP_1N_WEIGHTS, allAssets), [allAssets]);
-  const liqOnnSeries  = useMemo(() => computeWeightedSeries(LIQ_1N_WEIGHTS,  allAssets), [allAssets]);
-
-  // ── ETF MCAP family ─────────────────────────────────────────────────────────
-  const etfMBaseSeries    = useMemo(() => computeWeightedSeries(ETF_MCAP_BASE,      allAssets), [allAssets]);
-  const etfMMinvarSeries  = useMemo(() => computeWeightedSeries(ETF_MCAP_MINVAR,    allAssets), [allAssets]);
-  const etfMPlusLiqSeries = useMemo(() => computeWeightedSeries(ETF_MCAP_PLUS_LIQ,  allAssets), [allAssets]);
-  const etfMPlusTechSeries= useMemo(() => computeWeightedSeries(ETF_MCAP_PLUS_TECH, allAssets), [allAssets]);
-
-  // ── ETF Liquidity family ────────────────────────────────────────────────────
-  const etfLBaseSeries    = useMemo(() => computeWeightedSeries(ETF_LIQ_BASE,      allAssets), [allAssets]);
-  const etfLMinvarSeries  = useMemo(() => computeWeightedSeries(ETF_LIQ_MINVAR,    allAssets), [allAssets]);
-  const etfLPlusLiqSeries = useMemo(() => computeWeightedSeries(ETF_LIQ_PLUS_LIQ,  allAssets), [allAssets]);
-  const etfLPlusTechSeries= useMemo(() => computeWeightedSeries(ETF_LIQ_PLUS_TECH, allAssets), [allAssets]);
-
-  // ── PF family (universe-agnostic) ───────────────────────────────────────────
-  const pfBaseSeries      = useMemo(() => computeWeightedSeries(PF_BASE,         allAssets), [allAssets]);
-  const pfPlusSizeSeries  = useMemo(() => computeWeightedSeries(PF_PLUS_SIZE,    allAssets), [allAssets]);
-  const pfPlusLiqSeries   = useMemo(() => computeWeightedSeries(PF_PLUS_LIQ,     allAssets), [allAssets]);
-  const pfPlusTechSeries  = useMemo(() => computeWeightedSeries(PF_PLUS_TECH,    allAssets), [allAssets]);
-  const pfPlusQualSeries  = useMemo(() => computeWeightedSeries(PF_PLUS_QUALITY, allAssets), [allAssets]);
-
-  // ── Comparison table rows ───────────────────────────────────────────────────
+  // ── Comparison table ────────────────────────────────────────────────────
   const comparisonRows = useMemo((): CompRow[] => {
     const btcPct = parseFloat((btcReturn * 100).toFixed(2));
-    const r = (s: Map<string, number>) => parseFloat(lastReturn(s).toFixed(2));
+    const r = (key: string) => parseFloat(lastCumReturn(allStrategies[key]).toFixed(2));
     return [
-      { type: "section", label: "Simple Benchmarks",         color: "#6b7280" },
-      { type: "data",    label: "Bitcoin",                    color: "#f97316", mcap: btcPct,                    liq: btcPct },
-      { type: "data",    label: "1/N Equal",                  color: "#f472b6", mcap: r(mcapOnnSeries),          liq: r(liqOnnSeries) },
-      { type: "section", label: "ETF Family (Construction)",  color: "#fbbf24" },
-      { type: "data",    label: "Base",                       color: "#fde68a", mcap: r(etfMBaseSeries),         liq: r(etfLBaseSeries) },
-      { type: "data",    label: "MinVar",                     color: "#fcd34d", mcap: r(etfMMinvarSeries),       liq: r(etfLMinvarSeries) },
-      { type: "data",    label: "+Liquidity",                 color: "#fbbf24", mcap: r(etfMPlusLiqSeries),      liq: r(etfLPlusLiqSeries) },
-      { type: "data",    label: "+Tech",                      color: "#f59e0b", mcap: r(etfMPlusTechSeries),     liq: r(etfLPlusTechSeries) },
-      { type: "section", label: "PF Family (Construction)",   color: "#10b981" },
-      { type: "data",    label: "Base",                       color: "#6ee7b7", mcap: r(pfBaseSeries),           liq: r(pfBaseSeries) },
-      { type: "data",    label: "+Size",                      color: "#34d399", mcap: r(pfPlusSizeSeries),       liq: r(pfPlusSizeSeries) },
-      { type: "data",    label: "+Liquidity",                 color: "#10b981", mcap: r(pfPlusLiqSeries),        liq: r(pfPlusLiqSeries) },
-      { type: "data",    label: "+Tech",                      color: "#059669", mcap: r(pfPlusTechSeries),       liq: r(pfPlusTechSeries) },
-      { type: "data",    label: "+Quality",                   color: "#047857", mcap: r(pfPlusQualSeries),       liq: r(pfPlusQualSeries) },
+      { type: "section", label: "Simple Benchmarks",        color: "#6b7280" },
+      { type: "data",    label: "Bitcoin",                   color: "#f97316", mcap: btcPct,      liq: btcPct },
+      { type: "data",    label: "1/N Equal",                 color: "#f472b6", mcap: r("onn_m"),  liq: r("onn_l") },
+      { type: "section", label: "ETF Family (Construction)", color: "#fbbf24" },
+      { type: "data",    label: "Base",                      color: "#fde68a", mcap: r("em_b"),   liq: r("el_b") },
+      { type: "data",    label: "MinVar",                    color: "#fcd34d", mcap: r("em_mv"),  liq: r("el_mv") },
+      { type: "data",    label: "+Liquidity",                color: "#fbbf24", mcap: r("em_lq"),  liq: r("el_lq") },
+      { type: "data",    label: "+Tech",                     color: "#f59e0b", mcap: r("em_tc"),  liq: r("el_tc") },
+      { type: "section", label: "PF Family (Construction)",  color: "#10b981" },
+      { type: "data",    label: "Base",                      color: "#6ee7b7", mcap: r("pf_b"),   liq: r("pf_b_l") },
+      { type: "data",    label: "+Size",                     color: "#34d399", mcap: r("pf_sz"),  liq: r("pf_sz_l") },
+      { type: "data",    label: "+Liquidity",                color: "#10b981", mcap: r("pf_lq"),  liq: r("pf_lq_l") },
+      { type: "data",    label: "+Tech",                     color: "#059669", mcap: r("pf_tc"),  liq: r("pf_tc_l") },
+      { type: "data",    label: "+Quality",                  color: "#047857", mcap: r("pf_ql"),  liq: r("pf_ql_l") },
     ];
-  }, [
-    btcReturn, mcapOnnSeries, liqOnnSeries,
-    etfMBaseSeries, etfMMinvarSeries, etfMPlusLiqSeries, etfMPlusTechSeries,
-    etfLBaseSeries, etfLMinvarSeries, etfLPlusLiqSeries, etfLPlusTechSeries,
-    pfBaseSeries, pfPlusSizeSeries, pfPlusLiqSeries, pfPlusTechSeries, pfPlusQualSeries,
-  ]);
+  }, [btcReturn, allStrategies]);
 
-  // ── Asset breakdown for selected strategy ──────────────────────────────────
-  const activeStratWeights = useMemo(() => {
+  // ── Asset breakdown for selected strategy ──────────────────────────────
+  const activeStageWeights = useMemo(() => {
     const group = STRAT_GROUPS.find((g) => g.key === stratGroup);
     const stage = group?.stages.find((s) => s.key === stratStage) ?? group?.stages.at(-1);
-    return { weights: stage?.weights ?? {}, stage };
-  }, [stratGroup, stratStage]);
+    const strat = stage ? allStrategies[stage.key] : undefined;
+    return { strat, stage };
+  }, [stratGroup, stratStage, allStrategies]);
 
-  const assetBreakdown = useMemo(
-    () => computeAssetBreakdown(activeStratWeights.weights, allAssets),
-    [activeStratWeights.weights, allAssets],
-  );
+  const assetBreakdown = useMemo((): AssetBreakdownRow[] => {
+    const { strat } = activeStageWeights;
+    if (!strat?.latestWeights) return [];
+    return strat.latestWeights
+      .filter((w) => w.weight > 0)
+      .map((w) => {
+        const asset = allAssets[w.coin];
+        const lastData = asset?.dailyData.at(-1);
+        const returnPct = lastData ? parseFloat(((lastData.cumReturn - 1) * 100).toFixed(2)) : null;
+        return {
+          id: w.coin,
+          name: asset?.displayName ?? w.coin,
+          weightPct: w.weight,
+          returnPct,
+          contribution: returnPct !== null ? parseFloat(((w.weight / 100) * returnPct).toFixed(3)) : null,
+          available: !!asset,
+        };
+      });
+  }, [activeStageWeights, allAssets]);
 
   const breakdownTotalWeight = useMemo(
     () => parseFloat(assetBreakdown.filter((r) => r.available).reduce((s, r) => s + r.weightPct, 0).toFixed(2)),
     [assetBreakdown],
   );
-
   const breakdownTotalReturn = useMemo(
     () => parseFloat(assetBreakdown.reduce((s, r) => s + (r.contribution ?? 0), 0).toFixed(3)),
     [assetBreakdown],
   );
 
-  // ── Chart data (all series pre-computed) ───────────────────────────────────
+  // ── Chart series (all from performance.json) ───────────────────────────
   const chartSeries = useMemo((): ChartPoint[] => {
     const dateMap = new Map<string, ChartPoint>();
-    dateMap.set("2026-05-01", { date: "2026-05-01", index: 1000, combined: 1000 });
 
-    let combinedValue = 1000;
+    // Helper: add any strategy series by key
+    const addSeries = (chartKey: string, stratKey: string) => {
+      const data = allStrategies[stratKey]?.dailyData ?? [];
+      for (const d of data) {
+        if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
+        dateMap.get(d.date)![chartKey] = parseFloat((d.cumReturn * 1000).toFixed(4));
+      }
+    };
+
+    // Private Fund Index + combined (50/50 signal)
     if (privateData) {
+      let combinedValue = 1000;
       for (const d of privateData.dailyData) {
         if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
         const pt = dateMap.get(d.date)!;
@@ -396,6 +318,8 @@ export default function PrivateFundDashboard({
         pt.combined = parseFloat(combinedValue.toFixed(4));
       }
     }
+
+    // Bitcoin
     if (btcData) {
       for (const d of btcData.dailyData) {
         if (!dateMap.has(d.date)) dateMap.set(d.date, { date: d.date });
@@ -403,73 +327,28 @@ export default function PrivateFundDashboard({
       }
     }
 
-    // 1/N
-    mcapOnnSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.onn_m = parseFloat((cr * 1000).toFixed(4));
-    });
-    liqOnnSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.onn_l = parseFloat((cr * 1000).toFixed(4));
-    });
+    // PF family
+    addSeries("pf_b",  "pf_b");
+    addSeries("pf_sz", "pf_sz");
+    addSeries("pf_lq", "pf_lq");
+    addSeries("pf_tc", "pf_tc");
+    addSeries("pf_ql", "pf_ql");
 
     // ETF MCAP family
-    etfMBaseSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.em_b = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfMMinvarSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.em_mv = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfMPlusLiqSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.em_lq = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfMPlusTechSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.em_tc = parseFloat((cr * 1000).toFixed(4));
-    });
+    addSeries("em_b",  "em_b");
+    addSeries("em_mv", "em_mv");
+    addSeries("em_lq", "em_lq");
+    addSeries("em_tc", "em_tc");
 
-    // ETF Liquidity family
-    etfLBaseSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.el_b = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfLMinvarSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.el_mv = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfLPlusLiqSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.el_lq = parseFloat((cr * 1000).toFixed(4));
-    });
-    etfLPlusTechSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.el_tc = parseFloat((cr * 1000).toFixed(4));
-    });
+    // ETF Liq family
+    addSeries("el_b",  "el_b");
+    addSeries("el_mv", "el_mv");
+    addSeries("el_lq", "el_lq");
+    addSeries("el_tc", "el_tc");
 
-    // PF family
-    pfBaseSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.pf_b = parseFloat((cr * 1000).toFixed(4));
-    });
-    pfPlusSizeSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.pf_sz = parseFloat((cr * 1000).toFixed(4));
-    });
-    pfPlusLiqSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.pf_lq = parseFloat((cr * 1000).toFixed(4));
-    });
-    pfPlusTechSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.pf_tc = parseFloat((cr * 1000).toFixed(4));
-    });
-    pfPlusQualSeries.forEach((cr, date) => {
-      if (!dateMap.has(date)) dateMap.set(date, { date });
-      dateMap.get(date)!.pf_ql = parseFloat((cr * 1000).toFixed(4));
-    });
+    // 1/N benchmarks
+    addSeries("onn_m", "onn_m");
+    addSeries("onn_l", "onn_l");
 
     // Live point for Private Fund + BTC
     if (isLive) {
@@ -482,14 +361,7 @@ export default function PrivateFundDashboard({
     }
 
     return Array.from(dateMap.values()).sort((a, b) => (a.date as string).localeCompare(b.date as string));
-  }, [
-    privateData, btcData,
-    mcapOnnSeries, liqOnnSeries,
-    etfMBaseSeries, etfMMinvarSeries, etfMPlusLiqSeries, etfMPlusTechSeries,
-    etfLBaseSeries, etfLMinvarSeries, etfLPlusLiqSeries, etfLPlusTechSeries,
-    pfBaseSeries, pfPlusSizeSeries, pfPlusLiqSeries, pfPlusTechSeries, pfPlusQualSeries,
-    isLive, portfolioLiveReturn, btcPos, btcLive,
-  ]);
+  }, [privateData, btcData, allStrategies, isLive, portfolioLiveReturn, btcPos, btcLive]);
 
   const activeSeries = useMemo(
     () => [
@@ -553,7 +425,6 @@ export default function PrivateFundDashboard({
           <div className="text-center py-24 text-gray-400">No performance data yet.</div>
         ) : (
           <>
-            {/* Portfolio summary banner */}
             {positions && (
               <section>
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144] flex flex-wrap gap-6 items-end">
@@ -582,7 +453,6 @@ export default function PrivateFundDashboard({
               </section>
             )}
 
-            {/* Primary performance cards */}
             <section>
               <SectionHeader
                 title="Performance"
@@ -611,7 +481,6 @@ export default function PrivateFundDashboard({
               </div>
             </section>
 
-            {/* Construction-stage comparison table */}
             <section>
               <SectionHeader
                 title="Construction Stage Comparison"
@@ -634,10 +503,7 @@ export default function PrivateFundDashboard({
                         return (
                           <tr key={`sec-${i}`} className="border-b border-[#2d3144]">
                             <td colSpan={5} className="px-4 py-2">
-                              <span
-                                className="text-xs font-semibold tracking-wider uppercase"
-                                style={{ color: row.color }}
-                              >
+                              <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: row.color }}>
                                 {row.label}
                               </span>
                             </td>
@@ -687,13 +553,11 @@ export default function PrivateFundDashboard({
                   </tbody>
                 </table>
                 <div className="px-4 py-2 border-t border-[#2d3144] text-xs text-gray-600">
-                  MCAP Universe: BTC/ETH/BNB/SOL/XRP/ADA/LINK/XLM/UNI/LTC/ZEC/BCH + COIN/HOOD/MSTR ·
-                  Liq Universe: replaces XLM with HYPE; ETF missing aave/sui (renormalized)
+                  Returns since first rebalance date · computed server-side per-period using weights active at each rebalance
                 </div>
               </div>
             </section>
 
-            {/* Chart with universe toggle */}
             <section>
               <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
                 <div>
@@ -728,15 +592,12 @@ export default function PrivateFundDashboard({
               </div>
             </section>
 
-            {/* Asset breakdown by strategy */}
             <section>
               <SectionHeader
                 title="Asset Breakdown by Strategy"
                 subtitle="individual weights and returns for each construction stage"
               />
-              {/* Group + stage selector */}
               <div className="flex flex-col gap-2 mb-3">
-                {/* Group row */}
                 <div className="flex gap-2 flex-wrap">
                   {STRAT_GROUPS.map((g) => {
                     const active = stratGroup === g.key;
@@ -759,7 +620,6 @@ export default function PrivateFundDashboard({
                     );
                   })}
                 </div>
-                {/* Stage row */}
                 <div className="flex gap-1.5 flex-wrap">
                   {STRAT_GROUPS.find((g) => g.key === stratGroup)?.stages.map((s) => {
                     const active = stratStage === s.key;
@@ -780,7 +640,6 @@ export default function PrivateFundDashboard({
                   })}
                 </div>
               </div>
-              {/* Breakdown table */}
               <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -788,7 +647,7 @@ export default function PrivateFundDashboard({
                       <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">#</th>
                       <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Asset</th>
                       <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Weight</th>
-                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Return (since May 1)</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Return (since first rebalance)</th>
                       <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Contribution</th>
                     </tr>
                   </thead>
@@ -806,12 +665,10 @@ export default function PrivateFundDashboard({
                           </td>
                           <td className="px-4 py-2.5 font-medium text-xs" style={{ color: row.available ? "#e5e7eb" : "#6b7280" }}>
                             {row.name}
-                            {!row.available && (
-                              <span className="ml-1.5 text-xs text-gray-600 font-normal">(no data)</span>
-                            )}
+                            {!row.available && <span className="ml-1.5 text-xs text-gray-600 font-normal">(no data)</span>}
                           </td>
                           <td className="px-4 py-2.5 text-right font-mono text-xs"
-                            style={{ color: row.available ? (activeStratWeights.stage?.color ?? "#9ca3af") : "#4b5563" }}>
+                            style={{ color: row.available ? (activeStageWeights.stage?.color ?? "#9ca3af") : "#4b5563" }}>
                             {row.weightPct.toFixed(2)}%
                           </td>
                           <td className="px-4 py-2.5 text-right font-mono font-medium text-xs"
@@ -828,7 +685,7 @@ export default function PrivateFundDashboard({
                     <tr className="border-t-2 border-[#3d4166] bg-[#ffffff04]">
                       <td className="px-4 py-2.5" />
                       <td className="px-4 py-2.5 text-gray-300 font-semibold text-xs">Available total</td>
-                      <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: activeStratWeights.stage?.color ?? "#9ca3af" }}>
+                      <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: activeStageWeights.stage?.color ?? "#9ca3af" }}>
                         {breakdownTotalWeight.toFixed(2)}%
                       </td>
                       <td className="px-4 py-2.5" />
@@ -840,12 +697,11 @@ export default function PrivateFundDashboard({
                   </tbody>
                 </table>
                 <div className="px-4 py-2 border-t border-[#2d3144] text-xs text-gray-600">
-                  Weights match source CSV directly · grayed rows = asset not in performance data · Contribution = raw weight × return (eod)
+                  Weights from latest rebalance · grayed rows = asset not in performance data · Contribution = (weight/100) × return
                 </div>
               </div>
             </section>
 
-            {/* Individual asset performance */}
             {portfolioAssets.length > 0 && (
               <section>
                 <SectionHeader
@@ -858,7 +714,6 @@ export default function PrivateFundDashboard({
               </section>
             )}
 
-            {/* Top movers */}
             {topMovers.length > 0 && (
               <section>
                 <SectionHeader
@@ -907,7 +762,6 @@ export default function PrivateFundDashboard({
               </section>
             )}
 
-            {/* Positions table */}
             {portfolioAssets.length > 0 && positions && (
               <section>
                 <SectionHeader title="Positions" subtitle={`execution ${positions.executionDate}`} />

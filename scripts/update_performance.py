@@ -3,7 +3,8 @@
 update_performance.py
 Reads weight CSVs from 'Weights History Top15 BTC 50% Cap/',
 fetches CoinGecko prices (crypto) + yfinance prices (stocks),
-computes returns & metrics, writes data/performance.json.
+computes returns & metrics for all strategies and benchmark families,
+writes data/performance.json.
 
 Usage:
   COINGECKO_API_KEY=<key> python scripts/update_performance.py
@@ -36,26 +37,125 @@ HEADERS = {
 BASE_URL = "https://pro-api.coingecko.com/api/v3"
 
 # ── Strategy config ────────────────────────────────────────────────────────
+# Each entry: strategy_key → (filename, id_col_or_None, weight_col)
+# Multi-column family files are referenced multiple times with different weight_col.
 
-WEIGHT_FILES = {
-    "etf":     ("MinVar_Tech_Adj_Weights_ETF_WEIGHTS.csv",  "gecko_id", "weight_risk_tech"),
-    "quality": ("Quality_Factor_weights.csv",                "gecko_id", "weight"),
-    "risk":    ("Risk_Factor_weights.csv",                   None,       "weight"),
-    "private": ("Private_Fund_Weights.csv",                  "gecko_id", "weight_risk_tech_quality2"),
+WEIGHT_FILES: dict[str, tuple[str, str | None, str]] = {
+    # ── Main strategies ─────────────────────────────────────────────────────
+    "private":     ("Private_Fund_Weights.csv",                          "gecko_id", "weight_risk_tech_quality2"),
+    "private_liq": ("Private_Fund_Weights_Liquidity_Universe.csv",       "gecko_id", "weight_risk_tech_quality2"),
+    "etf":         ("MinVar_Tech_Adj_Weights_ETF_WEIGHTS.csv",           "gecko_id", "weight_risk_tech"),
+    "etf_liq":     ("MinVar_Tech_Adj_Weights_ETF_WEIGHTS_Liquidity_Universe.csv", "gecko_id", "weight_risk_tech"),
+    "quality":     ("Quality_Factor_weights.csv",                         "gecko_id", "weight"),
+    "quality_liq": ("Quality_Factor_weights_Liquidity_Universe.csv",      "gecko_id", "weight"),
+    "risk":        ("Risk_Factor_weights.csv",                            None,       "weight"),
+    "risk_liq":    ("Risk_Factor_weights_Liquidity_Universe.csv",         None,       "weight"),
+
+    # ── PF family — MCAP universe ────────────────────────────────────────────
+    "pf_b":        ("PF_family_weights_mcap.csv",       "gecko_id", "Base"),
+    "pf_sz":       ("PF_family_weights_mcap.csv",       "gecko_id", "+Size"),
+    "pf_lq":       ("PF_family_weights_mcap.csv",       "gecko_id", "+Liquidity"),
+    "pf_tc":       ("PF_family_weights_mcap.csv",       "gecko_id", "+Tech"),
+    "pf_ql":       ("PF_family_weights_mcap.csv",       "gecko_id", "+Quality"),
+
+    # ── PF family — Liquidity universe ──────────────────────────────────────
+    "pf_b_l":      ("PF_family_weights_liquidity.csv",  "gecko_id", "Base"),
+    "pf_sz_l":     ("PF_family_weights_liquidity.csv",  "gecko_id", "+Size"),
+    "pf_lq_l":     ("PF_family_weights_liquidity.csv",  "gecko_id", "+Liquidity"),
+    "pf_tc_l":     ("PF_family_weights_liquidity.csv",  "gecko_id", "+Tech"),
+    "pf_ql_l":     ("PF_family_weights_liquidity.csv",  "gecko_id", "+Quality"),
+
+    # ── ETF family — MCAP universe ───────────────────────────────────────────
+    "em_b":        ("ETF_family_weights_mcap.csv",      "gecko_id", "Base"),
+    "em_mv":       ("ETF_family_weights_mcap.csv",      "gecko_id", "MinVar"),
+    "em_lq":       ("ETF_family_weights_mcap.csv",      "gecko_id", "+Liquidity"),
+    "em_tc":       ("ETF_family_weights_mcap.csv",      "gecko_id", "+Tech"),
+
+    # ── ETF family — Liquidity universe ─────────────────────────────────────
+    "el_b":        ("ETF_family_weights_liquidity.csv", "gecko_id", "Base"),
+    "el_mv":       ("ETF_family_weights_liquidity.csv", "gecko_id", "MinVar"),
+    "el_lq":       ("ETF_family_weights_liquidity.csv", "gecko_id", "+Liquidity"),
+    "el_tc":       ("ETF_family_weights_liquidity.csv", "gecko_id", "+Tech"),
+
+    # ── Simple benchmarks — MCAP universe ───────────────────────────────────
+    "onn_m":       ("1_N_weights_MCAP_universe.csv",    None, "weight"),
+    "mcap_m":      ("MCAP_weights.csv",                 None, "weight"),
+    "liq_m":       ("Liquidity_weights.csv",            None, "weight"),
+
+    # ── Simple benchmarks — Liquidity universe ───────────────────────────────
+    "onn_l":       ("1_N_weights_Liquidity_universe.csv",    None, "weight"),
+    "mcap_l":      ("MCAP_weights_Liquidity_universe.csv",   None, "weight"),
+    "liq_l":       ("Liquidity_weights_Liquidity_universe.csv", None, "weight"),
 }
 
-DISPLAY_NAMES = {
-    "etf":     "ETF",
-    "quality": "Quality",
-    "risk":    "Risk",
-    "private": "Private Fund",
+DISPLAY_NAMES: dict[str, str] = {
+    "private":     "Private Fund",
+    "private_liq": "Private Fund (Liq)",
+    "etf":         "ETF",
+    "etf_liq":     "ETF (Liq)",
+    "quality":     "Quality",
+    "quality_liq": "Quality (Liq)",
+    "risk":        "Risk",
+    "risk_liq":    "Risk (Liq)",
+    "pf_b":        "PF Base",
+    "pf_sz":       "PF +Size",
+    "pf_lq":       "PF +Liquidity",
+    "pf_tc":       "PF +Tech",
+    "pf_ql":       "PF +Quality",
+    "pf_b_l":      "PF Base (Liq)",
+    "pf_sz_l":     "PF +Size (Liq)",
+    "pf_lq_l":     "PF +Liquidity (Liq)",
+    "pf_tc_l":     "PF +Tech (Liq)",
+    "pf_ql_l":     "PF +Quality (Liq)",
+    "em_b":        "ETF MCAP Base",
+    "em_mv":       "ETF MCAP MinVar",
+    "em_lq":       "ETF MCAP +Liq",
+    "em_tc":       "ETF MCAP +Tech",
+    "el_b":        "ETF Liq Base",
+    "el_mv":       "ETF Liq MinVar",
+    "el_lq":       "ETF Liq +Liq",
+    "el_tc":       "ETF Liq +Tech",
+    "onn_m":       "1/N MCAP",
+    "mcap_m":      "MCAP Weighted",
+    "liq_m":       "Liq Weighted",
+    "onn_l":       "1/N Liq",
+    "mcap_l":      "MCAP Weighted (Liq)",
+    "liq_l":       "Liq Weighted (Liq)",
 }
 
-COLORS = {
-    "etf":     "#3b82f6",
-    "quality": "#10b981",
-    "risk":    "#f59e0b",
-    "private": "#8b5cf6",
+COLORS: dict[str, str] = {
+    "private":     "#8b5cf6",
+    "private_liq": "#7c3aed",
+    "etf":         "#3b82f6",
+    "etf_liq":     "#60a5fa",
+    "quality":     "#10b981",
+    "quality_liq": "#34d399",
+    "risk":        "#f59e0b",
+    "risk_liq":    "#fbbf24",
+    "pf_b":        "#6ee7b7",
+    "pf_sz":       "#34d399",
+    "pf_lq":       "#10b981",
+    "pf_tc":       "#059669",
+    "pf_ql":       "#047857",
+    "pf_b_l":      "#a7f3d0",
+    "pf_sz_l":     "#6ee7b7",
+    "pf_lq_l":     "#34d399",
+    "pf_tc_l":     "#10b981",
+    "pf_ql_l":     "#059669",
+    "em_b":        "#fde68a",
+    "em_mv":       "#fcd34d",
+    "em_lq":       "#fbbf24",
+    "em_tc":       "#f59e0b",
+    "el_b":        "#bae6fd",
+    "el_mv":       "#7dd3fc",
+    "el_lq":       "#38bdf8",
+    "el_tc":       "#0ea5e9",
+    "onn_m":       "#f472b6",
+    "mcap_m":      "#fb7185",
+    "liq_m":       "#f43f5e",
+    "onn_l":       "#c084fc",
+    "mcap_l":      "#a855f7",
+    "liq_l":       "#9333ea",
 }
 
 # Mapping from lowercase weight-file IDs → yfinance tickers
@@ -69,64 +169,70 @@ STOCK_ID_TO_TICKER: dict[str, str] = {
     "circle":    "CRCL",
 }
 
-# Display names for individual assets
 ASSET_DISPLAY_NAMES: dict[str, str] = {
-    "bitcoin":      "BTC",
-    "ethereum":     "ETH",
-    "binancecoin":  "BNB",
-    "ripple":       "XRP",
-    "solana":       "SOL",
-    "cardano":      "ADA",
-    "litecoin":     "LTC",
-    "bitcoin-cash": "BCH",
-    "chainlink":    "LINK",
-    "stellar":      "XLM",
-    "hyperliquid":  "HYPE",
-    "uniswap":      "UNI",
-    "ethena":       "ENA",
-    "morpho":       "MORPHO",
-    "ether-fi":     "ETHFI",
-    "zcash":        "ZEC",
-    "mstr":         "MSTR",
-    "hood":         "HOOD",
-    "coin":         "COIN",
-    "crcl":         "CRCL",
-    "sky":          "SKY",
-    "aave":         "AAVE",
-    "sui":          "SUI",
+    "bitcoin":           "BTC",
+    "ethereum":          "ETH",
+    "binancecoin":       "BNB",
+    "ripple":            "XRP",
+    "solana":            "SOL",
+    "cardano":           "ADA",
+    "litecoin":          "LTC",
+    "bitcoin-cash":      "BCH",
+    "chainlink":         "LINK",
+    "stellar":           "XLM",
+    "hyperliquid":       "HYPE",
+    "uniswap":           "UNI",
+    "ethena":            "ENA",
+    "morpho":            "MORPHO",
+    "ether-fi":          "ETHFI",
+    "zcash":             "ZEC",
+    "mstr":              "MSTR",
+    "hood":              "HOOD",
+    "coin":              "COIN",
+    "crcl":              "CRCL",
+    "sky":               "SKY",
+    "aave":              "AAVE",
+    "sui":               "SUI",
+    "the-open-network":  "TON",
+    "hedera-hashgraph":  "HBAR",
+    "avalanche-2":       "AVAX",
+    "near":              "NEAR",
+    "bittensor":         "TAO",
+    "venice-token":      "VVV",
 }
 
-# Fixed colors per asset for consistent display
 ASSET_COLORS: dict[str, str] = {
-    "bitcoin":      "#f7931a",
-    "ethereum":     "#627eea",
-    "binancecoin":  "#f3ba2f",
-    "ripple":       "#00aae4",
-    "solana":       "#9945ff",
-    "cardano":      "#0033ad",
-    "litecoin":     "#b8b8b8",
-    "bitcoin-cash": "#2a5ada",
-    "chainlink":    "#375bd2",
-    "stellar":      "#e6c34a",
-    "hyperliquid":  "#00b4d8",
-    "uniswap":      "#ff007a",
-    "ethena":       "#1db3a0",
-    "morpho":       "#7c3aed",
-    "ether-fi":     "#06b6d4",
-    "zcash":        "#a1a1aa",
-    "mstr":         "#e11d48",
-    "hood":         "#22c55e",
-    "coin":         "#f59e0b",
-    "crcl":         "#818cf8",
-    "sky":          "#10b981",
-    "aave":         "#b6509e",
-    "sui":          "#4da2ff",
+    "bitcoin":           "#f7931a",
+    "ethereum":          "#627eea",
+    "binancecoin":       "#f3ba2f",
+    "ripple":            "#00aae4",
+    "solana":            "#9945ff",
+    "cardano":           "#0033ad",
+    "litecoin":          "#b8b8b8",
+    "bitcoin-cash":      "#2a5ada",
+    "chainlink":         "#375bd2",
+    "stellar":           "#e6c34a",
+    "hyperliquid":       "#00b4d8",
+    "uniswap":           "#ff007a",
+    "ethena":            "#1db3a0",
+    "morpho":            "#7c3aed",
+    "ether-fi":          "#06b6d4",
+    "zcash":             "#a1a1aa",
+    "mstr":              "#e11d48",
+    "hood":              "#22c55e",
+    "coin":              "#f59e0b",
+    "crcl":              "#818cf8",
+    "sky":               "#10b981",
+    "aave":              "#b6509e",
+    "sui":               "#4da2ff",
+    "the-open-network":  "#0088cc",
+    "hedera-hashgraph":  "#9b59b6",
+    "avalanche-2":       "#e84142",
+    "near":              "#00ec97",
+    "bittensor":         "#8b8b8b",
+    "venice-token":      "#7c5cbf",
 }
 ASSET_COLOR_FALLBACKS = ["#94a3b8", "#64748b", "#475569", "#334155", "#1e293b"]
-
-# Extra assets to always fetch even if not in any weight CSV
-# (used by benchmark construction stages in benchmarkWeights.ts)
-EXTRA_CRYPTO_ASSETS: list[str] = ["sky", "aave", "sui"]
 
 
 # ── Weight loading ─────────────────────────────────────────────────────────
@@ -229,16 +335,10 @@ def fetch_stock_prices(
     start_date: datetime.date,
     end_date: datetime.date,
 ) -> pd.DataFrame:
-    """
-    Fetch adjusted closing prices for stock tickers via yfinance.
-    Returns a DataFrame with lowercase stock IDs as column names.
-    Weekend/holiday gaps are forward-filled so the index aligns with crypto.
-    """
     if not stock_ids:
         return pd.DataFrame()
 
     result: dict[str, pd.Series] = {}
-    # yfinance end date is exclusive
     yf_end = end_date + datetime.timedelta(days=1)
 
     for sid in stock_ids:
@@ -258,7 +358,7 @@ def fetch_stock_prices(
                 print(f"  ! No yfinance data for {ticker}")
                 continue
 
-            close = data["Close"].squeeze()  # handles single or MultiIndex columns
+            close = data["Close"].squeeze()
             close.index = pd.to_datetime(close.index).normalize()
             result[sid] = close
             print(f"  ✓ {ticker} ({sid}): {len(close)} trading days")
@@ -365,7 +465,7 @@ def main():
     if not rebalance_dates:
         sys.exit("ERROR: No rebalance date folders found.")
 
-    # Load all weights (stocks included)
+    # Load all weights
     all_weights: dict[str, dict] = {}
     for strat, (fname, idx_col, wt_col) in WEIGHT_FILES.items():
         all_weights[strat] = {}
@@ -374,9 +474,9 @@ def main():
             if w is not None:
                 all_weights[strat][d] = w
         n = len(all_weights[strat])
-        print(f"  {'✓' if n else '!'} {DISPLAY_NAMES[strat]:20s} {n} date(s)")
+        print(f"  {'✓' if n else '!'} {DISPLAY_NAMES.get(strat, strat):30s} {n} date(s)")
 
-    # Partition IDs into crypto (CoinGecko) and stocks (yfinance)
+    # Collect all IDs, split crypto vs stocks
     all_ids = {
         gid
         for dd in all_weights.values()
@@ -384,7 +484,7 @@ def main():
         for gid in w.index
     }
     stock_ids  = sorted(all_ids & set(STOCK_ID_TO_TICKER))
-    crypto_ids = sorted((all_ids - set(STOCK_ID_TO_TICKER)) | set(EXTRA_CRYPTO_ASSETS))
+    crypto_ids = sorted(all_ids - set(STOCK_ID_TO_TICKER))
 
     start_date = min(d for dd in all_weights.values() for d in dd)
     end_date   = today
@@ -404,12 +504,11 @@ def main():
     print(f"\nFetching yfinance prices for {len(stock_ids)} stocks …")
     stock_df = fetch_stock_prices(stock_ids, start_date, end_date)
 
-    # ── Merge into a single price matrix ──
+    # ── Merge into single price matrix ──
     crypto_df = pd.DataFrame(crypto_prices)
     crypto_df.index = pd.to_datetime(crypto_df.index)
 
     if not crypto_df.empty and not stock_df.empty:
-        # Reindex stocks to the full date range, then ffill for weekends/holidays
         full_idx = crypto_df.index.union(stock_df.index)
         stock_df = stock_df.reindex(full_idx).ffill().bfill()
         prices_df = pd.concat([crypto_df, stock_df], axis=1)
@@ -420,7 +519,6 @@ def main():
 
     prices_df = prices_df.sort_index().ffill().bfill()
     print(f"\nPrice matrix: {prices_df.shape[0]} days × {prices_df.shape[1]} assets")
-    print(f"  Crypto: {len(crypto_prices)}  |  Stocks: {len(stock_df.columns) if not stock_df.empty else 0}")
 
     # ── Compute strategy returns ──
     latest_reb_date = max(d for d, _ in rebalance_dates)
@@ -457,25 +555,22 @@ def main():
         ]
 
         strategies_out[strat_key] = {
-            "displayName":    DISPLAY_NAMES[strat_key],
-            "color":          COLORS[strat_key],
+            "displayName":    DISPLAY_NAMES.get(strat_key, strat_key),
+            "color":          COLORS.get(strat_key, "#94a3b8"),
             "dailyData":      daily_data,
             "metrics":        metrics,
             "latestWeights":  latest_weights,
             "monthlyReturns": monthly,
         }
-        print(f"  ✓ {DISPLAY_NAMES[strat_key]}: {len(daily_data)} days")
+        print(f"  ✓ {DISPLAY_NAMES.get(strat_key, strat_key)}: {len(daily_data)} days")
 
     # ── Compute individual asset performance ──
-    all_strategy_assets = (
-        {
-            asset_id
-            for dates_dict in all_weights.values()
-            for w in dates_dict.values()
-            for asset_id in w.index
-        }
-        | set(EXTRA_CRYPTO_ASSETS)
-    )
+    all_strategy_assets = {
+        asset_id
+        for dates_dict in all_weights.values()
+        for w in dates_dict.values()
+        for asset_id in w.index
+    }
     common_start = pd.Timestamp(start_date)
     assets_out: dict = {}
     fallback_idx = 0

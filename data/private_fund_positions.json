@@ -1,21 +1,21 @@
 {
-  "executionDate": "2026-05-01",
-  "totalDeployed": 105010.5,
+  "executionDate": "2026-06-01",
+  "totalDeployed": 106588,
   "positions": [
-    { "id": "bitcoin",     "executionPrice": 77069.90, "amount": 0.63215,   "allocation": 48720.00 },
-    { "id": "ethereum",    "executionPrice":  2279.00, "amount": 1.2209,    "allocation":  2782.50 },
-    { "id": "hood",        "executionPrice":    73.86, "amount": 95.131,    "allocation":  7024.50 },
-    { "id": "coin",        "executionPrice":   190.80, "amount": 40.13,     "allocation":  7665.00 },
-    { "id": "mstr",        "executionPrice":   168.31, "amount": 57.9,      "allocation":  9744.00 },
-    { "id": "solana",      "executionPrice":    84.03, "amount": 24.366,    "allocation":  2047.50 },
-    { "id": "binancecoin", "executionPrice":   617.99, "amount": 7.577,     "allocation":  4683.00 },
-    { "id": "crcl",        "executionPrice":    91.90, "amount": 52.322,    "allocation":  4809.00 },
-    { "id": "hyperliquid", "executionPrice":    40.17, "amount": 134.22,    "allocation":  5397.00 },
-    { "id": "chainlink",   "executionPrice":     9.17, "amount": 222.13,    "allocation":  2037.00 },
-    { "id": "zcash",       "executionPrice":   347.42, "amount": 3.687,     "allocation":  1281.00 },
-    { "id": "uniswap",     "executionPrice":     3.22, "amount": 1007.29,   "allocation":  3244.50 },
-    { "id": "ether-fi",    "executionPrice":     0.413,"amount": 2542.30,   "allocation":  1050.00 },
-    { "id": "ethena",      "executionPrice":    0.1036,"amount": 19256.75,  "allocation":  1995.00 },
-    { "id": "morpho",      "executionPrice":    1.996, "amount": 1261.89,   "allocation":  2520.00 }
+    { "id": "bitcoin",      "executionPrice": 72606.00, "amount": 0.54,     "allocation": 39207 },
+    { "id": "ethereum",     "executionPrice": 1981.75,  "amount": 2.63,     "allocation": 5213  },
+    { "id": "hood",         "executionPrice": 98.06,    "amount": 60.66,    "allocation": 5948  },
+    { "id": "mstr",         "executionPrice": 155.47,   "amount": 99.90,    "allocation": 15531 },
+    { "id": "coin",         "executionPrice": 193.01,   "amount": 31.54,    "allocation": 6087  },
+    { "id": "solana",       "executionPrice": 80.64,    "amount": 27.37,    "allocation": 2207  },
+    { "id": "binancecoin",  "executionPrice": 691.78,   "amount": 14.96,    "allocation": 10351 },
+    { "id": "crcl",         "executionPrice": 119.42,   "amount": 29.19,    "allocation": 3486  },
+    { "id": "hyperliquid",  "executionPrice": 76.84,    "amount": 42.18,    "allocation": 3241  },
+    { "id": "zcash",        "executionPrice": 546.67,   "amount": 1.95,     "allocation": 1066  },
+    { "id": "chainlink",    "executionPrice": 8.98,     "amount": 245.75,   "allocation": 2207  },
+    { "id": "uniswap",      "executionPrice": 2.95,     "amount": 1257.62,  "allocation": 3710  },
+    { "id": "sky",          "executionPrice": 0.069,    "amount": 71536.00, "allocation": 4936  },
+    { "id": "morpho",       "executionPrice": 1.99,     "amount": 1172.99,  "allocation": 2335  },
+    { "id": "venice-token", "executionPrice": 18.22,    "amount": 58.51,    "allocation": 1066  }
   ]
 }
