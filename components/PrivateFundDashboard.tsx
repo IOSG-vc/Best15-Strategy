@@ -243,7 +243,7 @@ export default function PrivateFundDashboard({
     : (btcData?.dailyData.at(-1)?.cumReturn ?? 1) - 1;
 
   // ── From-inception returns (May 1 start) for metric cards ─────────────
-  const inceptionStartDate = privateData?.dailyData[0]?.date ?? latestRebalanceDate;
+  const inceptionStartDate = positions?.inceptionDate ?? latestRebalanceDate;
 
   const privateFundInceptionReturn = useMemo(() => {
     if (!privateData?.dailyData.length) return 0;
