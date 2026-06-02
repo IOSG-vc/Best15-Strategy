@@ -230,15 +230,11 @@ export default function PrivateFundDashboard({
   const isLive = livePrices !== null;
 
   // Inception (May 1) banner figures
+  // Current value = actual market value of current positions (same number the positions table uses)
   const inceptionDeployed = positions?.inceptionDeployed ?? totalDeployed;
-  // cumReturn from performance.json already handles the rebalance; use live positions to extend to today
-  const inceptionLiveCumReturn = useMemo(() => {
-    const lastEOD = privateData?.dailyData.at(-1)?.cumReturn ?? 1;
-    return isLive ? lastEOD * (1 + portfolioLiveReturn) : lastEOD;
-  }, [privateData, isLive, portfolioLiveReturn]);
-  const inceptionCurrentValue = inceptionDeployed * inceptionLiveCumReturn;
+  const inceptionCurrentValue = totalDeployed + totalPnlDollar;
   const inceptionPnlDollar = inceptionCurrentValue - inceptionDeployed;
-  const inceptionReturnPct = (inceptionLiveCumReturn - 1) * 100;
+  const inceptionReturnPct = inceptionDeployed > 0 ? (inceptionPnlDollar / inceptionDeployed) * 100 : 0;
 
   const btcPos = positionMap.get("bitcoin");
   const btcLive = livePrices?.["bitcoin"];
