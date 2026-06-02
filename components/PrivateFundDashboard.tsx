@@ -262,6 +262,55 @@ export default function PrivateFundDashboard({
     return (val - 1) * 100;
   }, [privateData]);
 
+  // ── Client-side Sharpe + Max DD for Combined and Bitcoin ─────────────────
+  const combinedMetrics = useMemo(() => {
+    const data = privateData?.dailyData ?? [];
+    if (data.length < 3) return { sharpe: null as number | null, maxDrawdown: 0 };
+    const rets = data.map(d => 0.5 * d.return);
+    let cum = 1, peak = 1, maxDD = 0;
+    for (const r of rets) {
+      cum *= (1 + r);
+      if (cum > peak) peak = cum;
+      const dd = cum / peak - 1;
+      if (dd < maxDD) maxDD = dd;
+    }
+    const n = rets.length;
+    const mean = rets.reduce((s, r) => s + r, 0) / n;
+    const std = Math.sqrt(rets.reduce((s, r) => s + (r - mean) ** 2, 0) / (n - 1));
+    const annRet = (Math.pow(cum, 365 / n) - 1);
+    const annVol = std * Math.sqrt(365);
+    const sharpe = annVol > 0 ? annRet / annVol : null;
+    return {
+      sharpe: sharpe !== null && isFinite(sharpe) ? parseFloat(sharpe.toFixed(4)) : null,
+      maxDrawdown: parseFloat((maxDD * 100).toFixed(2)),
+    };
+  }, [privateData]);
+
+  const btcMetrics = useMemo(() => {
+    const data = btcData?.dailyData ?? [];
+    if (data.length < 3) return { sharpe: null as number | null, maxDrawdown: 0 };
+    const rets: number[] = [];
+    for (let i = 1; i < data.length; i++)
+      rets.push(data[i].cumReturn / data[i - 1].cumReturn - 1);
+    let cum = 1, peak = 1, maxDD = 0;
+    for (const r of rets) {
+      cum *= (1 + r);
+      if (cum > peak) peak = cum;
+      const dd = cum / peak - 1;
+      if (dd < maxDD) maxDD = dd;
+    }
+    const n = rets.length;
+    const mean = rets.reduce((s, r) => s + r, 0) / n;
+    const std = Math.sqrt(rets.reduce((s, r) => s + (r - mean) ** 2, 0) / (n - 1));
+    const annRet = Math.pow(cum, 365 / n) - 1;
+    const annVol = std * Math.sqrt(365);
+    const sharpe = annVol > 0 ? annRet / annVol : null;
+    return {
+      sharpe: sharpe !== null && isFinite(sharpe) ? parseFloat(sharpe.toFixed(4)) : null,
+      maxDrawdown: parseFloat((maxDD * 100).toFixed(2)),
+    };
+  }, [btcData]);
+
   // ── Comparison table ────────────────────────────────────────────────────
   const comparisonRows = useMemo((): CompRow[] => {
     const btcPct = parseFloat((btcReturn * 100).toFixed(2));
@@ -496,14 +545,14 @@ export default function PrivateFundDashboard({
                   {
                     label: "Index + Signal (50/50)", color: "#06b6d4",
                     totalReturn: parseFloat(combinedInceptionReturn.toFixed(2)),
-                    sharpe: null,
-                    maxDrawdown: 0,
+                    sharpe: combinedMetrics.sharpe,
+                    maxDrawdown: combinedMetrics.maxDrawdown,
                   },
                   {
                     label: "Bitcoin", color: "#f97316",
                     totalReturn: parseFloat(btcInceptionReturn.toFixed(2)),
-                    sharpe: null,
-                    maxDrawdown: 0,
+                    sharpe: btcMetrics.sharpe,
+                    maxDrawdown: btcMetrics.maxDrawdown,
                   },
                 ].map((m) => (
                   <MetricCard key={m.label} m={{ ...m, annReturn: 0, volatility: 0 }} />
