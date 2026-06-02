@@ -11,6 +11,8 @@ export interface Position {
 export interface PositionsData {
   executionDate: string;
   totalDeployed: number;
+  inceptionDate: string;
+  inceptionDeployed: number;
   positions: Position[];
 }
 

@@ -229,6 +229,17 @@ export default function PrivateFundDashboard({
   const portfolioLiveReturn = totalPnlPct / 100;
   const isLive = livePrices !== null;
 
+  // Inception (May 1) banner figures
+  const inceptionDeployed = positions?.inceptionDeployed ?? totalDeployed;
+  // cumReturn from performance.json already handles the rebalance; use live positions to extend to today
+  const inceptionLiveCumReturn = useMemo(() => {
+    const lastEOD = privateData?.dailyData.at(-1)?.cumReturn ?? 1;
+    return isLive ? lastEOD * (1 + portfolioLiveReturn) : lastEOD;
+  }, [privateData, isLive, portfolioLiveReturn]);
+  const inceptionCurrentValue = inceptionDeployed * inceptionLiveCumReturn;
+  const inceptionPnlDollar = inceptionCurrentValue - inceptionDeployed;
+  const inceptionReturnPct = (inceptionLiveCumReturn - 1) * 100;
+
   const btcPos = positionMap.get("bitcoin");
   const btcLive = livePrices?.["bitcoin"];
   const btcReturn = btcPos && btcLive
@@ -450,25 +461,25 @@ export default function PrivateFundDashboard({
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144] flex flex-wrap gap-6 items-end">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Deployed Capital</div>
-                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalDeployed)}</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionDeployed)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Current Value</div>
-                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalDeployed + totalPnlDollar)}</div>
+                    <div className="text-xs text-gray-500 mb-1">Current Value {isLive ? "· live" : "· eod"}</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionCurrentValue)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Total P&amp;L</div>
-                    <div className="text-xl font-bold font-mono" style={{ color: totalPnlDollar >= 0 ? "#4ade80" : "#f87171" }}>
-                      {totalPnlDollar >= 0 ? "+" : "−"}${fmtUsd(Math.abs(totalPnlDollar))}
+                    <div className="text-xl font-bold font-mono" style={{ color: inceptionPnlDollar >= 0 ? "#4ade80" : "#f87171" }}>
+                      {inceptionPnlDollar >= 0 ? "+" : "−"}${fmtUsd(Math.abs(inceptionPnlDollar))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Return {isLive ? "(live)" : "(eod)"}</div>
-                    <div className="text-xl font-bold font-mono" style={{ color: totalPnlPct >= 0 ? "#4ade80" : "#f87171" }}>
-                      {totalPnlPct >= 0 ? "+" : ""}{totalPnlPct.toFixed(2)}%
+                    <div className="text-xs text-gray-500 mb-1">Return since {positions.inceptionDate}</div>
+                    <div className="text-xl font-bold font-mono" style={{ color: inceptionReturnPct >= 0 ? "#4ade80" : "#f87171" }}>
+                      {inceptionReturnPct >= 0 ? "+" : ""}{inceptionReturnPct.toFixed(2)}%
                     </div>
                   </div>
-                  <div className="ml-auto text-xs text-gray-600 self-end">execution: {positions.executionDate}</div>
+                  <div className="ml-auto text-xs text-gray-600 self-end">last rebalance: {positions.executionDate}</div>
                 </div>
               </section>
             )}
