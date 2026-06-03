@@ -46,6 +46,11 @@ export interface ValuationData {
   data_freshness?: string;
 }
 
+export interface McapPoint {
+  date: string;
+  mcap: number;
+}
+
 export interface TokenResult {
   name: string;
   symbol: string;
@@ -53,6 +58,7 @@ export interface TokenResult {
   status: "ok" | "error";
   data?: ValuationData;
   error?: string;
+  mcap_history?: McapPoint[];
 }
 
 export interface ValuationsFile {

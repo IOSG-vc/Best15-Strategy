@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { ValuationsFile, TokenResult, ValuationScenario } from "@/lib/loadValuations";
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from "recharts";
+import type { ValuationsFile, TokenResult, ValuationScenario, McapPoint } from "@/lib/loadValuations";
 import Nav from "./Nav";
 
 interface Props {
@@ -222,6 +225,93 @@ function ModelMethodology({ tokenKey }: { tokenKey: string }) {
   );
 }
 
+// ── McapChart ───────────────────────────────────────────────────────────────
+
+function McapChart({ history, symbol, color }: { history: McapPoint[]; symbol: string; color: string }) {
+  if (!history.length) return null;
+
+  const min = Math.min(...history.map((d) => d.mcap));
+  const max = Math.max(...history.map((d) => d.mcap));
+  const latest = history[history.length - 1].mcap;
+  const first  = history[0].mcap;
+  const change = ((latest / first) - 1) * 100;
+  const isUp   = change >= 0;
+
+  function fmtMcap(n: number) {
+    if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
+    return `$${(n / 1e6).toFixed(0)}M`;
+  }
+
+  // Show only ~12 evenly-spaced x-axis ticks
+  const step = Math.max(1, Math.floor(history.length / 12));
+  const ticks = history
+    .filter((_, i) => i % step === 0 || i === history.length - 1)
+    .map((d) => d.date);
+
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <span className="text-sm font-semibold text-gray-300">{symbol} Market Cap</span>
+          <span className="ml-2 text-xs text-gray-500">90 days</span>
+        </div>
+        <div className="text-right">
+          <div className="text-base font-bold font-mono text-white">{fmtMcap(latest)}</div>
+          <div className="text-xs font-mono" style={{ color: isUp ? "#4ade80" : "#f87171" }}>
+            {isUp ? "+" : ""}{change.toFixed(1)}%
+          </div>
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={160}>
+        <AreaChart data={history} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id={`mcap-grad-${symbol}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+          <XAxis
+            dataKey="date"
+            ticks={ticks}
+            tickFormatter={(d: string) => {
+              const [, m, day] = d.split("-");
+              return `${parseInt(m)}/${parseInt(day)}`;
+            }}
+            tick={{ fill: "#6b7280", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            domain={[min * 0.95, max * 1.05]}
+            tickFormatter={fmtMcap}
+            tick={{ fill: "#6b7280", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+            width={52}
+          />
+          <Tooltip
+            contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 12 }}
+            labelStyle={{ color: "#9ca3af", marginBottom: 2 }}
+            formatter={(v: number) => [fmtMcap(v), "MCap"]}
+            itemStyle={{ color: color }}
+          />
+          <Area
+            type="monotone"
+            dataKey="mcap"
+            stroke={color}
+            strokeWidth={1.5}
+            fill={`url(#mcap-grad-${symbol})`}
+            dot={false}
+            activeDot={{ r: 3, fill: color }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmtPrice(n: number): string {
@@ -355,6 +445,12 @@ function ScenarioCard({ s, spot, isPrimary }: { s: ValuationScenario; spot: numb
   );
 }
 
+const TOKEN_COLORS: Record<string, string> = {
+  uni:   "#ff007a",
+  ethfi: "#06b6d4",
+  jup:   "#9945ff",
+};
+
 function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }) {
   if (token.status === "error") {
     return (
@@ -368,6 +464,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const primary = d.scenarios.find((s) => s.is_primary) ?? d.scenarios[0];
   const others  = d.scenarios.filter((s) => s !== primary);
   const dr      = (d.model.discount_rate * 100).toFixed(1);
+  const chartColor = TOKEN_COLORS[tokenKey] ?? "#60a5fa";
 
   return (
     <div className="space-y-5">
@@ -415,6 +512,11 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           </div>
         </div>
       </div>
+
+      {/* Market cap chart */}
+      {token.mcap_history && token.mcap_history.length > 0 && (
+        <McapChart history={token.mcap_history} symbol={d.token} color={chartColor} />
+      )}
 
       {/* Primary scenario */}
       <ScenarioCard s={primary} spot={d.market.spot} isPrimary={true} />
