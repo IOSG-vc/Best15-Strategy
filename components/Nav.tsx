@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/cycle-signals", label: "Cycle Signal" },
   { href: "/private-fund", label: "Private Fund" },
+  { href: "/valuation",    label: "Valuations" },
 ];
 
 export default function Nav() {
