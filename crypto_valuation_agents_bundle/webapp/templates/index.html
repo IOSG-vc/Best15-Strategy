@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Valuation Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --card2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --accent-jup: #1FC7D4;
+    --accent-ethfi: #627EEA;
+    --accent-uni: #FF007A;
+    --accent-hype: #6EE7B7;
+    --accent-sky: #F0B429;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+  header { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header p { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .badge-model { background: #21262d; color: var(--blue); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; }
+  main { padding: 24px 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+  .token-info { display: flex; align-items: center; gap: 10px; }
+  .token-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .token-name { font-weight: 600; font-size: 15px; }
+  .token-symbol { color: var(--muted); font-size: 12px; margin-top: 1px; }
+  .chain-badge { background: #21262d; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 11px; color: var(--muted); }
+  .status-row { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--card2); border-bottom: 1px solid var(--border); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-idle .status-dot { background: var(--muted); }
+  .status-running .status-dot { background: var(--yellow); animation: pulse 1s infinite; }
+  .status-done .status-dot { background: var(--green); }
+  .status-error .status-dot { background: var(--red); }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  .status-label { font-size: 12px; color: var(--muted); }
+  .run-btn { margin-left: auto; padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border); background: #21262d; color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500; transition: background .15s; }
+  .run-btn:hover:not(:disabled) { background: #30363d; }
+  .run-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .card-body { padding: 16px 20px; min-height: 120px; }
+  .unavailable { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  .unavailable code { background: #21262d; border-radius: 4px; padding: 1px 5px; font-family: monospace; font-size: 12px; color: var(--orange); }
+  .market-row { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
+  .market-item label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .03em; }
+  .market-item .val { font-size: 16px; font-weight: 600; }
+  .market-item .sub { font-size: 11px; color: var(--muted); }
+  .gp-bar { margin-bottom: 14px; }
+  .gp-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 5px; }
+  .gp-val { font-size: 13px; font-weight: 500; }
+  .section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  table.pv-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.pv-table th { text-align: right; color: var(--muted); font-weight: 500; padding: 3px 6px; font-size: 11px; }
+  table.pv-table th:first-child { text-align: left; }
+  table.pv-table td { text-align: right; padding: 4px 6px; border-top: 1px solid #21262d; }
+  table.pv-table td:first-child { text-align: left; color: var(--muted); }
+  table.pv-table tr.primary td { color: var(--text); font-weight: 500; }
+  table.pv-table tr.primary td:first-child { color: var(--blue); }
+  .pspot { font-size: 11px; color: var(--muted); }
+  .pspot.green { color: var(--green); }
+  .pspot.red { color: var(--red); }
+  .range-bar-wrap { margin: 3px 0; }
+  .range-bar { position: relative; height: 6px; background: #21262d; border-radius: 3px; overflow: visible; }
+  .range-fill { position: absolute; height: 6px; border-radius: 3px; }
+  .spot-line { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--red); border-radius: 1px; z-index: 2; }
+  .error-box { background: #2d1519; border: 1px solid var(--red); border-radius: 6px; padding: 10px; margin-top: 10px; }
+  .error-box summary { color: var(--red); font-size: 12px; cursor: pointer; }
+  .error-box pre { color: var(--muted); font-size: 11px; white-space: pre-wrap; margin-top: 8px; max-height: 180px; overflow-y: auto; }
+  .model-note { font-size: 11px; color: var(--muted); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--yellow); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .placeholder { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+  .current-gp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .gp-item label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; display: block; }
+  .gp-item .v { font-size: 13px; font-weight: 500; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Crypto Valuation Dashboard</h1>
+    <p>3-Year GP-Capture Monte Carlo · Live data via DeFiLlama & CoinGecko</p>
+  </div>
+  <span class="badge-model">IOSG Research</span>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const TOKENS = ["jup", "ethfi", "uni", "hype", "sky"];
+const COLORS = { jup:"#1FC7D4", ethfi:"#627EEA", uni:"#FF007A", hype:"#6EE7B7", sky:"#F0B429" };
+const UNAVAIL_COLOR = "#30363d";
+
+function fmt(x, decimals=2) {
+  if (x == null || isNaN(x)) return "—";
+  const abs = Math.abs(x);
+  if (abs >= 1e9) return "$" + (x/1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return "$" + (x/1e6).toFixed(1) + "M";
+  if (abs >= 1e3) return "$" + (x/1e3).toFixed(1) + "K";
+  if (abs >= 1) return "$" + x.toFixed(2);
+  if (abs >= 0.01) return "$" + x.toFixed(4);
+  return "$" + x.toFixed(6);
+}
+function pct(x) { return x == null ? "—" : (x * 100).toFixed(1) + "%"; }
+function relpct(x) { return x == null ? "—" : (x >= 0 ? "+" : "") + (x * 100).toFixed(1) + "%"; }
+function timeAgo(iso) {
+  if (!iso) return "";
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s/60) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  return Math.floor(s/86400) + "d ago";
+}
+
+function buildCard(token, status) {
+  const el = document.getElementById("card-" + token);
+  if (!el) return;
+  const color = status.available ? COLORS[token] : UNAVAIL_COLOR;
+  const sym = status.symbol;
+  const name = status.name;
+
+  // Header
+  el.querySelector(".token-dot").style.background = color;
+  el.querySelector(".token-name").textContent = name;
+  el.querySelector(".token-symbol").textContent = sym;
+  el.querySelector(".chain-badge").textContent = status.chain;
+
+  // Status row
+  const sr = el.querySelector(".status-row");
+  sr.className = "status-row status-" + (status.status || "idle");
+  const sl = el.querySelector(".status-label");
+  if (status.status === "running") {
+    sl.innerHTML = '<span class="spinner"></span> Running valuation…';
+  } else if (status.status === "done" && status.last_run) {
+    sl.textContent = "Updated " + timeAgo(status.last_run);
+  } else if (status.status === "error") {
+    sl.textContent = "Error · " + timeAgo(status.last_run);
+  } else {
+    sl.textContent = status.has_result ? "Cached result" : "Not yet run";
+  }
+
+  // Button
+  const btn = el.querySelector(".run-btn");
+  btn.disabled = !status.available || status.status === "running";
+  btn.textContent = status.status === "running" ? "Running…" : "Run Valuation";
+}
+
+function buildResult(token, data) {
+  const body = document.getElementById("body-" + token);
+  if (!body || !data.result) return;
+  const r = data.result;
+  const spot = r.market?.spot;
+  const color = COLORS[token];
+
+  let html = "";
+
+  // Market row
+  html += `<div class="market-row">`;
+  html += `<div class="market-item"><label>Spot</label><div class="val">${fmt(spot)}</div></div>`;
+  html += `<div class="market-item"><label>MCap</label><div class="val">${fmt(r.market?.market_cap)}</div></div>`;
+  if (r.market?.fdv) html += `<div class="market-item"><label>FDV</label><div class="val">${fmt(r.market.fdv)}</div></div>`;
+  html += `</div>`;
+
+  // Current GP
+  if (r.current_gp) {
+    html += `<div class="current-gp-grid">`;
+    const gp = r.current_gp;
+    if (gp.total_annualized != null) {
+      html += `<div class="gp-item"><label>Annualized GP</label><div class="v">${fmt(gp.total_annualized)}</div></div>`;
+    }
+    if (gp.seed_annualized != null) {
+      html += `<div class="gp-item"><label>GP Seed (ann.)</label><div class="v">${fmt(gp.seed_annualized)}</div></div>`;
+    }
+    if (gp.annualized_full_activation != null) {
+      html += `<div class="gp-item"><label>Full-act GP (ann.)</label><div class="v">${fmt(gp.annualized_full_activation)}</div></div>`;
+    }
+    if (gp.annualized_current_state != null) {
+      html += `<div class="gp-item"><label>Current-state GP</label><div class="v">${fmt(gp.annualized_current_state)}</div></div>`;
+    }
+    if (gp.stake_tvl != null) {
+      html += `<div class="gp-item"><label>Staking TVL</label><div class="v">${fmt(gp.stake_tvl)}</div></div>`;
+    }
+    if (gp.staking_apy != null) {
+      html += `<div class="gp-item"><label>Staking APY</label><div class="v">${pct(gp.staking_apy)}</div></div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Model info
+  html += `<div style="margin-bottom:10px;font-size:11px;color:var(--muted);">`;
+  html += `${r.model?.type || "MC"} · DR ${pct(r.model?.discount_rate)} · ${r.model?.multiple}x multiple · ${(r.model?.paths||0).toLocaleString()} paths`;
+  html += `</div>`;
+
+  // Scenarios table
+  if (r.scenarios?.length) {
+    // Find min/max PV across all scenarios for the bar chart
+    const allP50 = r.scenarios.map(s => s.pv?.p50 || 0).filter(Boolean);
+    const allP90 = r.scenarios.map(s => s.pv?.p90 || 0).filter(Boolean);
+    const barMax = Math.max(spot * 2, ...(allP90.length ? allP90 : [spot]));
+
+    html += `<div class="section-title">Fair Value Distribution (discounted, 3Y horizon)</div>`;
+    html += `<table class="pv-table"><thead><tr>`;
+    html += `<th>Scenario</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P(&gt;spot)</th>`;
+    html += `</tr></thead><tbody>`;
+
+    for (const sc of r.scenarios) {
+      const pv = sc.pv || {};
+      const cls = sc.is_primary ? "primary" : "";
+      const pAbove = sc.prob_above_spot;
+      const pClass = pAbove >= 0.5 ? "green" : pAbove < 0.25 ? "red" : "";
+
+      html += `<tr class="${cls}">`;
+      html += `<td>${sc.label}</td>`;
+      html += `<td>${fmt(pv.p25)}</td>`;
+      html += `<td>${fmt(pv.p50)}</td>`;
+      html += `<td>${fmt(pv.p75)}</td>`;
+      html += `<td>${fmt(pv.p90)}</td>`;
+      html += `<td class="pspot ${pClass}">${pct(pAbove)}</td>`;
+      html += `</tr>`;
+
+      // Mini bar for primary scenario
+      if (sc.is_primary && spot && barMax) {
+        const p25pct = Math.min(100, (pv.p25 / barMax) * 100);
+        const p75pct = Math.min(100, (pv.p75 / barMax) * 100);
+        const spotPct = Math.min(100, (spot / barMax) * 100);
+        html += `<tr><td colspan="6" style="padding:4px 6px 8px;">`;
+        html += `<div class="range-bar">`;
+        html += `<div class="range-fill" style="left:${p25pct}%;width:${p75pct-p25pct}%;background:${color}33;"></div>`;
+        html += `<div class="spot-line" style="left:${spotPct}%;" title="Current spot"></div>`;
+        html += `</div>`;
+        html += `<div style="font-size:10px;color:var(--muted);margin-top:3px;">`;
+        html += `<span style="color:var(--red);">|</span> spot ${fmt(spot)} &nbsp; `;
+        html += `<span style="color:${color};opacity:.7;">■</span> P25–P75 range`;
+        html += `</div></td></tr>`;
+      }
+    }
+    html += `</tbody></table>`;
+  }
+
+  // Error
+  if (data.error) {
+    html += `<div class="error-box"><details><summary>Error details</summary><pre>${data.error}</pre></details></div>`;
+  }
+
+  // Model note
+  if (r.model?.note) {
+    html += `<div class="model-note">${r.model.note}</div>`;
+  }
+  if (r.caveats?.length) {
+    html += `<div class="model-note">⚠ ${r.caveats.join("; ")}</div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+async function runToken(token) {
+  await fetch(`/api/run/${token}`, { method: "POST" });
+  poll();
+}
+
+function createCards(statusMap) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (const token of TOKENS) {
+    const s = statusMap[token] || {};
+    const div = document.createElement("div");
+    div.className = "card";
+    div.id = "card-" + token;
+    div.innerHTML = `
+      <div class="card-header">
+        <div class="token-info">
+          <div class="token-dot" style="background:${s.available ? COLORS[token] : UNAVAIL_COLOR}"></div>
+          <div>
+            <div class="token-name">${s.name || token.toUpperCase()}</div>
+            <div class="token-symbol">${s.symbol || ""}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="chain-badge">${s.chain || ""}</span>
+        </div>
+      </div>
+      <div class="status-row status-idle">
+        <div class="status-dot"></div>
+        <span class="status-label">Not yet run</span>
+        <button class="run-btn" onclick="runToken('${token}')" ${!s.available || s.status === "running" ? "disabled" : ""}>Run Valuation</button>
+      </div>
+      <div class="card-body" id="body-${token}">
+        ${!s.available
+          ? `<div class="unavailable">Unavailable — ${s.unavailable_reason || ""}</div>`
+          : `<div class="placeholder">Click "Run Valuation" to fetch live data and compute fair value.</div>`}
+      </div>`;
+    grid.appendChild(div);
+  }
+}
+
+async function poll() {
+  const statusRes = await fetch("/api/status");
+  const statusMap = await statusRes.json();
+  let anyRunning = false;
+
+  for (const token of TOKENS) {
+    const s = statusMap[token];
+    buildCard(token, s);
+    if (s.status === "running") anyRunning = true;
+
+    if (s.has_result || s.status === "error") {
+      const res = await fetch(`/api/result/${token}`);
+      const data = await res.json();
+      buildResult(token, data);
+    }
+  }
+
+  if (anyRunning) setTimeout(poll, 3000);
+  else setTimeout(poll, 30000);
+}
+
+(async () => {
+  const res = await fetch("/api/status");
+  const statusMap = await res.json();
+  createCards(statusMap);
+  buildCardsFromStatus(statusMap);
+  await poll();
+})();
+
+function buildCardsFromStatus(statusMap) {
+  for (const token of TOKENS) buildCard(token, statusMap[token] || {});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+{
+  "jobs": [
+    {
+      "id": "b4db6b1e1c53",
+      "name": "HYPE valuation report Mon/Fri",
+      "prompt": "Run the HYPE valuation agent from /Users/momir_mini/.openclaw/workspace/altcoin_research and deliver a concise Discord-friendly update.\n\nSteps:\n1. Run `python hype_gp_capture_12m_start_run.py` in the workdir.\n2. Run or ensure `hype_latest_3_table_report.md` is refreshed if the generator is available; otherwise use the script's stdout plus `hype_3y_gp_capture_12m_start_run.json`.\n3. Deliver only a short Discord-friendly 3-block update in aligned text code blocks: key assumptions, model results, sanity checks/KPI drift.\n4. Avoid long methodology or wide Markdown tables. Do not expose secrets.\n5. If live APIs fail after retries, use last successful JSON/report and clearly label stale data.\n\nMandatory report points:\n- Spot, P50 PV, EV PV, P50/spot, EV/spot for base DB-observed emissions and +10% optionality.\n- 30D revenue/GP, 12M median monthly revenue, selected start GP, TTM GP.\n- Buyback years, base emissions, net supply/month, volume sanity.\n- Flag if buyback-years crosses 20y or if 30D revenue materially diverges from 12M median.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 9 * * 1,5",
+      "schedule_display": "0 9 * * 1,5",
+      "repeat": {
+        "times": null,
+        "completed": 8
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    },
+    {
+      "id": "b67596133b6d",
+      "name": "SKY valuation report Mon/Fri",
+      "prompt": "Run the locked SKY valuation agent report for Momir and deliver a concise Discord-friendly update. Workdir is /Users/momir_mini/.openclaw/workspace/altcoin_research.\n\nUse the locked SKY model structure established on 2026-05-08:\n- GP = gross income / stability fee income - savings-rate costs / DSR - stUSDS cost.\n- Net profit = GP - OPEX.\n- OPEX scenarios: bear $90M/year, base $70M/year, bull $50M/year.\n- Use Sky native dashboard / BlockAnalitica data for DAI, USDS, sDAI, sUSDS, savings rate, financials; do not rely on CoinGecko stablecoin wrappers for the DAI/USDS split.\n- Base DAI assumption is flat; future growth comes from USDS.\n- MC path uses broad money-market/yield/CDP TVL monthly returns since 2022, dampened/capped as in sky_mc_agent.py unless explicitly updated by Momir later.\n- Discount rate: 25% base.\n- Multiples: 10x GP and 15x Net Profit.\n- Treasury treatment: monthly positive net profit accumulates as cash; no buyback or supply reduction assumed. Main valuation line is 15x NP + accumulated treasury cash.\n- Track stale-assumption KPIs: SSR/savings rate, USDS savings penetration, DAI savings penetration, USDS supply, DAI supply, annualized GP, OPEX assumption.\n\nSteps:\n1. Run: python sky_mc_agent.py\n2. If it fails due stale API/page changes, inspect and fix the minimum necessary data pull issue while preserving locked methodology; report any methodology changes explicitly.\n3. Read sky_mc_result.md and sky_mc_result.json.\n4. Deliver a concise Discord-friendly report in the same 3-table format as HYPE/SKY:\n   Table 1: key assumptions/KPIs.\n   Table 2: model results, with P50 and EV, emphasizing Base $70M OPEX 15x NP + cash.\n   Table 3: sanity checks/current multiples, including spot vs base PV, probability spot justified, Y3 USDS supply, Y3 GP, Y3 NP, accumulated treasury cash.\n5. Flag stale assumptions or material KPI changes vs locked baseline: USDS 6.43B, DAI 4.17B, sUSDS 5.22B, sDAI 0.24B, SSR 3.65%, USDS savings penetration 81%, current GP ~$218.5M, base NP ~$148.5M.\n\nDo not ask questions; the cron run is autonomous.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 9 * * 1,5",
+      "schedule_display": "0 9 * * 1,5",
+      "repeat": {
+        "times": null,
+        "completed": 7
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    },
+    {
+      "id": "b43e2ad006d6",
+      "name": "ETHFI valuation report Mon/Fri",
+      "prompt": "Run the locked ETHFI valuation agent report for Momir and deliver a concise Discord-friendly update.\n\nWorkdir: /Users/momir_mini/.openclaw/workspace/altcoin_research\nPrimary script: python ethfi_mc_agent.py\nOutput files: ethfi_mc_result.md and ethfi_mc_result.json\n\nInstructions:\n1. Run `python ethfi_mc_agent.py` from the workdir.\n2. If it errors, inspect and report the failure concisely; do not print secrets. The Dune API key may be available in ~/.hermes/secrets/dune_api_key or ~/.hermes/secrets.env and must never be printed.\n3. Read ethfi_mc_result.md/json after the run.\n4. Deliver a Discord-friendly report with 3 key tables/blocks:\n   - Key assumptions + actionable insights / assumption watchlist.\n   - Model results: discounted PV at 15x GP and 15x GP + cash, including P25/P50/EV/P75/P90 and P(spot).\n   - Sanity checks: Y3 card annual GMV and staking TVL distributions, Y3 staking GP P50, current GP bridge, current MCap/GP and FDV/GP.\n5. Include hurdle-rate sensitivity for P50 15x GP fair value at 17.5%, 22.5%, 27.5%, 32.5%, and 37.5%.\n6. Highlight if new data suggest assumptions need fixing, especially:\n   - Dune card growth anchor changed materially.\n   - Card GMV slows sharply or exceeds the cap.\n   - Staking APY/TVL shifts materially.\n   - Take-rate diverges from 135bps.\n   - Base 15x GP P50 crosses above/below spot.\n   - Unaccounted 145.3M ETHFI receives an unlock schedule.\n   - OPEX/cash assumptions look stale.\n7. Keep output concise and avoid wide Markdown tables; use aligned text code blocks.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 9 * * 1,5",
+      "schedule_display": "0 9 * * 1,5",
+      "repeat": {
+        "times": null,
+        "completed": 7
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    },
+    {
+      "id": "c5b33a900b6c",
+      "name": "UNI valuation report Mon/Fri",
+      "prompt": "Run the locked UNI valuation agent report for Momir and deliver a concise Discord-friendly update. This job is self-contained.\n\nFirst read `/Users/momir_mini/.openclaw/workspace/altcoin_research/UNI_LOCKED_MODEL.md` and follow it exactly. If the file is unavailable, use the locked assumptions below.\n\nLocked UNI model summary:\n- 3-year GP-capture valuation, not perpetual DCF.\n- Never call the full-activation line \"terminal GP\". Use \"full-activation Y3 GP\" or \"potential Y3 GP\".\n- HYPE-style MC volume simulation using Uniswap monthly DEX volume history from DeFiLlama (`https://api.llama.fi/summary/dexs/uniswap?dataType=dailyVolume`). Aggregate daily volume to completed monthly volume; use history from 2021-01 through latest completed month; monthly log-return bootstrap; simulate 36 months; valuation denominator is Year-3 trailing 12M volume.\n- Live base seed = min(latest full 30D Uniswap volume, trailing 12 completed months median monthly volume). For backtests, use min(latest completed month, trailing 12 completed months median).\n- Pull Uniswap fees from DeFiLlama (`https://api.llama.fi/summary/fees/uniswap?dataType=dailyFees`). LP fee bps live = recent 30D fees/volume cross-checked against trailing 12M; corrected recent reference was ~10.92bps.\n- Current-state LP protocol take = ~0.826bps because v4 not yet fee-switch active; current-state total take = 0.826bps + frontend effective take.\n- Full-activation Y3 GP take = LP fee bps * 25% + frontend effective take.\n- Frontend fee = 15bps; frontend/total volume = ~2%; frontend effective take = 0.30bps.\n- Apply 15x GP multiple.\n- No post-activation cash additive. Protocol fees route TokenJar -> Firepit -> UNI burns.\n- Primary supply basis: current circulating UNI supply from market data; show FDV/full-supply sensitivity if available.\n- Discount rate: liquid-token framework DR = risk_free_rate + 3% ERP * (UNI 365D daily stdev / S&P500 365D daily stdev). Use current 10Y yield, UNI price history, S&P500 history. Prior locked run produced ~24-25%.\n\nOutput exactly three compact Discord-friendly sections/tables:\n1) Key assumptions: spot, data freshness, base seed, LP fee bps, current-state/full-activation take bps, DR, supply, multiple.\n2) Model results: Y3 TTM volume P25/P50/P75/EV-mean; current-state GP and PV price; full-activation Y3 GP and PV price; FDV PV sensitivity. Include EV/mean PV price.\n3) Sanity checks/current multiples: current annualized volume, current-state annual GP, full-activation annual GP, MCap/current-state GP, MCap/full-activation GP, FDV/full-activation GP, probability PV > spot and PV > 3x spot.\n\nKeep output concise, easy to read in Discord, and avoid wide markdown pipe tables. Prefer aligned text code blocks. Include caveats if any data endpoint fails and clearly state fallback assumptions. Do not ask questions during the cron run.",
+      "skills": [
+        "crypto-gp-capture-valuation"
+      ],
+      "skill": "crypto-gp-capture-valuation",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 9 * * 1,5",
+      "schedule_display": "0 9 * * 1,5",
+      "repeat": {
+        "times": null,
+        "completed": 7
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    },
+    {
+      "id": "f7a1d8d25f96",
+      "name": "JUP valuation report Mon/Fri",
+      "prompt": "Run the locked JUP valuation agent from /Users/momir_mini/.openclaw/workspace/altcoin_research and deliver a concise Discord-friendly update.\n\nSteps:\n1. Run `python3 jup_locked_agent.py` from the workdir.\n2. Read `jup_locked_report.md` and `jup_locked_result.json`.\n3. Deliver a short metric-first report using compact bullets and narrow aligned ```text``` blocks only; no wide Markdown tables.\n\nRequired fields:\n- Spot, mcap, FDV, as-of timestamp.\n- Core, +10% optionality, and +10% optionality+Jupnet: P25, P50 PV, P75, EV PV, P50/spot, EV/spot, P>spot.\n- Product revenue/GP split: Perps GP, Aggregator GP, Jupiterz volume + implied GP, DCA fees, JUP Lend revenue, jupSOL revenue, tracked optional total.\n- Supply assumption: scheduled unlock pressure is 0 JUP/month until Jupiter announces a public distribution plan for the ~3.405B cold-storage/community reserve. Do NOT describe 53.47M/month as current or scheduled dilution. Mention it only as a retired/invalid assumption if relevant.\n- Explain valuation read-through: current core GP seed, buybacks at 50% of entity GP, current/effective supply denominator, and small optional lines. Note that Lend/jupSOL are tracked explicitly but not separate MC drivers until material.\n- Action signal: Watch / Act / No action, with one trigger that would upgrade/downgrade.\n\nIf live APIs fail, use the latest local artifacts and clearly label stale data.",
+      "skills": [
+        "crypto-gp-capture-valuation"
+      ],
+      "skill": "crypto-gp-capture-valuation",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 9 * * 1,5",
+      "schedule_display": "0 9 * * 1,5",
+      "repeat": {
+        "times": null,
+        "completed": 7
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    },
+    {
+      "id": "89e61df4858d",
+      "name": "Crypto valuation ranking EOW",
+      "prompt": "Produce the end-of-week crypto valuation analysis for Momir and deliver to Discord. Rank the locked/report-list projects by model_price/spot_price. Include at minimum HYPE, SKY, ETHFI, UNI, and JUP if their model files/reports are available in /Users/momir_mini/.openclaw/workspace/altcoin_research and/or their recurring reports. Use each token's latest locked model convention and refreshed spot price. For each project, compute or extract P50 PV/spot and EV PV/spot; rank primarily by P50/spot, with EV/spot as secondary. Output concise Discord-friendly sections: (1) ranked table: token, P50 PV, spot, P50/spot, EV/spot, signal; (2) key movers/stale assumptions; (3) action list/KPIs for next week. Avoid wide Markdown tables; use aligned text blocks or narrow tables. Do not ask questions; if a model cannot be refreshed, use the latest locked/report value and label it stale.",
+      "skills": [
+        "crypto-gp-capture-valuation"
+      ],
+      "skill": "crypto-gp-capture-valuation",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": "0 18 * * 5",
+      "schedule_display": "0 18 * * 5",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "origin  # or replace with discord / telegram / local on recipient setup",
+      "enabled_toolsets": [
+        "terminal",
+        "file",
+        "web"
+      ],
+      "workdir": "/Users/momir_mini/.openclaw/workspace/altcoin_research"
+    }
+  ]
+}
