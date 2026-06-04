@@ -38,7 +38,7 @@ UA = "Mozilla/5.0 Hermes valuation cron"
 
 
 def fetch_mcap_history(coingecko_id: str, days: int = 90) -> list[dict]:
-    """Fetch daily market cap history from CoinGecko API."""
+    """Fetch daily market cap history from CoinGecko API, with retry on rate-limit."""
     url = (
         f"{CG_BASE}/coins/{coingecko_id}/market_chart"
         f"?vs_currency=usd&days={days}&interval=daily"
@@ -47,17 +47,23 @@ def fetch_mcap_history(coingecko_id: str, days: int = 90) -> list[dict]:
     if CG_API_KEY:
         headers["x-cg-pro-api-key"] = CG_API_KEY
     req = Request(url, headers=headers)
-    try:
-        with urlopen(req, timeout=20) as r:
-            data = json.loads(r.read())
-        return [
-            {"date": datetime.datetime.fromtimestamp(ts / 1000, tz=datetime.timezone.utc).strftime("%Y-%m-%d"),
-             "mcap": round(mc)}
-            for ts, mc in data.get("market_caps", [])
-        ]
-    except Exception as e:
-        print(f"  mcap history fetch failed for {coingecko_id}: {e}")
-        return []
+    for attempt in range(3):
+        try:
+            with urlopen(req, timeout=20) as r:
+                data = json.loads(r.read())
+            return [
+                {"date": datetime.datetime.fromtimestamp(ts / 1000, tz=datetime.timezone.utc).strftime("%Y-%m-%d"),
+                 "mcap": round(mc)}
+                for ts, mc in data.get("market_caps", [])
+            ]
+        except Exception as e:
+            if attempt < 2:
+                wait = 10 * (attempt + 1)
+                print(f"  mcap history fetch failed for {coingecko_id} (attempt {attempt+1}): {e} — retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                print(f"  mcap history fetch failed for {coingecko_id} after 3 attempts: {e}")
+    return []
 
 
 results: dict = {}
@@ -93,7 +99,7 @@ for token_key, module_path, name, symbol, chain, cg_id in TOKENS:
     mcap_history = fetch_mcap_history(cg_id)
     results[token_key]["mcap_history"] = mcap_history
     print(f"[{symbol}] {len(mcap_history)} market cap data points ✓")
-    time.sleep(1.5)  # Respect public rate limits between tokens
+    time.sleep(4)  # Respect public rate limits between tokens
 
 output = {
     "lastUpdated": str(datetime.date.today()),

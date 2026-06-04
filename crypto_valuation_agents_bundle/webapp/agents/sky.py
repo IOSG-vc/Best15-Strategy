@@ -38,19 +38,27 @@ _FALLBACK_FDV = 1.896796712e9
 
 def _fetch_cg_market():
     """Fetch live SKY market data from CoinGecko. Returns (spot, mcap, fdv, supply)."""
+    import time as _time
     url = f"{_CG_BASE}/coins/markets?vs_currency=usd&ids=sky&sparkline=false"
     hdrs = {"User-Agent": "Mozilla/5.0"}
     if _CG_KEY:
         hdrs["x-cg-pro-api-key"] = _CG_KEY
     req = urllib.request.Request(url, headers=hdrs)
-    with urllib.request.urlopen(req, timeout=20) as r:
-        data = json.load(r)
-    m = data[0]
-    spot = float(m["current_price"])
-    mcap = float(m["market_cap"])
-    fdv = float(m.get("fully_diluted_valuation") or mcap)
-    supply = float(m.get("circulating_supply") or mcap / spot)
-    return spot, mcap, fdv, supply
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.load(r)
+            m = data[0]
+            spot = float(m["current_price"])
+            mcap = float(m["market_cap"])
+            fdv = float(m.get("fully_diluted_valuation") or mcap)
+            supply = float(m.get("circulating_supply") or mcap / spot)
+            return spot, mcap, fdv, supply
+        except Exception as e:
+            if attempt < 2:
+                _time.sleep(10 * (attempt + 1))
+            else:
+                raise
 
 USDS_SUPPLY = 6.426632076e9
 DAI_SUPPLY = 4.165943911e9
