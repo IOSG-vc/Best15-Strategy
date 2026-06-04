@@ -449,6 +449,8 @@ const TOKEN_COLORS: Record<string, string> = {
   uni:   "#ff007a",
   ethfi: "#06b6d4",
   jup:   "#9945ff",
+  hype:  "#00e5a0",
+  sky:   "#f59e0b",
 };
 
 function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }) {

@@ -1,20 +1,20 @@
 {
   "token": "SKY",
   "name": "Sky",
-  "as_of_utc": "2026-06-04T07:26:42.253390+00:00",
+  "as_of_utc": "2026-06-04T20:02:55.489803+00:00",
   "market": {
-    "spot": 0.08084,
-    "market_cap": 1876588264.0,
-    "fdv": 1896796712.0,
-    "circulating_supply": 23462665147.0,
-    "max_supply": 23462665147.0
+    "spot": 0.06508,
+    "market_cap": 1513908762.0,
+    "fdv": 1527230222.0,
+    "circulating_supply": 23258009058.013546,
+    "max_supply": 23258009058.013546
   },
   "model": {
     "type": "3Y GP/NP Monte Carlo",
     "discount_rate": 0.25,
     "multiple": 15.0,
     "paths": 100000,
-    "note": "GP = gross income - savings-rate cost - stUSDS expense. NP = GP - OPEX. USDS growth path: money-market TVL returns \u00d7 0.65 dampener, capped \u00b18%/+10% monthly. DAI supply flat. Treasury = cumulative positive NP. Market data locked 2026-05-08."
+    "note": "GP = gross income - savings-rate cost - stUSDS expense. NP = GP - OPEX. USDS growth path: money-market TVL returns \u00d7 0.65 dampener, capped \u00b18%/+10% monthly. DAI supply flat. Treasury = cumulative positive NP. Protocol financials locked 2026-05-08."
   },
   "current_gp": {
     "gross_income": 425200000.0,
@@ -33,13 +33,13 @@
       "label": "Base OPEX ($70M), 15\u00d7 NP",
       "is_primary": true,
       "pv": {
-        "p25": 0.04848550436856924,
-        "p50": 0.05347803181946839,
-        "p75": 0.05967132022715659,
-        "p90": 0.06668244590839474
+        "p25": 0.04891214680695922,
+        "p50": 0.053948605410336206,
+        "p75": 0.06019639092395987,
+        "p90": 0.06726921017310984
       },
-      "ev": 0.0548604520713454,
-      "prob_above_spot": 0.01142,
+      "ev": 0.05534319010506724,
+      "prob_above_spot": 0.13409,
       "prob_3x": 0.0
     },
     {
@@ -47,13 +47,13 @@
       "label": "Base OPEX ($70M), 10\u00d7 GP",
       "is_primary": false,
       "pv": {
-        "p25": 0.04759900159075609,
-        "p50": 0.050927353224688846,
-        "p75": 0.05505621216314766,
-        "p90": 0.05973029595063975
+        "p25": 0.048017843353218466,
+        "p50": 0.051375482422136444,
+        "p75": 0.05554067276455223,
+        "p90": 0.060255885597318884
       },
-      "ev": 0.05184896672594019,
-      "prob_above_spot": 0.00084,
+      "ev": 0.052305205551957154,
+      "prob_above_spot": 0.03429,
       "prob_3x": 0.0
     },
     {
@@ -61,13 +61,13 @@
       "label": "Bear OPEX ($90M), 15\u00d7 NP",
       "is_primary": false,
       "pv": {
-        "p25": 0.041938933506407844,
-        "p50": 0.04693146095730698,
-        "p75": 0.0531247493649952,
-        "p90": 0.06013587504623332
+        "p25": 0.042307970171853934,
+        "p50": 0.047344428775230915,
+        "p75": 0.05359221428885459,
+        "p90": 0.060665033538004565
       },
-      "ev": 0.048313881209184,
-      "prob_above_spot": 0.0041,
+      "ev": 0.04873901346996196,
+      "prob_above_spot": 0.05284,
       "prob_3x": 0.0
     },
     {
@@ -75,21 +75,21 @@
       "label": "Bull OPEX ($50M), 15\u00d7 NP",
       "is_primary": false,
       "pv": {
-        "p25": 0.05503207523073064,
-        "p50": 0.06002460268162978,
-        "p75": 0.06621789108931797,
-        "p90": 0.07322901677055613
+        "p25": 0.0555163234420645,
+        "p50": 0.06055278204544147,
+        "p75": 0.06680056755906513,
+        "p90": 0.07387338680821512
       },
-      "ev": 0.0614070229335068,
-      "prob_above_spot": 0.03203,
+      "ev": 0.06194736674017252,
+      "prob_above_spot": 0.30776,
       "prob_3x": 0.0
     }
   ],
   "caveats": [
-    "Market data (spot, supply, financials) locked at 2026-05-08; re-run sky_data_collection to refresh.",
+    "Protocol financials (gross income, savings rate, USDS/DAI supply) locked at 2026-05-08; re-run sky_data_collection to refresh.",
     "USDS growth is modeled on broad money-market TVL returns dampened by 0.65 \u2014 Sky may diverge from sector.",
     "No buybacks or SKY supply reduction modeled; treasury accumulates cash only.",
     "Savings rate (3.65%) and USDS savings penetration (81.2%) are point-in-time inputs."
   ],
-  "data_freshness": "2026-05-08"
+  "data_freshness": "2026-06-04"
 }

@@ -31,7 +31,7 @@ TOKENS = [
     ("ethfi", "agents.ethfi", "ether.fi",    "ETHFI", "Ethereum",  "ether-fi"),
     ("jup",   "agents.jup",   "Jupiter",     "JUP",   "Solana",    "jupiter-exchange-solana"),
     ("hype",  "agents.hype",  "Hyperliquid", "HYPE",  "HyperEVM",  "hyperliquid"),
-    ("sky",   "agents.sky",   "Sky",         "SKY",   "Ethereum",  "sky-governance-token"),
+    ("sky",   "agents.sky",   "Sky",         "SKY",   "Ethereum",  "sky"),
 ]
 
 UA = "Mozilla/5.0 Hermes valuation cron"
