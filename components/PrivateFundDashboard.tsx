@@ -962,6 +962,108 @@ export default function PrivateFundDashboard({
                 </div>
               </section>
             )}
+
+            {positions && (
+              <section>
+                <SectionHeader title="Capital Events" subtitle="deposits and withdrawals since inception" />
+                <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#2d3144]">
+                        <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">#</th>
+                        <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Date</th>
+                        <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Type</th>
+                        <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Amount</th>
+                        <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Fund Value Before</th>
+                        <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Fund Value After</th>
+                        <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Running Capital</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Inception deposit */}
+                      <tr className="border-b border-[#2d3144] hover:bg-[#ffffff04]">
+                        <td className="px-4 py-2.5 text-gray-600 text-xs">1</td>
+                        <td className="px-4 py-2.5 font-mono text-xs text-gray-300">{positions.inceptionDate}</td>
+                        <td className="px-4 py-2.5 text-xs">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{ background: "#4ade8020", color: "#4ade80", border: "1px solid #4ade8040" }}>
+                            ↓ Deposit
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-medium text-xs text-green-400">
+                          +${fmtUsd(inceptionFundSize)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-gray-600 text-xs">—</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-300">${fmtUsd(inceptionFundSize)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-300">${fmtUsd(inceptionFundSize)}</td>
+                      </tr>
+
+                      {/* Rebalance cash flow events */}
+                      {rebalanceHistory.filter((e) => e.cashFlow !== 0).map((e, i) => {
+                        const isWithdrawal = e.cashFlow < 0;
+                        const valueAfter = e.fundValueBeforeCashFlow != null ? e.fundValueBeforeCashFlow + e.cashFlow : null;
+                        // running capital = inceptionFundSize + sum of cashFlows up to and including this entry
+                        const runningCapital = inceptionFundSize + rebalanceHistory
+                          .slice(0, rebalanceHistory.indexOf(e) + 1)
+                          .reduce((s, x) => s + x.cashFlow, 0);
+                        return (
+                          <tr key={e.date + i} className="border-b border-[#2d3144] hover:bg-[#ffffff04]">
+                            <td className="px-4 py-2.5 text-gray-600 text-xs">{i + 2}</td>
+                            <td className="px-4 py-2.5 font-mono text-xs text-gray-300">{e.date}</td>
+                            <td className="px-4 py-2.5 text-xs">
+                              {isWithdrawal ? (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+                                  style={{ background: "#f8717120", color: "#f87171", border: "1px solid #f8717140" }}>
+                                  ↑ Withdrawal
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+                                  style={{ background: "#4ade8020", color: "#4ade80", border: "1px solid #4ade8040" }}>
+                                  ↓ Deposit
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono font-medium text-xs"
+                              style={{ color: isWithdrawal ? "#f87171" : "#4ade80" }}>
+                              {isWithdrawal ? "−" : "+"}${fmtUsd(Math.abs(e.cashFlow))}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-300">
+                              {e.fundValueBeforeCashFlow != null ? `$${fmtUsd(e.fundValueBeforeCashFlow)}` : (
+                                <span className="text-yellow-600">not recorded</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-300">
+                              {valueAfter != null ? `$${fmtUsd(valueAfter)}` : "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-400">
+                              ${fmtUsd(runningCapital)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {/* Totals row */}
+                      <tr className="border-t-2 border-[#3d4166] bg-[#ffffff04]">
+                        <td className="px-4 py-2.5" />
+                        <td className="px-4 py-2.5 text-gray-300 font-semibold text-xs" colSpan={2}>Net invested capital</td>
+                        <td className="px-4 py-2.5 text-right font-mono font-bold text-xs"
+                          style={{ color: totalCashFlows <= 0 ? "#f87171" : "#4ade80" }}>
+                          {totalCashFlows !== 0 && (
+                            <span className="text-gray-500 font-normal mr-2 text-xs">
+                              {totalCashFlows < 0 ? "−" : "+"}${fmtUsd(Math.abs(totalCashFlows))} net flows
+                            </span>
+                          )}
+                        </td>
+                        <td colSpan={2} />
+                        <td className="px-4 py-2.5 text-right font-mono font-bold text-xs text-white">
+                          ${fmtUsd(netInvestedCapital)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>
