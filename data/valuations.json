@@ -9,11 +9,11 @@
       "data": {
         "token": "UNI",
         "name": "Uniswap",
-        "as_of_utc": "2026-06-04T07:36:26.895893+00:00",
+        "as_of_utc": "2026-06-04T07:48:22.195777+00:00",
         "market": {
           "spot": 2.69,
-          "market_cap": 1675457065.0,
-          "fdv": 2407505630.0,
+          "market_cap": 1675411357.0,
+          "fdv": 2407439950.0,
           "circulating_supply": 622841561.5538775,
           "max_supply": 1000000000.0
         },
@@ -31,8 +31,8 @@
           "take_bps_current": 1.126,
           "take_bps_full": 3.420054974317931,
           "ann_volume": 472081960507.3333,
-          "mcap_current_state_gp": 31.51936848092864,
-          "mcap_full_activation_gp": 10.377262697832409
+          "mcap_current_state_gp": 31.518508603749677,
+          "mcap_full_activation_gp": 10.376979596621819
         },
         "scenarios": [
           {
@@ -444,7 +444,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 1675457065
+          "mcap": 1675411357
         }
       ]
     },
@@ -456,11 +456,11 @@
       "data": {
         "token": "ETHFI",
         "name": "ether.fi",
-        "as_of_utc": "2026-06-04T07:36:57.820147+00:00",
+        "as_of_utc": "2026-06-04T07:48:55.735306+00:00",
         "market": {
-          "spot": 0.332132,
-          "market_cap": 292259435.0,
-          "fdv": 331376086.0,
+          "spot": 0.331847,
+          "market_cap": 292693965.0,
+          "fdv": 331868775.0,
           "circulating_supply": 880665741.0
         },
         "model": {
@@ -480,7 +480,7 @@
           "staking_apy": 0.02518065,
           "stake_tvl": 3074038778.06707,
           "vault_tvl": 196224239.61228,
-          "card_take_bps_30d": 138.04718078652152,
+          "card_take_bps_30d": 137.97602160787852,
           "card_mom": 0.18235218567307188
         },
         "scenarios": [
@@ -490,13 +490,13 @@
             "weight": 0.2,
             "margin": 0.5,
             "pv": {
-              "p25": 0.11018817533131418,
-              "p50": 0.12771537468826755,
-              "p75": 0.16208937265494971,
-              "p90": 0.22320955157641342
+              "p25": 0.11015955135002624,
+              "p50": 0.1276784640629134,
+              "p75": 0.16198104541338845,
+              "p90": 0.2230486915970208
             },
-            "ev": 0.15216466153705258,
-            "prob_above_spot": 0.03178,
+            "ev": 0.15207556275318937,
+            "prob_above_spot": 0.03176,
             "is_primary": false
           },
           {
@@ -505,13 +505,13 @@
             "weight": 0.4,
             "margin": 0.6,
             "pv": {
-              "p25": 0.20698795644358167,
-              "p50": 0.2263334863439868,
-              "p75": 0.2607954454956282,
-              "p90": 0.32118896579105854
+              "p25": 0.2069553708295414,
+              "p50": 0.22630360537646887,
+              "p75": 0.26068553535123595,
+              "p90": 0.321011306052827
             },
-            "ev": 0.24922672579554317,
-            "prob_above_spot": 0.08682,
+            "ev": 0.24913762701168,
+            "prob_above_spot": 0.08686,
             "is_primary": true
           },
           {
@@ -520,13 +520,13 @@
             "weight": 0.4,
             "margin": 0.7,
             "pv": {
-              "p25": 0.331883455429157,
-              "p50": 0.3546321517917063,
-              "p75": 0.3903074013488754,
-              "p90": 0.4492878873935537
+              "p25": 0.3318583045653999,
+              "p50": 0.35458125420061043,
+              "p75": 0.39017994597632377,
+              "p90": 0.44904271747259605
             },
-            "ev": 0.37547544787941733,
-            "prob_above_spot": 0.74716,
+            "ev": 0.37538634909555413,
+            "prob_above_spot": 0.7501,
             "is_primary": false
           },
           {
@@ -534,40 +534,40 @@
             "label": "Weighted 20/40/40",
             "weight": 1.0,
             "pv": {
-              "p25": 0.20266673312943304,
-              "p50": 0.26835660063412453,
-              "p75": 0.3510147808030467,
-              "p90": 0.40289165351521206
+              "p25": 0.20263287839050026,
+              "p50": 0.2682170105693343,
+              "p75": 0.3509548530776711,
+              "p90": 0.40275304559894876
             },
-            "ev": 0.2804476654824737,
-            "prob_above_spot": 0.34174,
+            "ev": 0.2803591070398734,
+            "prob_above_spot": 0.34322,
             "is_primary": true
           }
         ],
         "raw_results": {
           "bear": {
             "pv_15x_gp": {
-              "p25": 0.11018817533131418,
-              "p50": 0.12771537468826755,
-              "p75": 0.16208937265494971,
-              "p90": 0.22320955157641342,
-              "ev": 0.15216466153705258,
-              "p_spot_justified": 0.03178
+              "p25": 0.11015955135002624,
+              "p50": 0.1276784640629134,
+              "p75": 0.16198104541338845,
+              "p90": 0.2230486915970208,
+              "ev": 0.15207556275318937,
+              "p_spot_justified": 0.03176
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.11018817533131418,
-              "p50": 0.12771537468826755,
-              "p75": 0.162111752759486,
-              "p90": 0.22367338439169526,
-              "ev": 0.15295909070244224,
+              "p25": 0.11015955135002624,
+              "p50": 0.1276784640629134,
+              "p75": 0.16199684880366938,
+              "p90": 0.22342275017659918,
+              "ev": 0.1528674048405026,
               "p_spot_justified": 0.03372
             },
             "y3_gp": {
-              "p25": 13013316.443467336,
-              "p50": 15083293.470620736,
-              "p75": 19142891.622804806,
-              "p90": 26361236.30448058,
-              "ev": 17970774.868907623
+              "p25": 13009935.927134689,
+              "p50": 15078934.294634603,
+              "p75": 19130098.084209163,
+              "p90": 26342238.60523897,
+              "ev": 17960252.22738412
             },
             "y3_card_gdv_ann": {
               "p25": 1259432381.491894,
@@ -577,39 +577,39 @@
               "ev": 1342633861.0589166
             },
             "y3_stake_tvl": {
-              "p25": 1381885612.369193,
-              "p50": 3040667489.8240604,
-              "p75": 6743126216.76553,
-              "p90": 13739931177.606018,
-              "ev": 6116975411.689536
+              "p25": 1378407289.7935462,
+              "p50": 3035821220.4264946,
+              "p75": 6730317337.5402975,
+              "p90": 13717262631.196758,
+              "ev": 6106130528.095831
             },
             "treasury_cash": {
               "p25": 0.0,
               "p50": 0.0,
               "p75": 0.0,
-              "p90": 779612.7959349081,
-              "ev": 1407341.3172580434
+              "p90": 771094.9450912112,
+              "ev": 1402758.2757150268
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.16317744784655977,
-                "pv_15x_gp_plus_cash_p50": 0.16317744784655977
+                "pv_15x_gp_p50": 0.16313028843714322,
+                "pv_15x_gp_plus_cash_p50": 0.16313028843714322
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.1440009874097814,
-                "pv_15x_gp_plus_cash_p50": 0.1440009874097814
+                "pv_15x_gp_p50": 0.14395937012987375,
+                "pv_15x_gp_plus_cash_p50": 0.14395937012987375
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.12771537468826755,
-                "pv_15x_gp_plus_cash_p50": 0.12771537468826755
+                "pv_15x_gp_p50": 0.1276784640629134,
+                "pv_15x_gp_plus_cash_p50": 0.1276784640629134
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.11379576541556707,
-                "pv_15x_gp_plus_cash_p50": 0.11379576541556707
+                "pv_15x_gp_p50": 0.11376287765342882,
+                "pv_15x_gp_plus_cash_p50": 0.11376287765342882
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.10182763136152292,
-                "pv_15x_gp_plus_cash_p50": 0.10182763136152292
+                "pv_15x_gp_p50": 0.1017982024727845,
+                "pv_15x_gp_plus_cash_p50": 0.1017982024727845
               }
             },
             "margin": 0.5,
@@ -617,27 +617,27 @@
           },
           "base": {
             "pv_15x_gp": {
-              "p25": 0.20698795644358167,
-              "p50": 0.2263334863439868,
-              "p75": 0.2607954454956282,
-              "p90": 0.32118896579105854,
-              "ev": 0.24922672579554317,
-              "p_spot_justified": 0.08682
+              "p25": 0.2069553708295414,
+              "p50": 0.22630360537646887,
+              "p75": 0.26068553535123595,
+              "p90": 0.321011306052827,
+              "ev": 0.24913762701168,
+              "p_spot_justified": 0.08686
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.2069943755466266,
-              "p50": 0.2263589989548136,
-              "p75": 0.26185533004802597,
-              "p90": 0.3271958024020895,
-              "ev": 0.2513203679660838,
-              "p_spot_justified": 0.09386
+              "p25": 0.2069600226893297,
+              "p50": 0.22633233954753848,
+              "p75": 0.26173599150504046,
+              "p90": 0.3270685058046365,
+              "ev": 0.2512260228335089,
+              "p_spot_justified": 0.094
             },
             "y3_gp": {
-              "p25": 24445452.2373915,
-              "p50": 26730175.635374725,
-              "p75": 30800162.077692248,
-              "p90": 37932687.76274234,
-              "ev": 29433886.523620185
+              "p25": 24441603.848889418,
+              "p50": 26726646.66790813,
+              "p75": 30787181.596937183,
+              "p90": 37911705.99781231,
+              "ev": 29423363.882096685
             },
             "y3_card_gdv_ann": {
               "p25": 2414461409.175793,
@@ -647,39 +647,39 @@
               "ev": 2562608312.908253
             },
             "y3_stake_tvl": {
-              "p25": 1381885612.369193,
-              "p50": 3040667489.8240604,
-              "p75": 6743126216.76553,
-              "p90": 13739931177.606018,
-              "ev": 6116975411.689536
+              "p25": 1378407289.7935462,
+              "p50": 3035821220.4264946,
+              "p75": 6730317337.5402975,
+              "p90": 13717262631.196758,
+              "ev": 6106130528.095831
             },
             "treasury_cash": {
               "p25": 0.0,
               "p50": 0.0,
-              "p75": 1814372.3115597134,
-              "p90": 10346550.454215558,
-              "ev": 3708913.5929575446
+              "p75": 1797766.9081689967,
+              "p90": 10325688.944966037,
+              "ev": 3699619.619840258
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.28917834484667354,
-                "pv_15x_gp_plus_cash_p50": 0.28917834484667354
+                "pv_15x_gp_p50": 0.28914016698413614,
+                "pv_15x_gp_plus_cash_p50": 0.28914016698413614
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.2551943773174118,
-                "pv_15x_gp_plus_cash_p50": 0.2551943773174118
+                "pv_15x_gp_p50": 0.25516068608142833,
+                "pv_15x_gp_plus_cash_p50": 0.25516068608142833
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.2263334863439868,
-                "pv_15x_gp_plus_cash_p50": 0.2263334863439868
+                "pv_15x_gp_p50": 0.22630360537646887,
+                "pv_15x_gp_plus_cash_p50": 0.22630360537646887
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.20166555812527248,
-                "pv_15x_gp_plus_cash_p50": 0.20166555812527248
+                "pv_15x_gp_p50": 0.20163893386348442,
+                "pv_15x_gp_plus_cash_p50": 0.20163893386348442
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.18045597774314764,
-                "pv_15x_gp_plus_cash_p50": 0.18045597774314764
+                "pv_15x_gp_p50": 0.18043215360958056,
+                "pv_15x_gp_plus_cash_p50": 0.18043215360958056
               }
             },
             "margin": 0.6,
@@ -687,27 +687,27 @@
           },
           "bull": {
             "pv_15x_gp": {
-              "p25": 0.331883455429157,
-              "p50": 0.3546321517917063,
-              "p75": 0.3903074013488754,
-              "p90": 0.4492878873935537,
-              "ev": 0.37547544787941733,
-              "p_spot_justified": 0.74716
+              "p25": 0.3318583045653999,
+              "p50": 0.35458125420061043,
+              "p75": 0.39017994597632377,
+              "p90": 0.44904271747259605,
+              "ev": 0.37538634909555413,
+              "p_spot_justified": 0.7501
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.33862715702604196,
-              "p50": 0.3636931105922813,
-              "p75": 0.4029887690250799,
-              "p90": 0.46828314560324885,
-              "ev": 0.3866256791080863,
-              "p_spot_justified": 0.81066
+              "p25": 0.33859261949420993,
+              "p50": 0.3636388103754185,
+              "p75": 0.4028766586138731,
+              "p90": 0.4680274182610642,
+              "ev": 0.3865278635414673,
+              "p_spot_justified": 0.8129
             },
             "y3_gp": {
-              "p25": 39195716.00913537,
-              "p50": 41882356.23665604,
-              "p75": 46095633.299201004,
-              "p90": 53061278.44743121,
-              "ev": 44343967.08463225
+              "p25": 39192745.67091248,
+              "p50": 41876345.18821868,
+              "p75": 46080580.71220202,
+              "p90": 53032323.6729806,
+              "ev": 44333444.44310875
             },
             "y3_card_gdv_ann": {
               "p25": 3723834483.831678,
@@ -717,39 +717,39 @@
               "ev": 3937221550.4453573
             },
             "y3_stake_tvl": {
-              "p25": 1381885612.369193,
-              "p50": 3040667489.8240604,
-              "p75": 6743126216.76553,
-              "p90": 13739931177.606018,
-              "ev": 6116975411.689536
+              "p25": 1378407289.7935462,
+              "p50": 3035821220.4264946,
+              "p75": 6730317337.5402975,
+              "p90": 13717262631.196758,
+              "ev": 6106130528.095831
             },
             "treasury_cash": {
-              "p25": 11711089.33365206,
-              "p50": 15872873.798987675,
-              "p75": 22605525.450854186,
-              "p90": 33818299.33355537,
-              "ev": 19752775.689434372
+              "p25": 11703891.131859416,
+              "p50": 15864430.205645038,
+              "p75": 22581862.067977376,
+              "p90": 33781320.05128287,
+              "ev": 19737333.79850158
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.45310104280671554,
-                "pv_15x_gp_plus_cash_p50": 0.4645490069247835
+                "pv_15x_gp_p50": 0.45303601274250566,
+                "pv_15x_gp_plus_cash_p50": 0.4644778871029887
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.39985303374717696,
-                "pv_15x_gp_plus_cash_p50": 0.4099556438724663
+                "pv_15x_gp_p50": 0.3997956459550456,
+                "pv_15x_gp_plus_cash_p50": 0.40989288198534274
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.3546321517917063,
-                "pv_15x_gp_plus_cash_p50": 0.3635922197793594
+                "pv_15x_gp_p50": 0.35458125420061043,
+                "pv_15x_gp_plus_cash_p50": 0.3635365558698661
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.3159810418487855,
-                "pv_15x_gp_plus_cash_p50": 0.32396455829948084
+                "pv_15x_gp_p50": 0.3159356915505093,
+                "pv_15x_gp_plus_cash_p50": 0.32391496116051244
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.2827486675721811,
-                "pv_15x_gp_plus_cash_p50": 0.2898925412228508
+                "pv_15x_gp_p50": 0.28270808685779214,
+                "pv_15x_gp_plus_cash_p50": 0.28984816031671584
               }
             },
             "margin": 0.7,
@@ -757,43 +757,43 @@
           },
           "weighted_20_40_40": {
             "pv_15x_gp": {
-              "p25": 0.20266673312943304,
-              "p50": 0.26835660063412453,
-              "p75": 0.3510147808030467,
-              "p90": 0.40289165351521206,
-              "ev": 0.2804476654824737,
-              "p_spot_justified": 0.34174
+              "p25": 0.20263287839050026,
+              "p50": 0.2682170105693343,
+              "p75": 0.3509548530776711,
+              "p90": 0.40275304559894876,
+              "ev": 0.2803591070398734,
+              "p_spot_justified": 0.34322
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.2026674859991089,
-              "p50": 0.26995418438839147,
-              "p75": 0.35963381962507635,
-              "p90": 0.4169695116786189,
-              "ev": 0.2859139039744987,
-              "p_spot_justified": 0.37008
+              "p25": 0.2026398816748316,
+              "p50": 0.2697968442308425,
+              "p75": 0.35960395177584287,
+              "p90": 0.41682109392255684,
+              "ev": 0.285819267119938,
+              "p_spot_justified": 0.371
             },
             "pv_15x_gp_plus_optionality": {
-              "p25": 0.22293340644237636,
-              "p50": 0.295192260697537,
-              "p75": 0.38611625888335144,
-              "p90": 0.4431808188667333,
-              "ev": 0.3084924320307211,
-              "p_spot_justified": 0.44844
+              "p25": 0.2228961662295503,
+              "p50": 0.2950387116262677,
+              "p75": 0.38605033838543823,
+              "p90": 0.4430283501588437,
+              "ev": 0.30839501774386074,
+              "p_spot_justified": 0.44886
             },
             "pv_15x_gp_plus_cash_plus_optionality": {
-              "p25": 0.2229342345990198,
-              "p50": 0.29694960282723065,
-              "p75": 0.395597201587584,
-              "p90": 0.4586664628464808,
-              "ev": 0.3145052943719486,
-              "p_spot_justified": 0.45562
+              "p25": 0.22290386984231478,
+              "p50": 0.2967765286539268,
+              "p75": 0.3955643469534272,
+              "p90": 0.45850320331481254,
+              "ev": 0.31440119383193177,
+              "p_spot_justified": 0.45594
             },
             "y3_gp": {
-              "p25": 23935112.119308762,
-              "p50": 31693140.87691045,
-              "p75": 41455141.671868995,
-              "p90": 47581844.094075546,
-              "ev": 33121105.833557993
+              "p25": 23931113.846086442,
+              "p50": 31676655.172523227,
+              "p75": 41448064.156956844,
+              "p90": 47565474.38225774,
+              "ev": 33110647.006793387
             },
             "y3_card_gdv_ann": {
               "p25": 2317758645.434907,
@@ -803,18 +803,18 @@
               "ev": 2869174251.9970994
             },
             "y3_stake_tvl": {
-              "p25": 1384957111.1041884,
-              "p50": 3035231057.8789377,
-              "p75": 6740852440.803695,
-              "p90": 13802888697.438934,
-              "ev": 6117598015.787415
+              "p25": 1383302646.6832476,
+              "p50": 3031690757.307854,
+              "p75": 6731472647.055307,
+              "p90": 13770984573.747967,
+              "ev": 6106816609.123553
             },
             "treasury_cash": {
               "p25": 0.0,
-              "p50": 2854823.17207462,
-              "p75": 15161051.74190084,
-              "p90": 24905381.275116604,
-              "ev": 9683510.645080175
+              "p50": 2840128.3848962937,
+              "p75": 15149986.36099645,
+              "p90": 24893633.05947076,
+              "ev": 9672742.661390908
             },
             "scenario_weights": {
               "bear": 0.2,
@@ -1188,7 +1188,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 292259435
+          "mcap": 292693965
         }
       ]
     },
@@ -1196,19 +1196,850 @@
       "name": "Jupiter",
       "symbol": "JUP",
       "chain": "Solana",
-      "status": "error",
-      "error": "urllib.error.HTTPError: HTTP Error 429: Too Many Requests",
-      "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/scripts/update_valuations.py\", line 63, in <module>\n    data = mod.run()\n           ^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/jup.py\", line 254, in run\n    market = cg_market()\n             ^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/jup.py\", line 51, in cg_market\n    arr = fetch_json(url)\n          ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/jup.py\", line 41, in fetch_json\n    with urllib.request.urlopen(req, timeout=timeout) as r:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 215, in urlopen\n    return opener.open(url, data, timeout)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 521, in open\n    response = meth(req, response)\n               ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 630, in http_response\n    response = self.parent.error(\n               ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/urllib/request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 429: Too Many Requests\n",
-      "mcap_history": []
+      "status": "ok",
+      "data": {
+        "token": "JUP",
+        "name": "Jupiter",
+        "as_of_utc": "2026-06-04T07:49:03.798820+00:00",
+        "market": {
+          "spot": 0.17872,
+          "market_cap": 593806564.0,
+          "fdv": 1227281620.0,
+          "circulating_supply": 3320312968.08
+        },
+        "model": {
+          "type": "3Y GP-Capture Monte Carlo",
+          "discount_rate": 0.244,
+          "multiple": 15.0,
+          "paths": 100000,
+          "note": "50% of entity GP used for buybacks; 0 scheduled unlocks until Jupiter announces reserve plan"
+        },
+        "current_gp": {
+          "perps_30d": 1977771.5,
+          "aggregator_30d": 2185269.0,
+          "jupiterz_30d": 341443.07042999996,
+          "total_30d": 4504483.570429999,
+          "seed_monthly": 4504483.570429999,
+          "seed_annualized": 54053802.84515999,
+          "optional_tracked_30d": 286765.0
+        },
+        "y3_state": {
+          "y3_ttm_gp": {
+            "p25": 24800908.160262626,
+            "p50": 81612546.81402937,
+            "p75": 190789266.14568657,
+            "p90": 257329395.90401414
+          },
+          "y3_perps_gp": {
+            "p25": 6862388.473393079,
+            "p50": 24407188.137510337,
+            "p75": 86880064.65833218,
+            "p90": 177281430.41890252
+          },
+          "y3_spot_gp": {
+            "p25": 2089050.686590804,
+            "p50": 14021109.947439019,
+            "p75": 94405257.63540173,
+            "p90": 227620510.42477328
+          },
+          "y3_effective_supply": {
+            "p25": 2063608380.2296474,
+            "p50": 2631941472.233963,
+            "p75": 2990756145.8802786,
+            "p90": 3138570617.7096653
+          },
+          "buyback_accum_tokens": {
+            "p25": 329556822.1997211,
+            "p50": 688371495.8460371,
+            "p75": 1256704587.8503525,
+            "p90": 1769422702.730684
+          }
+        },
+        "scenarios": [
+          {
+            "key": "core",
+            "label": "Core GP",
+            "pv": {
+              "p25": 0.06569451501955115,
+              "p50": 0.2435598564966026,
+              "p75": 0.715121816348496,
+              "p90": 1.280286197695622
+            },
+            "ev": 167880.82943543553,
+            "prob_above_spot": 0.55981,
+            "prob_3x": 0.33399,
+            "is_primary": true
+          },
+          {
+            "key": "opt_10",
+            "label": "+10% Optionality",
+            "pv": {
+              "p25": 0.07226396652150628,
+              "p50": 0.26791584214626296,
+              "p75": 0.7866339979833458,
+              "p90": 1.4083148174651845
+            },
+            "ev": 184668.91237897912,
+            "prob_above_spot": 0.57879,
+            "prob_3x": 0.35634,
+            "is_primary": false
+          },
+          {
+            "key": "opt_10_jupnet_10",
+            "label": "+10% Opt + Jupnet",
+            "pv": {
+              "p25": 0.07883341802346139,
+              "p50": 0.29227182779592314,
+              "p75": 0.8581461796181952,
+              "p90": 1.5363434372347464
+            },
+            "ev": 201456.99532252262,
+            "prob_above_spot": 0.59642,
+            "prob_3x": 0.3758,
+            "is_primary": false
+          }
+        ]
+      },
+      "mcap_history": [
+        {
+          "date": "2026-03-07",
+          "mcap": 618304601
+        },
+        {
+          "date": "2026-03-08",
+          "mcap": 596657712
+        },
+        {
+          "date": "2026-03-09",
+          "mcap": 574494455
+        },
+        {
+          "date": "2026-03-10",
+          "mcap": 560179447
+        },
+        {
+          "date": "2026-03-11",
+          "mcap": 585755236
+        },
+        {
+          "date": "2026-03-12",
+          "mcap": 577395596
+        },
+        {
+          "date": "2026-03-13",
+          "mcap": 569130137
+        },
+        {
+          "date": "2026-03-14",
+          "mcap": 576925438
+        },
+        {
+          "date": "2026-03-15",
+          "mcap": 562107894
+        },
+        {
+          "date": "2026-03-16",
+          "mcap": 569992295
+        },
+        {
+          "date": "2026-03-17",
+          "mcap": 592723793
+        },
+        {
+          "date": "2026-03-18",
+          "mcap": 601916169
+        },
+        {
+          "date": "2026-03-19",
+          "mcap": 570804044
+        },
+        {
+          "date": "2026-03-20",
+          "mcap": 557459732
+        },
+        {
+          "date": "2026-03-21",
+          "mcap": 557957985
+        },
+        {
+          "date": "2026-03-22",
+          "mcap": 549053970
+        },
+        {
+          "date": "2026-03-23",
+          "mcap": 534168192
+        },
+        {
+          "date": "2026-03-24",
+          "mcap": 535953182
+        },
+        {
+          "date": "2026-03-25",
+          "mcap": 545962576
+        },
+        {
+          "date": "2026-03-26",
+          "mcap": 541350194
+        },
+        {
+          "date": "2026-03-27",
+          "mcap": 520458216
+        },
+        {
+          "date": "2026-03-28",
+          "mcap": 497729675
+        },
+        {
+          "date": "2026-03-29",
+          "mcap": 512438606
+        },
+        {
+          "date": "2026-03-30",
+          "mcap": 502648093
+        },
+        {
+          "date": "2026-03-31",
+          "mcap": 535403788
+        },
+        {
+          "date": "2026-04-01",
+          "mcap": 562100271
+        },
+        {
+          "date": "2026-04-02",
+          "mcap": 552042767
+        },
+        {
+          "date": "2026-04-03",
+          "mcap": 549995086
+        },
+        {
+          "date": "2026-04-04",
+          "mcap": 579510870
+        },
+        {
+          "date": "2026-04-05",
+          "mcap": 577952261
+        },
+        {
+          "date": "2026-04-06",
+          "mcap": 576680736
+        },
+        {
+          "date": "2026-04-07",
+          "mcap": 567885984
+        },
+        {
+          "date": "2026-04-08",
+          "mcap": 609004428
+        },
+        {
+          "date": "2026-04-09",
+          "mcap": 568998739
+        },
+        {
+          "date": "2026-04-10",
+          "mcap": 573235903
+        },
+        {
+          "date": "2026-04-11",
+          "mcap": 589825921
+        },
+        {
+          "date": "2026-04-12",
+          "mcap": 588526384
+        },
+        {
+          "date": "2026-04-13",
+          "mcap": 568550889
+        },
+        {
+          "date": "2026-04-14",
+          "mcap": 606574512
+        },
+        {
+          "date": "2026-04-15",
+          "mcap": 588238169
+        },
+        {
+          "date": "2026-04-16",
+          "mcap": 600455014
+        },
+        {
+          "date": "2026-04-17",
+          "mcap": 639542408
+        },
+        {
+          "date": "2026-04-18",
+          "mcap": 657961859
+        },
+        {
+          "date": "2026-04-19",
+          "mcap": 637170957
+        },
+        {
+          "date": "2026-04-20",
+          "mcap": 599799521
+        },
+        {
+          "date": "2026-04-21",
+          "mcap": 600522104
+        },
+        {
+          "date": "2026-04-22",
+          "mcap": 609837990
+        },
+        {
+          "date": "2026-04-23",
+          "mcap": 611596300
+        },
+        {
+          "date": "2026-04-24",
+          "mcap": 615678630
+        },
+        {
+          "date": "2026-04-25",
+          "mcap": 616235827
+        },
+        {
+          "date": "2026-04-26",
+          "mcap": 612810351
+        },
+        {
+          "date": "2026-04-27",
+          "mcap": 652664197
+        },
+        {
+          "date": "2026-04-28",
+          "mcap": 698371722
+        },
+        {
+          "date": "2026-04-29",
+          "mcap": 625938350
+        },
+        {
+          "date": "2026-04-30",
+          "mcap": 602937956
+        },
+        {
+          "date": "2026-05-01",
+          "mcap": 597711230
+        },
+        {
+          "date": "2026-05-02",
+          "mcap": 592821338
+        },
+        {
+          "date": "2026-05-03",
+          "mcap": 599587158
+        },
+        {
+          "date": "2026-05-04",
+          "mcap": 589592001
+        },
+        {
+          "date": "2026-05-05",
+          "mcap": 591122428
+        },
+        {
+          "date": "2026-05-06",
+          "mcap": 636695270
+        },
+        {
+          "date": "2026-05-07",
+          "mcap": 656944029
+        },
+        {
+          "date": "2026-05-08",
+          "mcap": 683457380
+        },
+        {
+          "date": "2026-05-09",
+          "mcap": 806951830
+        },
+        {
+          "date": "2026-05-10",
+          "mcap": 827748306
+        },
+        {
+          "date": "2026-05-11",
+          "mcap": 888121940
+        },
+        {
+          "date": "2026-05-12",
+          "mcap": 828220924
+        },
+        {
+          "date": "2026-05-13",
+          "mcap": 770057094
+        },
+        {
+          "date": "2026-05-14",
+          "mcap": 737960397
+        },
+        {
+          "date": "2026-05-15",
+          "mcap": 746098514
+        },
+        {
+          "date": "2026-05-16",
+          "mcap": 697802285
+        },
+        {
+          "date": "2026-05-17",
+          "mcap": 660213738
+        },
+        {
+          "date": "2026-05-18",
+          "mcap": 636862661
+        },
+        {
+          "date": "2026-05-19",
+          "mcap": 662762827
+        },
+        {
+          "date": "2026-05-20",
+          "mcap": 647433376
+        },
+        {
+          "date": "2026-05-21",
+          "mcap": 706509624
+        },
+        {
+          "date": "2026-05-22",
+          "mcap": 709415476
+        },
+        {
+          "date": "2026-05-23",
+          "mcap": 661073649
+        },
+        {
+          "date": "2026-05-24",
+          "mcap": 705023856
+        },
+        {
+          "date": "2026-05-25",
+          "mcap": 667784470
+        },
+        {
+          "date": "2026-05-26",
+          "mcap": 670553868
+        },
+        {
+          "date": "2026-05-27",
+          "mcap": 658607084
+        },
+        {
+          "date": "2026-05-28",
+          "mcap": 627388724
+        },
+        {
+          "date": "2026-05-29",
+          "mcap": 581660604
+        },
+        {
+          "date": "2026-05-30",
+          "mcap": 618419987
+        },
+        {
+          "date": "2026-05-31",
+          "mcap": 611878943
+        },
+        {
+          "date": "2026-06-01",
+          "mcap": 631096163
+        },
+        {
+          "date": "2026-06-02",
+          "mcap": 663287549
+        },
+        {
+          "date": "2026-06-03",
+          "mcap": 644665016
+        },
+        {
+          "date": "2026-06-04",
+          "mcap": 664699414
+        },
+        {
+          "date": "2026-06-04",
+          "mcap": 593806564
+        }
+      ]
     },
     "hype": {
       "name": "Hyperliquid",
       "symbol": "HYPE",
       "chain": "HyperEVM",
       "status": "error",
-      "error": "requests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=hyperliquid&sparkline=false&price_change_percentage=24h",
-      "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/scripts/update_valuations.py\", line 63, in <module>\n    data = mod.run()\n           ^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/hype.py\", line 24, in run\n    res = _hype.run_model()\n          ^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 222, in run_model\n    market=cg_market()\n           ^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 40, in cg_market\n    return get_json(\n           ^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 35, in get_json\n    r.raise_for_status()\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/models.py\", line 1167, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 429 Client Error: Too Many Requests for url: https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=hyperliquid&sparkline=false&price_change_percentage=24h\n",
-      "mcap_history": []
+      "error": "requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)",
+      "traceback": "Traceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 534, in _make_request\n    response = conn.getresponse()\n               ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connection.py\", line 571, in getresponse\n    httplib_response = super().getresponse()\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 1450, in getresponse\n    response.begin()\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 336, in begin\n    version, status, reason = self._read_status()\n                              ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 297, in _read_status\n    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/socket.py\", line 720, in readinto\n    return self._sock.recv_into(b)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/ssl.py\", line 1251, in recv_into\n    return self.read(nbytes, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/ssl.py\", line 1103, in read\n    return self._sslobj.read(len, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTimeoutError: The read operation timed out\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/adapters.py\", line 696, in send\n    resp = conn.urlopen(\n           ^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 842, in urlopen\n    retries = retries.increment(\n              ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/util/retry.py\", line 498, in increment\n    raise reraise(type(error), error, _stacktrace)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/util/util.py\", line 39, in reraise\n    raise value\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 788, in urlopen\n    response = self._make_request(\n               ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 536, in _make_request\n    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 367, in _raise_timeout\n    raise ReadTimeoutError(\nurllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/scripts/update_valuations.py\", line 70, in <module>\n    data = mod.run()\n           ^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/hype.py\", line 24, in run\n    res = _hype.run_model()\n          ^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 267, in run_model\n    dr,rf,hp_std,spy_std,n_hp,n_spy=discount_rate()\n                                    ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 195, in discount_rate\n    spy = sp500_prices()\n          ^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 73, in sp500_prices\n    vals = fred_series(\"SP500\")\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 61, in fred_series\n    r = requests.get(f\"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}\", timeout=30)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/api.py\", line 87, in get\n    return request(\"get\", url, params=params, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/api.py\", line 71, in request\n    return session.request(method=method, url=url, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/adapters.py\", line 742, in send\n    raise ReadTimeout(e, request=request)\nrequests.exceptions.ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)\n",
+      "mcap_history": [
+        {
+          "date": "2026-03-07",
+          "mcap": 7429875991
+        },
+        {
+          "date": "2026-03-08",
+          "mcap": 7218580286
+        },
+        {
+          "date": "2026-03-09",
+          "mcap": 7330775407
+        },
+        {
+          "date": "2026-03-10",
+          "mcap": 8295942324
+        },
+        {
+          "date": "2026-03-11",
+          "mcap": 8133322717
+        },
+        {
+          "date": "2026-03-12",
+          "mcap": 8637132470
+        },
+        {
+          "date": "2026-03-13",
+          "mcap": 8899305990
+        },
+        {
+          "date": "2026-03-14",
+          "mcap": 8684194532
+        },
+        {
+          "date": "2026-03-15",
+          "mcap": 9030529128
+        },
+        {
+          "date": "2026-03-16",
+          "mcap": 8886905084
+        },
+        {
+          "date": "2026-03-17",
+          "mcap": 9716525628
+        },
+        {
+          "date": "2026-03-18",
+          "mcap": 9817546868
+        },
+        {
+          "date": "2026-03-19",
+          "mcap": 10037420613
+        },
+        {
+          "date": "2026-03-20",
+          "mcap": 9336726145
+        },
+        {
+          "date": "2026-03-21",
+          "mcap": 9424955296
+        },
+        {
+          "date": "2026-03-22",
+          "mcap": 9429693708
+        },
+        {
+          "date": "2026-03-23",
+          "mcap": 9160930583
+        },
+        {
+          "date": "2026-03-24",
+          "mcap": 8866384369
+        },
+        {
+          "date": "2026-03-25",
+          "mcap": 9622247924
+        },
+        {
+          "date": "2026-03-26",
+          "mcap": 9596883953
+        },
+        {
+          "date": "2026-03-27",
+          "mcap": 9306503226
+        },
+        {
+          "date": "2026-03-28",
+          "mcap": 9193086572
+        },
+        {
+          "date": "2026-03-29",
+          "mcap": 9404913866
+        },
+        {
+          "date": "2026-03-30",
+          "mcap": 9023333311
+        },
+        {
+          "date": "2026-03-31",
+          "mcap": 8757865975
+        },
+        {
+          "date": "2026-04-01",
+          "mcap": 8712783744
+        },
+        {
+          "date": "2026-04-02",
+          "mcap": 8577163474
+        },
+        {
+          "date": "2026-04-03",
+          "mcap": 8393169236
+        },
+        {
+          "date": "2026-04-04",
+          "mcap": 8490797573
+        },
+        {
+          "date": "2026-04-05",
+          "mcap": 8689369262
+        },
+        {
+          "date": "2026-04-06",
+          "mcap": 8806780783
+        },
+        {
+          "date": "2026-04-07",
+          "mcap": 8661929090
+        },
+        {
+          "date": "2026-04-08",
+          "mcap": 9212111989
+        },
+        {
+          "date": "2026-04-09",
+          "mcap": 9238401704
+        },
+        {
+          "date": "2026-04-10",
+          "mcap": 9403959436
+        },
+        {
+          "date": "2026-04-11",
+          "mcap": 9916115415
+        },
+        {
+          "date": "2026-04-12",
+          "mcap": 10073827471
+        },
+        {
+          "date": "2026-04-13",
+          "mcap": 9737587825
+        },
+        {
+          "date": "2026-04-14",
+          "mcap": 10563313738
+        },
+        {
+          "date": "2026-04-15",
+          "mcap": 10367275021
+        },
+        {
+          "date": "2026-04-16",
+          "mcap": 10620387339
+        },
+        {
+          "date": "2026-04-17",
+          "mcap": 10458860238
+        },
+        {
+          "date": "2026-04-18",
+          "mcap": 10610905589
+        },
+        {
+          "date": "2026-04-19",
+          "mcap": 10469907465
+        },
+        {
+          "date": "2026-04-20",
+          "mcap": 9691840473
+        },
+        {
+          "date": "2026-04-21",
+          "mcap": 9683629100
+        },
+        {
+          "date": "2026-04-22",
+          "mcap": 9501845698
+        },
+        {
+          "date": "2026-04-23",
+          "mcap": 9824680051
+        },
+        {
+          "date": "2026-04-24",
+          "mcap": 9836919578
+        },
+        {
+          "date": "2026-04-25",
+          "mcap": 9804494104
+        },
+        {
+          "date": "2026-04-26",
+          "mcap": 9890437413
+        },
+        {
+          "date": "2026-04-27",
+          "mcap": 10140301631
+        },
+        {
+          "date": "2026-04-28",
+          "mcap": 9915238964
+        },
+        {
+          "date": "2026-04-29",
+          "mcap": 9558838410
+        },
+        {
+          "date": "2026-04-30",
+          "mcap": 9517109169
+        },
+        {
+          "date": "2026-05-01",
+          "mcap": 9460812216
+        },
+        {
+          "date": "2026-05-02",
+          "mcap": 9803039197
+        },
+        {
+          "date": "2026-05-03",
+          "mcap": 9843518332
+        },
+        {
+          "date": "2026-05-04",
+          "mcap": 9889842327
+        },
+        {
+          "date": "2026-05-05",
+          "mcap": 9966565322
+        },
+        {
+          "date": "2026-05-06",
+          "mcap": 10409653587
+        },
+        {
+          "date": "2026-05-07",
+          "mcap": 10253462301
+        },
+        {
+          "date": "2026-05-08",
+          "mcap": 10136166176
+        },
+        {
+          "date": "2026-05-09",
+          "mcap": 10288209715
+        },
+        {
+          "date": "2026-05-10",
+          "mcap": 10238069453
+        },
+        {
+          "date": "2026-05-11",
+          "mcap": 10274147186
+        },
+        {
+          "date": "2026-05-12",
+          "mcap": 9994435917
+        },
+        {
+          "date": "2026-05-13",
+          "mcap": 9574968306
+        },
+        {
+          "date": "2026-05-14",
+          "mcap": 9268235871
+        },
+        {
+          "date": "2026-05-15",
+          "mcap": 10518032022
+        },
+        {
+          "date": "2026-05-16",
+          "mcap": 10531893670
+        },
+        {
+          "date": "2026-05-17",
+          "mcap": 9982951139
+        },
+        {
+          "date": "2026-05-18",
+          "mcap": 10743852713
+        },
+        {
+          "date": "2026-05-19",
+          "mcap": 11341593837
+        },
+        {
+          "date": "2026-05-20",
+          "mcap": 11483593354
+        },
+        {
+          "date": "2026-05-21",
+          "mcap": 12979211614
+        },
+        {
+          "date": "2026-05-22",
+          "mcap": 13994854508
+        },
+        {
+          "date": "2026-05-23",
+          "mcap": 13139337765
+        },
+        {
+          "date": "2026-05-24",
+          "mcap": 13908081603
+        },
+        {
+          "date": "2026-05-25",
+          "mcap": 15017327064
+        },
+        {
+          "date": "2026-05-26",
+          "mcap": 13614350248
+        },
+        {
+          "date": "2026-05-27",
+          "mcap": 13222710560
+        },
+        {
+          "date": "2026-05-28",
+          "mcap": 12835538484
+        },
+        {
+          "date": "2026-05-29",
+          "mcap": 13687499326
+        },
+        {
+          "date": "2026-05-30",
+          "mcap": 14302850227
+        },
+        {
+          "date": "2026-05-31",
+          "mcap": 15077776934
+        },
+        {
+          "date": "2026-06-01",
+          "mcap": 16001149106
+        },
+        {
+          "date": "2026-06-02",
+          "mcap": 16376479140
+        },
+        {
+          "date": "2026-06-03",
+          "mcap": 15448457188
+        },
+        {
+          "date": "2026-06-04",
+          "mcap": 16560560639
+        },
+        {
+          "date": "2026-06-04",
+          "mcap": 15267808962
+        }
+      ]
     },
     "sky": {
       "name": "Sky",
@@ -1218,7 +2049,7 @@
       "data": {
         "token": "SKY",
         "name": "Sky",
-        "as_of_utc": "2026-06-04T07:37:09.210339+00:00",
+        "as_of_utc": "2026-06-04T07:50:06.253572+00:00",
         "market": {
           "spot": 0.08084,
           "market_cap": 1876588264.0,
