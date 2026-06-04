@@ -13,6 +13,8 @@ _CG_KEY = os.environ.get("COINGECKO_API_KEY", "")
 _CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
 _CG_HEADERS = {"x-cg-pro-api-key": _CG_KEY} if _CG_KEY else {}
 
+FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
+
 CG_ID = "hyperliquid"
 N_PATHS = 100_000
 MONTHS = 36
@@ -58,9 +60,26 @@ def cg_prices(days="max"):
 
 
 def fred_series(series="DGS10"):
+    if FRED_API_KEY:
+        # Use the FRED API (more reliable in CI than the public fredgraph.csv endpoint)
+        r = requests.get(
+            "https://api.stlouisfed.org/fred/series/observations",
+            params={"series_id": series, "api_key": FRED_API_KEY, "file_type": "json",
+                    "observation_start": "2000-01-01", "sort_order": "asc"},
+            timeout=30,
+        )
+        r.raise_for_status()
+        vals = []
+        for obs in r.json().get("observations", []):
+            try:
+                vals.append((datetime.strptime(obs["date"], "%Y-%m-%d").date(), float(obs["value"])))
+            except Exception:
+                pass
+        return vals
+    # Fallback: public CSV (may be geo-blocked in some CI environments)
     r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}", timeout=30)
     r.raise_for_status()
-    vals=[]
+    vals = []
     for row in csv.DictReader(io.StringIO(r.text)):
         try:
             vals.append((datetime.strptime(row['observation_date'], '%Y-%m-%d').date(), float(row[series])))
@@ -190,18 +209,23 @@ def choose_monthly_return_distribution():
 
 
 def discount_rate():
-    # Free CoinGecko often blocks days=max; 365d is enough for liquid-token stdev framework.
-    hp = cg_prices("365")
-    spy = sp500_prices()
-    rf = fred_series("DGS10")[-1][1] / 100.0
-    cutoff = datetime.now(timezone.utc).date() - timedelta(days=365)
-    hp_ret = log_returns(hp, cutoff=cutoff)
-    spy_ret = log_returns(spy, cutoff=cutoff)
-    if len(hp_ret) < 60: hp_ret = log_returns(hp)
-    if len(spy_ret) < 60: spy_ret = log_returns(spy)[-252:]
-    hp_std=float(np.std(hp_ret, ddof=1)); spy_std=float(np.std(spy_ret, ddof=1))
-    dr = rf + ERP * (hp_std / spy_std)
-    return dr, rf, hp_std, spy_std, len(hp_ret), len(spy_ret)
+    # Only used for the "calculated reference" rate shown in the report.
+    # The model always uses SELECTED_DISCOUNT_RATE for actual MC paths.
+    try:
+        hp = cg_prices("365")
+        spy = sp500_prices()
+        rf = fred_series("DGS10")[-1][1] / 100.0
+        cutoff = datetime.now(timezone.utc).date() - timedelta(days=365)
+        hp_ret = log_returns(hp, cutoff=cutoff)
+        spy_ret = log_returns(spy, cutoff=cutoff)
+        if len(hp_ret) < 60: hp_ret = log_returns(hp)
+        if len(spy_ret) < 60: spy_ret = log_returns(spy)[-252:]
+        hp_std=float(np.std(hp_ret, ddof=1)); spy_std=float(np.std(spy_ret, ddof=1))
+        dr = rf + ERP * (hp_std / spy_std)
+        return dr, rf, hp_std, spy_std, len(hp_ret), len(spy_ret)
+    except Exception as e:
+        print(f"[HYPE] discount_rate() fetch failed ({e}); using NaN for reference fields")
+        return float('nan'), float('nan'), float('nan'), float('nan'), 0, 0
 
 
 def percentile_ranks(x):
