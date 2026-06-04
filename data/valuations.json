@@ -9,11 +9,11 @@
       "data": {
         "token": "UNI",
         "name": "Uniswap",
-        "as_of_utc": "2026-06-04T07:48:22.195777+00:00",
+        "as_of_utc": "2026-06-04T07:56:43.804251+00:00",
         "market": {
-          "spot": 2.69,
-          "market_cap": 1675411357.0,
-          "fdv": 2407439950.0,
+          "spot": 2.68,
+          "market_cap": 1672855299.0,
+          "fdv": 2403767088.0,
           "circulating_supply": 622841561.5538775,
           "max_supply": 1000000000.0
         },
@@ -25,56 +25,56 @@
           "note": "25% fee-switch GP on LP fees + 0.30bps frontend fee; volume bootstrapped from 2021+ monthly history"
         },
         "current_gp": {
-          "annualized_current_state": 53156428.75312573,
-          "annualized_full_activation": 161454625.73188666,
-          "lp_fee_bps_30d": 12.480219897271725,
+          "annualized_current_state": 53156285.70120639,
+          "annualized_full_activation": 161454587.61858666,
+          "lp_fee_bps_30d": 12.480253483504972,
           "take_bps_current": 1.126,
-          "take_bps_full": 3.420054974317931,
-          "ann_volume": 472081960507.3333,
-          "mcap_current_state_gp": 31.518508603749677,
-          "mcap_full_activation_gp": 10.376979596621819
+          "take_bps_full": 3.420063370876243,
+          "ann_volume": 472080690064.0,
+          "mcap_current_state_gp": 31.47050771009823,
+          "mcap_full_activation_gp": 10.361150610051919
         },
         "scenarios": [
           {
             "key": "current_state",
             "label": "Current-state economics",
             "pv": {
-              "p25": 0.26138038339423986,
-              "p50": 0.8225038812081018,
-              "p75": 2.6360722250394177,
-              "p90": 7.396266239913232
+              "p25": 0.26137967998044026,
+              "p50": 0.8225016677268424,
+              "p75": 2.6360651309738428,
+              "p90": 7.396246335451884
             },
-            "ev": 3.878366157671687,
-            "prob_above_spot": 0.2463,
-            "prob_3x": 0.0914875,
+            "ev": 3.8783557204068866,
+            "prob_above_spot": 0.2470875,
+            "prob_3x": 0.091775,
             "is_primary": false
           },
           {
             "key": "full_activation",
             "label": "Full-activation (fee switch on)",
             "pv": {
-              "p25": 0.793903446195913,
-              "p50": 2.498231341315784,
-              "p75": 8.006671337395558,
-              "p90": 22.46504186962259
+              "p25": 0.7939032587854868,
+              "p50": 2.498230751578327,
+              "p75": 8.006669447324803,
+              "p90": 22.465036566480133
             },
-            "ev": 11.779951571733015,
-            "prob_above_spot": 0.4825875,
-            "prob_3x": 0.2487625,
+            "ev": 11.779948790934226,
+            "prob_above_spot": 0.4834125,
+            "prob_3x": 0.2492875,
             "is_primary": true
           },
           {
             "key": "full_activation_fdv",
             "label": "Full-activation (max supply)",
             "pv": {
-              "p25": 0.4944760621516672,
-              "p50": 1.556002309747961,
-              "p75": 4.9868876786321215,
-              "p90": 13.992161758448972
+              "p25": 0.4944759454246647,
+              "p50": 1.5560019424349623,
+              "p75": 4.9868865014175014,
+              "p90": 13.992158455431445
             },
-            "ev": 7.337043431967244,
-            "prob_above_spot": 0.373725,
-            "prob_3x": 0.169225,
+            "ev": 7.337041699970185,
+            "prob_above_spot": 0.37445,
+            "prob_3x": 0.169725,
             "is_primary": false
           }
         ],
@@ -444,7 +444,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 1675411357
+          "mcap": 1672855299
         }
       ]
     },
@@ -456,11 +456,11 @@
       "data": {
         "token": "ETHFI",
         "name": "ether.fi",
-        "as_of_utc": "2026-06-04T07:48:55.735306+00:00",
+        "as_of_utc": "2026-06-04T07:57:20.930540+00:00",
         "market": {
-          "spot": 0.331847,
-          "market_cap": 292693965.0,
-          "fdv": 331868775.0,
+          "spot": 0.33061,
+          "market_cap": 291208595.0,
+          "fdv": 330184600.0,
           "circulating_supply": 880665741.0
         },
         "model": {
@@ -472,16 +472,16 @@
           "note": "Card GP = GDV \u00d7 135bps take \u00d7 margin; staking GP = ETH bootstrap; vault flat"
         },
         "current_gp": {
-          "card_annualized": 7880213.21625,
+          "card_annualized": 7885838.64735,
           "staking_annualized": 3870314.7278467286,
           "vault_annualized": 1962242.3961228002,
-          "total_annualized": 13712770.34021953,
-          "card_gdv_30d_ann": 972865829.1666666,
+          "total_annualized": 13718395.771319529,
+          "card_gdv_30d_ann": 973560326.8333334,
           "staking_apy": 0.02518065,
           "stake_tvl": 3074038778.06707,
           "vault_tvl": 196224239.61228,
-          "card_take_bps_30d": 137.97602160787852,
-          "card_mom": 0.18235218567307188
+          "card_take_bps_30d": 137.87759522132444,
+          "card_mom": 0.18319622892087684
         },
         "scenarios": [
           {
@@ -490,13 +490,13 @@
             "weight": 0.2,
             "margin": 0.5,
             "pv": {
-              "p25": 0.11015955135002624,
-              "p50": 0.1276784640629134,
-              "p75": 0.16198104541338845,
-              "p90": 0.2230486915970208
+              "p25": 0.11021046341796255,
+              "p50": 0.12772953703199205,
+              "p75": 0.16202700630142178,
+              "p90": 0.22309626513283506
             },
-            "ev": 0.15207556275318937,
-            "prob_above_spot": 0.03176,
+            "ev": 0.1521178065893549,
+            "prob_above_spot": 0.03224,
             "is_primary": false
           },
           {
@@ -505,13 +505,13 @@
             "weight": 0.4,
             "margin": 0.6,
             "pv": {
-              "p25": 0.2069553708295414,
-              "p50": 0.22630360537646887,
-              "p75": 0.26068553535123595,
-              "p90": 0.321011306052827
+              "p25": 0.20706969403609668,
+              "p50": 0.22641633731365735,
+              "p75": 0.26078541711477043,
+              "p90": 0.3211294297777587
             },
-            "ev": 0.24913762701168,
-            "prob_above_spot": 0.08686,
+            "ev": 0.24924720954617352,
+            "prob_above_spot": 0.08816,
             "is_primary": true
           },
           {
@@ -520,13 +520,13 @@
             "weight": 0.4,
             "margin": 0.7,
             "pv": {
-              "p25": 0.3318583045653999,
-              "p50": 0.35458125420061043,
-              "p75": 0.39017994597632377,
-              "p90": 0.44904271747259605
+              "p25": 0.33205691220245315,
+              "p50": 0.3547931853702484,
+              "p75": 0.3903792825274486,
+              "p90": 0.4492264822155444
             },
-            "ev": 0.37538634909555413,
-            "prob_above_spot": 0.7501,
+            "ev": 0.3755837923151169,
+            "prob_above_spot": 0.76512,
             "is_primary": false
           },
           {
@@ -534,82 +534,82 @@
             "label": "Weighted 20/40/40",
             "weight": 1.0,
             "pv": {
-              "p25": 0.20263287839050026,
-              "p50": 0.2682170105693343,
-              "p75": 0.3509548530776711,
-              "p90": 0.40275304559894876
+              "p25": 0.20274332492156075,
+              "p50": 0.26829951985584166,
+              "p75": 0.35111868668933016,
+              "p90": 0.4029332701437127
             },
-            "ev": 0.2803591070398734,
-            "prob_above_spot": 0.34322,
+            "ev": 0.28049047474845634,
+            "prob_above_spot": 0.34956,
             "is_primary": true
           }
         ],
         "raw_results": {
           "bear": {
             "pv_15x_gp": {
-              "p25": 0.11015955135002624,
-              "p50": 0.1276784640629134,
-              "p75": 0.16198104541338845,
-              "p90": 0.2230486915970208,
-              "ev": 0.15207556275318937,
-              "p_spot_justified": 0.03176
+              "p25": 0.11021046341796255,
+              "p50": 0.12772953703199205,
+              "p75": 0.16202700630142178,
+              "p90": 0.22309626513283506,
+              "ev": 0.1521178065893549,
+              "p_spot_justified": 0.03224
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.11015955135002624,
-              "p50": 0.1276784640629134,
-              "p75": 0.16199684880366938,
-              "p90": 0.22342275017659918,
-              "ev": 0.1528674048405026,
-              "p_spot_justified": 0.03372
+              "p25": 0.11021046341796255,
+              "p50": 0.12772953703199205,
+              "p75": 0.1620354473610179,
+              "p90": 0.22345818254249478,
+              "ev": 0.1529096608822774,
+              "p_spot_justified": 0.03406
             },
             "y3_gp": {
-              "p25": 13009935.927134689,
-              "p50": 15078934.294634603,
-              "p75": 19130098.084209163,
-              "p90": 26342238.60523897,
-              "ev": 17960252.22738412
+              "p25": 13015948.685299113,
+              "p50": 15084966.05535965,
+              "p75": 19135526.103851035,
+              "p90": 26347857.07994394,
+              "ev": 17965241.260065306
             },
             "y3_card_gdv_ann": {
-              "p25": 1259432381.491894,
-              "p50": 1337323689.0416722,
-              "p75": 1419413502.9257708,
-              "p90": 1498699725.3387582,
-              "ev": 1342633861.0589166
+              "p25": 1260331449.815652,
+              "p50": 1338278361.4679961,
+              "p75": 1420426776.6334724,
+              "p90": 1499769598.933942,
+              "ev": 1343592324.2464786
             },
             "y3_stake_tvl": {
-              "p25": 1378407289.7935462,
-              "p50": 3035821220.4264946,
-              "p75": 6730317337.5402975,
-              "p90": 13717262631.196758,
-              "ev": 6106130528.095831
+              "p25": 1378269083.291572,
+              "p50": 3035183661.056159,
+              "p75": 6728128435.493031,
+              "p90": 13712554463.488838,
+              "ev": 6104603966.03355
             },
             "treasury_cash": {
               "p25": 0.0,
               "p50": 0.0,
               "p75": 0.0,
-              "p90": 771094.9450912112,
-              "ev": 1402758.2757150268
+              "p90": 771912.018664496,
+              "ev": 1402779.898106299
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.16313028843714322,
-                "pv_15x_gp_plus_cash_p50": 0.16313028843714322
+                "pv_15x_gp_p50": 0.16319554257564098,
+                "pv_15x_gp_plus_cash_p50": 0.16319554257564098
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.14395937012987375,
-                "pv_15x_gp_plus_cash_p50": 0.14395937012987375
+                "pv_15x_gp_p50": 0.14401695566329312,
+                "pv_15x_gp_plus_cash_p50": 0.14401695566329312
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.1276784640629134,
-                "pv_15x_gp_plus_cash_p50": 0.1276784640629134
+                "pv_15x_gp_p50": 0.12772953703199205,
+                "pv_15x_gp_plus_cash_p50": 0.12772953703199205
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.11376287765342882,
-                "pv_15x_gp_plus_cash_p50": 0.11376287765342882
+                "pv_15x_gp_p50": 0.11380838421536421,
+                "pv_15x_gp_plus_cash_p50": 0.11380838421536421
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.1017982024727845,
-                "pv_15x_gp_plus_cash_p50": 0.1017982024727845
+                "pv_15x_gp_p50": 0.10183892301626311,
+                "pv_15x_gp_plus_cash_p50": 0.10183892301626311
               }
             },
             "margin": 0.5,
@@ -617,69 +617,69 @@
           },
           "base": {
             "pv_15x_gp": {
-              "p25": 0.2069553708295414,
-              "p50": 0.22630360537646887,
-              "p75": 0.26068553535123595,
-              "p90": 0.321011306052827,
-              "ev": 0.24913762701168,
-              "p_spot_justified": 0.08686
+              "p25": 0.20706969403609668,
+              "p50": 0.22641633731365735,
+              "p75": 0.26078541711477043,
+              "p90": 0.3211294297777587,
+              "ev": 0.24924720954617352,
+              "p_spot_justified": 0.08816
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.2069600226893297,
-              "p50": 0.22633233954753848,
-              "p75": 0.26173599150504046,
-              "p90": 0.3270685058046365,
-              "ev": 0.2512260228335089,
-              "p_spot_justified": 0.094
+              "p25": 0.20707994759434448,
+              "p50": 0.226449883370646,
+              "p75": 0.26184131046681497,
+              "p90": 0.3271646169873869,
+              "ev": 0.2513382140021205,
+              "p_spot_justified": 0.09566
             },
             "y3_gp": {
-              "p25": 24441603.848889418,
-              "p50": 26726646.66790813,
-              "p75": 30787181.596937183,
-              "p90": 37911705.99781231,
-              "ev": 29423363.882096685
+              "p25": 24455105.51600808,
+              "p50": 26739960.40477243,
+              "p75": 30798977.71745463,
+              "p90": 37925656.50935673,
+              "ev": 29436305.67184639
             },
             "y3_card_gdv_ann": {
-              "p25": 2414461409.175793,
-              "p50": 2554316153.2152815,
-              "p75": 2702200879.9385405,
-              "p90": 2842709648.7136016,
-              "ev": 2562608312.908253
+              "p25": 2416185015.622499,
+              "p50": 2556139597.471572,
+              "p75": 2704129894.351135,
+              "p90": 2844738967.8230357,
+              "ev": 2564437676.671004
             },
             "y3_stake_tvl": {
-              "p25": 1378407289.7935462,
-              "p50": 3035821220.4264946,
-              "p75": 6730317337.5402975,
-              "p90": 13717262631.196758,
-              "ev": 6106130528.095831
+              "p25": 1378269083.291572,
+              "p50": 3035183661.056159,
+              "p75": 6728128435.493031,
+              "p90": 13712554463.488838,
+              "ev": 6104603966.03355
             },
             "treasury_cash": {
               "p25": 0.0,
               "p50": 0.0,
-              "p75": 1797766.9081689967,
-              "p90": 10325688.944966037,
-              "ev": 3699619.619840258
+              "p75": 1808016.4883118286,
+              "p90": 10340734.073251266,
+              "ev": 3704240.8481836235
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.28914016698413614,
-                "pv_15x_gp_plus_cash_p50": 0.28914016698413614
+                "pv_15x_gp_p50": 0.2892842006202282,
+                "pv_15x_gp_plus_cash_p50": 0.2892842006202282
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.25516068608142833,
-                "pv_15x_gp_plus_cash_p50": 0.25516068608142833
+                "pv_15x_gp_p50": 0.25528779301986376,
+                "pv_15x_gp_plus_cash_p50": 0.25528779301986376
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.22630360537646887,
-                "pv_15x_gp_plus_cash_p50": 0.22630360537646887
+                "pv_15x_gp_p50": 0.22641633731365735,
+                "pv_15x_gp_plus_cash_p50": 0.22641633731365735
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.20163893386348442,
-                "pv_15x_gp_plus_cash_p50": 0.20163893386348442
+                "pv_15x_gp_p50": 0.2017393792257633,
+                "pv_15x_gp_plus_cash_p50": 0.2017393792257633
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.18043215360958056,
-                "pv_15x_gp_plus_cash_p50": 0.18043215360958056
+                "pv_15x_gp_p50": 0.18052203492708613,
+                "pv_15x_gp_plus_cash_p50": 0.18052203492708613
               }
             },
             "margin": 0.6,
@@ -687,69 +687,69 @@
           },
           "bull": {
             "pv_15x_gp": {
-              "p25": 0.3318583045653999,
-              "p50": 0.35458125420061043,
-              "p75": 0.39017994597632377,
-              "p90": 0.44904271747259605,
-              "ev": 0.37538634909555413,
-              "p_spot_justified": 0.7501
+              "p25": 0.33205691220245315,
+              "p50": 0.3547931853702484,
+              "p75": 0.3903792825274486,
+              "p90": 0.4492264822155444,
+              "ev": 0.3755837923151169,
+              "p_spot_justified": 0.76512
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.33859261949420993,
-              "p50": 0.3636388103754185,
-              "p75": 0.4028766586138731,
-              "p90": 0.4680274182610642,
-              "ev": 0.3865278635414673,
-              "p_spot_justified": 0.8129
+              "p25": 0.33880559970436425,
+              "p50": 0.3638735169688518,
+              "p75": 0.40311594886235136,
+              "p90": 0.4682322722882254,
+              "ev": 0.3867473764139933,
+              "p_spot_justified": 0.82532
             },
             "y3_gp": {
-              "p25": 39192745.67091248,
-              "p50": 41876345.18821868,
-              "p75": 46080580.71220202,
-              "p90": 53032323.6729806,
-              "ev": 44333444.44310875
+              "p25": 39216201.400361605,
+              "p50": 41901374.43810362,
+              "p75": 46104122.52701778,
+              "p90": 53054026.444116876,
+              "ev": 44356762.65387013
             },
             "y3_card_gdv_ann": {
-              "p25": 3723834483.831678,
-              "p50": 3926375586.3509645,
-              "p75": 4138970105.087202,
-              "p90": 4336248379.543915,
-              "ev": 3937221550.4453573
+              "p25": 3726492809.658878,
+              "p50": 3929178499.7655644,
+              "p75": 4141924782.9001207,
+              "p90": 4339343887.980325,
+              "ev": 3940032206.4453487
             },
             "y3_stake_tvl": {
-              "p25": 1378407289.7935462,
-              "p50": 3035821220.4264946,
-              "p75": 6730317337.5402975,
-              "p90": 13717262631.196758,
-              "ev": 6106130528.095831
+              "p25": 1378269083.291572,
+              "p50": 3035183661.056159,
+              "p75": 6728128435.493031,
+              "p90": 13712554463.488838,
+              "ev": 6104603966.03355
             },
             "treasury_cash": {
-              "p25": 11703891.131859416,
-              "p50": 15864430.205645038,
-              "p75": 22581862.067977376,
-              "p90": 33781320.05128287,
-              "ev": 19737333.79850158
+              "p25": 11743159.865321305,
+              "p50": 15904600.435383525,
+              "p75": 22621630.64534932,
+              "p90": 33815152.246516295,
+              "ev": 19776430.46794156
             },
             "hurdle_sensitivity": {
               "17.5%": {
-                "pv_15x_gp_p50": 0.45303601274250566,
-                "pv_15x_gp_plus_cash_p50": 0.4644778871029887
+                "pv_15x_gp_p50": 0.4533067897532224,
+                "pv_15x_gp_plus_cash_p50": 0.4647776360159888
               },
               "22.5%": {
-                "pv_15x_gp_p50": 0.3997956459550456,
-                "pv_15x_gp_plus_cash_p50": 0.40989288198534274
+                "pv_15x_gp_p50": 0.40003460150574,
+                "pv_15x_gp_plus_cash_p50": 0.41015740468757067
               },
               "27.5%": {
-                "pv_15x_gp_p50": 0.35458125420061043,
-                "pv_15x_gp_plus_cash_p50": 0.3635365558698661
+                "pv_15x_gp_p50": 0.3547931853702484,
+                "pv_15x_gp_plus_cash_p50": 0.3637711627058071
               },
               "32.5%": {
-                "pv_15x_gp_p50": 0.3159356915505093,
-                "pv_15x_gp_plus_cash_p50": 0.32391496116051244
+                "pv_15x_gp_p50": 0.3161245244903432,
+                "pv_15x_gp_plus_cash_p50": 0.3241239983616544
               },
               "37.5%": {
-                "pv_15x_gp_p50": 0.28270808685779214,
-                "pv_15x_gp_plus_cash_p50": 0.28984816031671584
+                "pv_15x_gp_p50": 0.2828770598500304,
+                "pv_15x_gp_plus_cash_p50": 0.2900352126466597
               }
             },
             "margin": 0.7,
@@ -757,64 +757,64 @@
           },
           "weighted_20_40_40": {
             "pv_15x_gp": {
-              "p25": 0.20263287839050026,
-              "p50": 0.2682170105693343,
-              "p75": 0.3509548530776711,
-              "p90": 0.40275304559894876,
-              "ev": 0.2803591070398734,
-              "p_spot_justified": 0.34322
+              "p25": 0.20274332492156075,
+              "p50": 0.26829951985584166,
+              "p75": 0.35111868668933016,
+              "p90": 0.4029332701437127,
+              "ev": 0.28049047474845634,
+              "p_spot_justified": 0.34956
             },
             "pv_15x_gp_plus_cash": {
-              "p25": 0.2026398816748316,
-              "p50": 0.2697968442308425,
-              "p75": 0.35960395177584287,
-              "p90": 0.41682109392255684,
-              "ev": 0.285819267119938,
-              "p_spot_justified": 0.371
+              "p25": 0.2027563816029396,
+              "p50": 0.2699288736282511,
+              "p75": 0.35981713181305713,
+              "p90": 0.41703261912985207,
+              "ev": 0.2859605285313897,
+              "p_spot_justified": 0.37662
             },
             "pv_15x_gp_plus_optionality": {
-              "p25": 0.2228961662295503,
-              "p50": 0.2950387116262677,
-              "p75": 0.38605033838543823,
-              "p90": 0.4430283501588437,
-              "ev": 0.30839501774386074,
-              "p_spot_justified": 0.44886
+              "p25": 0.22301765741371685,
+              "p50": 0.29512947184142585,
+              "p75": 0.38623055535826323,
+              "p90": 0.44322659715808405,
+              "ev": 0.308539522223302,
+              "p_spot_justified": 0.45116
             },
             "pv_15x_gp_plus_cash_plus_optionality": {
-              "p25": 0.22290386984231478,
-              "p50": 0.2967765286539268,
-              "p75": 0.3955643469534272,
-              "p90": 0.45850320331481254,
-              "ev": 0.31440119383193177,
-              "p_spot_justified": 0.45594
+              "p25": 0.22303201976323359,
+              "p50": 0.2969217609910762,
+              "p75": 0.39579884499436285,
+              "p90": 0.4587358810428373,
+              "ev": 0.31455658138452874,
+              "p_spot_justified": 0.45804
             },
             "y3_gp": {
-              "p25": 23931113.846086442,
-              "p50": 31676655.172523227,
-              "p75": 41448064.156956844,
-              "p90": 47565474.38225774,
-              "ev": 33110647.006793387
+              "p25": 23944157.674559433,
+              "p50": 31686399.588851176,
+              "p75": 41467413.04467719,
+              "p90": 47586759.0530025,
+              "ev": 33126161.643977482
             },
             "y3_card_gdv_ann": {
-              "p25": 2317758645.434907,
-              "p50": 2702983956.882557,
-              "p75": 3833100572.0324335,
-              "p90": 4140698277.3984284,
-              "ev": 2869174251.9970994
+              "p25": 2319413218.8847013,
+              "p50": 2704913530.3086276,
+              "p75": 3835836899.410338,
+              "p90": 4143654188.898052,
+              "ev": 2871222463.336765
             },
             "y3_stake_tvl": {
               "p25": 1383302646.6832476,
-              "p50": 3031690757.307854,
+              "p50": 3030650191.933573,
               "p75": 6731472647.055307,
-              "p90": 13770984573.747967,
-              "ev": 6106816609.123553
+              "p90": 13766481897.274422,
+              "ev": 6105298937.438045
             },
             "treasury_cash": {
               "p25": 0.0,
-              "p50": 2840128.3848962937,
-              "p75": 15149986.36099645,
-              "p90": 24893633.05947076,
-              "ev": 9672742.661390908
+              "p50": 2850013.995410571,
+              "p75": 15189832.346847152,
+              "p90": 24934545.888858285,
+              "ev": 9690269.481193855
             },
             "scenario_weights": {
               "bear": 0.2,
@@ -1188,7 +1188,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 292693965
+          "mcap": 291208595
         }
       ]
     },
@@ -1200,11 +1200,11 @@
       "data": {
         "token": "JUP",
         "name": "Jupiter",
-        "as_of_utc": "2026-06-04T07:49:03.798820+00:00",
+        "as_of_utc": "2026-06-04T07:57:28.637559+00:00",
         "market": {
-          "spot": 0.17872,
-          "market_cap": 593806564.0,
-          "fdv": 1227281620.0,
+          "spot": 0.178238,
+          "market_cap": 591842783.0,
+          "fdv": 1223222871.0,
           "circulating_supply": 3320312968.08
         },
         "model": {
@@ -1243,16 +1243,16 @@
             "p90": 227620510.42477328
           },
           "y3_effective_supply": {
-            "p25": 2063608380.2296474,
-            "p50": 2631941472.233963,
-            "p75": 2990756145.8802786,
-            "p90": 3138570617.7096653
+            "p25": 2060209937.6341069,
+            "p50": 2630079944.0469446,
+            "p75": 2989864942.050005,
+            "p90": 3138079141.072369
           },
           "buyback_accum_tokens": {
-            "p25": 329556822.1997211,
-            "p50": 688371495.8460371,
-            "p75": 1256704587.8503525,
-            "p90": 1769422702.730684
+            "p25": 330448026.0299944,
+            "p50": 690233024.0330553,
+            "p75": 1260103030.4458923,
+            "p90": 1774207662.9676487
           }
         },
         "scenarios": [
@@ -1260,42 +1260,42 @@
             "key": "core",
             "label": "Core GP",
             "pv": {
-              "p25": 0.06569451501955115,
-              "p50": 0.2435598564966026,
-              "p75": 0.715121816348496,
-              "p90": 1.280286197695622
+              "p25": 0.06571714022113084,
+              "p50": 0.2437621564401467,
+              "p75": 0.7162754000992573,
+              "p90": 1.2844072466566583
             },
-            "ev": 167880.82943543553,
-            "prob_above_spot": 0.55981,
-            "prob_3x": 0.33399,
+            "ev": 167880.84076198083,
+            "prob_above_spot": 0.56025,
+            "prob_3x": 0.33492,
             "is_primary": true
           },
           {
             "key": "opt_10",
             "label": "+10% Optionality",
             "pv": {
-              "p25": 0.07226396652150628,
-              "p50": 0.26791584214626296,
-              "p75": 0.7866339979833458,
-              "p90": 1.4083148174651845
+              "p25": 0.07228885424324394,
+              "p50": 0.2681383720841614,
+              "p75": 0.7879029401091832,
+              "p90": 1.412847971322324
             },
-            "ev": 184668.91237897912,
-            "prob_above_spot": 0.57879,
-            "prob_3x": 0.35634,
+            "ev": 184668.9248381789,
+            "prob_above_spot": 0.57932,
+            "prob_3x": 0.35721,
             "is_primary": false
           },
           {
             "key": "opt_10_jupnet_10",
             "label": "+10% Opt + Jupnet",
             "pv": {
-              "p25": 0.07883341802346139,
-              "p50": 0.29227182779592314,
-              "p75": 0.8581461796181952,
-              "p90": 1.5363434372347464
+              "p25": 0.07886056826535702,
+              "p50": 0.29251458772817607,
+              "p75": 0.8595304801191088,
+              "p90": 1.5412886959879897
             },
-            "ev": 201456.99532252262,
-            "prob_above_spot": 0.59642,
-            "prob_3x": 0.3758,
+            "ev": 201457.008914377,
+            "prob_above_spot": 0.59698,
+            "prob_3x": 0.3766,
             "is_primary": false
           }
         ]
@@ -1663,7 +1663,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 593806564
+          "mcap": 591842783
         }
       ]
     },
@@ -1671,9 +1671,122 @@
       "name": "Hyperliquid",
       "symbol": "HYPE",
       "chain": "HyperEVM",
-      "status": "error",
-      "error": "requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)",
-      "traceback": "Traceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 534, in _make_request\n    response = conn.getresponse()\n               ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connection.py\", line 571, in getresponse\n    httplib_response = super().getresponse()\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 1450, in getresponse\n    response.begin()\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 336, in begin\n    version, status, reason = self._read_status()\n                              ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/http/client.py\", line 297, in _read_status\n    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/socket.py\", line 720, in readinto\n    return self._sock.recv_into(b)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/ssl.py\", line 1251, in recv_into\n    return self.read(nbytes, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/ssl.py\", line 1103, in read\n    return self._sslobj.read(len, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTimeoutError: The read operation timed out\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/adapters.py\", line 696, in send\n    resp = conn.urlopen(\n           ^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 842, in urlopen\n    retries = retries.increment(\n              ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/util/retry.py\", line 498, in increment\n    raise reraise(type(error), error, _stacktrace)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/util/util.py\", line 39, in reraise\n    raise value\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 788, in urlopen\n    response = self._make_request(\n               ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 536, in _make_request\n    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 367, in _raise_timeout\n    raise ReadTimeoutError(\nurllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/scripts/update_valuations.py\", line 70, in <module>\n    data = mod.run()\n           ^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/webapp/agents/hype.py\", line 24, in run\n    res = _hype.run_model()\n          ^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 267, in run_model\n    dr,rf,hp_std,spy_std,n_hp,n_spy=discount_rate()\n                                    ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 195, in discount_rate\n    spy = sp500_prices()\n          ^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 73, in sp500_prices\n    vals = fred_series(\"SP500\")\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/Best15-Strategy/Best15-Strategy/crypto_valuation_agents_bundle/hype_gp_capture_mc.py\", line 61, in fred_series\n    r = requests.get(f\"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}\", timeout=30)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/api.py\", line 87, in get\n    return request(\"get\", url, params=params, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/api.py\", line 71, in request\n    return session.request(method=method, url=url, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/requests/adapters.py\", line 742, in send\n    raise ReadTimeout(e, request=request)\nrequests.exceptions.ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read timed out. (read timeout=30)\n",
+      "status": "ok",
+      "data": {
+        "token": "HYPE",
+        "name": "Hyperliquid",
+        "as_of_utc": "2026-06-04T07:57:49.981407+00:00",
+        "market": {
+          "spot": 68.11,
+          "market_cap": 15202759213.0,
+          "fdv": 65289203543.0,
+          "circulating_supply": 222445714.0741414,
+          "max_supply": 955307079.4341414
+        },
+        "model": {
+          "type": "3Y GP-Capture Monte Carlo",
+          "discount_rate": 0.25,
+          "multiple": 15.0,
+          "paths": 100000,
+          "note": "Protocol revenue \u00d7 98.5% GP margin; buybacks reduce future supply offset by core emissions (~9.9M HYPE/month for 20 months); volume proxy: Binance futures monthly returns 2022+"
+        },
+        "current_gp": {
+          "trailing_30d_revenue": 54338579.0,
+          "median_6m_monthly_revenue": 51731578.5,
+          "conservative_monthly_start": 51731578.5,
+          "annualized_gp_30d": 619959858.67375,
+          "ttm_gp": 866987203.1899999,
+          "gp_margin": 0.985
+        },
+        "scenarios": [
+          {
+            "key": "pv_25pct",
+            "label": "25% discount rate (selected)",
+            "is_primary": true,
+            "pv": {
+              "p25": 7.15783093867785,
+              "p50": 18.28388514227276,
+              "p75": 46.32777478310868,
+              "p90": 85.75266088369948
+            },
+            "ev": 45.27473437151474,
+            "prob_above_spot": 0.12925,
+            "prob_3x": 0.0332
+          },
+          {
+            "key": "pv_15_0pct",
+            "label": "15.0% discount rate (bull)",
+            "is_primary": false,
+            "pv": {
+              "p25": 9.192168029657388,
+              "p50": 23.480373580012483,
+              "p75": 59.4946561178658,
+              "p90": 59.4946561178658
+            },
+            "ev": 23.480373580012483,
+            "prob_above_spot": 0.0
+          },
+          {
+            "key": "pv_20_0pct",
+            "label": "20.0% discount rate (bull)",
+            "is_primary": false,
+            "pv": {
+              "p25": 8.0903579583942,
+              "p50": 20.665921972512436,
+              "p75": 52.36338838151572,
+              "p90": 52.36338838151572
+            },
+            "ev": 20.665921972512436,
+            "prob_above_spot": 0.0
+          },
+          {
+            "key": "pv_30_0pct",
+            "label": "30.0% discount rate (bear)",
+            "is_primary": false,
+            "pv": {
+              "p25": 6.363285640466625,
+              "p50": 16.254307313837725,
+              "p75": 41.18522308750985,
+              "p90": 41.18522308750985
+            },
+            "ev": 16.254307313837725,
+            "prob_above_spot": 0.0
+          },
+          {
+            "key": "pv_35_0pct",
+            "label": "35.0% discount rate (bear)",
+            "is_primary": false,
+            "pv": {
+              "p25": 5.682116974894142,
+              "p50": 14.514337517045766,
+              "p75": 36.77648127755286,
+              "p90": 36.77648127755286
+            },
+            "ev": 14.514337517045766,
+            "prob_above_spot": 0.0
+          },
+          {
+            "key": "undiscounted_y3",
+            "label": "Undiscounted Y3 price",
+            "is_primary": false,
+            "pv": {
+              "p25": 13.980138552105176,
+              "p50": 35.710713168501485,
+              "p75": 90.48393512325914,
+              "p90": 167.48566578847556
+            },
+            "ev": 88.42721556936473,
+            "prob_above_spot": 0.32933,
+            "prob_3x": 0.07922
+          }
+        ],
+        "caveats": [
+          "DeFiLlama revenue used as GP base; verify against protocol-native fee data.",
+          "Supply model assumes buybacks proportional to GP and ~198M HYPE core emissions over 20 months.",
+          "Volume proxy is total Binance futures (BTCUSDT-scaled via Blockworks annual totals). HYPE's own growth may diverge."
+        ],
+        "data_freshness": "2026-06-04"
+      },
       "mcap_history": [
         {
           "date": "2026-03-07",
@@ -2037,7 +2150,7 @@
         },
         {
           "date": "2026-06-04",
-          "mcap": 15267808962
+          "mcap": 15202759213
         }
       ]
     },
@@ -2049,7 +2162,7 @@
       "data": {
         "token": "SKY",
         "name": "Sky",
-        "as_of_utc": "2026-06-04T07:50:06.253572+00:00",
+        "as_of_utc": "2026-06-04T07:57:52.107333+00:00",
         "market": {
           "spot": 0.08084,
           "market_cap": 1876588264.0,
