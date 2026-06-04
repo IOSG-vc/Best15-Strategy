@@ -1,0 +1,115 @@
+{
+  "token": "HYPE",
+  "name": "Hyperliquid",
+  "as_of_utc": "2026-06-04T10:00:00+00:00",
+  "market": {
+    "spot": 25.0,
+    "market_cap": 8000000000.0,
+    "fdv": 9000000000.0,
+    "circulating_supply": 320000000.0,
+    "max_supply": 330000000.0
+  },
+  "model": {
+    "type": "3Y GP-Capture Monte Carlo",
+    "discount_rate": 0.25,
+    "multiple": 15.0,
+    "paths": 100000,
+    "note": "Protocol revenue \u00d7 98.5% GP margin; buybacks reduce future supply offset by core emissions (~9.9M HYPE/month for 20 months); volume proxy: Binance futures monthly returns 2022+"
+  },
+  "current_gp": {
+    "trailing_30d_revenue": 50000000.0,
+    "median_6m_monthly_revenue": 45000000.0,
+    "conservative_monthly_start": 45000000.0,
+    "annualized_gp_30d": 540000000.0,
+    "ttm_gp": 500000000.0,
+    "gp_margin": 0.985
+  },
+  "scenarios": [
+    {
+      "key": "pv_25pct",
+      "label": "25% discount rate (selected)",
+      "is_primary": true,
+      "pv": {
+        "p25": 10.0,
+        "p50": 20.0,
+        "p75": 40.0,
+        "p90": 70
+      },
+      "ev": 35.0,
+      "prob_above_spot": 0.42,
+      "prob_3x": 0.15
+    },
+    {
+      "key": "pv_15_0pct",
+      "label": "15.0% discount rate (bull)",
+      "is_primary": false,
+      "pv": {
+        "p25": 14.0,
+        "p50": 28.0,
+        "p75": 56.0,
+        "p90": 56.0
+      },
+      "ev": 28.0,
+      "prob_above_spot": 0.0
+    },
+    {
+      "key": "pv_20_0pct",
+      "label": "20.0% discount rate (bull)",
+      "is_primary": false,
+      "pv": {
+        "p25": 12.0,
+        "p50": 24.0,
+        "p75": 48.0,
+        "p90": 48.0
+      },
+      "ev": 24.0,
+      "prob_above_spot": 0.0
+    },
+    {
+      "key": "pv_30_0pct",
+      "label": "30.0% discount rate (bear)",
+      "is_primary": false,
+      "pv": {
+        "p25": 8.5,
+        "p50": 17.0,
+        "p75": 34.0,
+        "p90": 34.0
+      },
+      "ev": 17.0,
+      "prob_above_spot": 0.0
+    },
+    {
+      "key": "pv_35_0pct",
+      "label": "35.0% discount rate (bear)",
+      "is_primary": false,
+      "pv": {
+        "p25": 7.0,
+        "p50": 14.0,
+        "p75": 28.0,
+        "p90": 28.0
+      },
+      "ev": 14.0,
+      "prob_above_spot": 0.0
+    },
+    {
+      "key": "undiscounted_y3",
+      "label": "Undiscounted Y3 price",
+      "is_primary": false,
+      "pv": {
+        "p25": 20.0,
+        "p50": 40.0,
+        "p75": 80.0,
+        "p90": 140
+      },
+      "ev": 70.0,
+      "prob_above_spot": 0.55,
+      "prob_3x": 0.25
+    }
+  ],
+  "caveats": [
+    "DeFiLlama revenue used as GP base; verify against protocol-native fee data.",
+    "Supply model assumes buybacks proportional to GP and ~198M HYPE core emissions over 20 months.",
+    "Volume proxy is total Binance futures (BTCUSDT-scaled via Blockworks annual totals). HYPE's own growth may diverge."
+  ],
+  "data_freshness": "2026-06-04"
+}

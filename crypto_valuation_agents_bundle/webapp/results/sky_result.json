@@ -1,0 +1,95 @@
+{
+  "token": "SKY",
+  "name": "Sky",
+  "as_of_utc": "2026-06-04T07:26:42.253390+00:00",
+  "market": {
+    "spot": 0.08084,
+    "market_cap": 1876588264.0,
+    "fdv": 1896796712.0,
+    "circulating_supply": 23462665147.0,
+    "max_supply": 23462665147.0
+  },
+  "model": {
+    "type": "3Y GP/NP Monte Carlo",
+    "discount_rate": 0.25,
+    "multiple": 15.0,
+    "paths": 100000,
+    "note": "GP = gross income - savings-rate cost - stUSDS expense. NP = GP - OPEX. USDS growth path: money-market TVL returns \u00d7 0.65 dampener, capped \u00b18%/+10% monthly. DAI supply flat. Treasury = cumulative positive NP. Market data locked 2026-05-08."
+  },
+  "current_gp": {
+    "gross_income": 425200000.0,
+    "savings_expense": 193490000.0,
+    "stusds_expense": 13230000.0,
+    "current_gp": 218480000.0,
+    "base_opex": 70000000.0,
+    "current_np_base_opex": 148480000.0,
+    "usds_supply": 6426632076.0,
+    "dai_supply": 4165943911.0,
+    "gross_income_yield_pct": 4.014132166923676
+  },
+  "scenarios": [
+    {
+      "key": "base_np15x",
+      "label": "Base OPEX ($70M), 15\u00d7 NP",
+      "is_primary": true,
+      "pv": {
+        "p25": 0.04848550436856924,
+        "p50": 0.05347803181946839,
+        "p75": 0.05967132022715659,
+        "p90": 0.06668244590839474
+      },
+      "ev": 0.0548604520713454,
+      "prob_above_spot": 0.01142,
+      "prob_3x": 0.0
+    },
+    {
+      "key": "base_gp10x",
+      "label": "Base OPEX ($70M), 10\u00d7 GP",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.04759900159075609,
+        "p50": 0.050927353224688846,
+        "p75": 0.05505621216314766,
+        "p90": 0.05973029595063975
+      },
+      "ev": 0.05184896672594019,
+      "prob_above_spot": 0.00084,
+      "prob_3x": 0.0
+    },
+    {
+      "key": "bear_np15x",
+      "label": "Bear OPEX ($90M), 15\u00d7 NP",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.041938933506407844,
+        "p50": 0.04693146095730698,
+        "p75": 0.0531247493649952,
+        "p90": 0.06013587504623332
+      },
+      "ev": 0.048313881209184,
+      "prob_above_spot": 0.0041,
+      "prob_3x": 0.0
+    },
+    {
+      "key": "bull_np15x",
+      "label": "Bull OPEX ($50M), 15\u00d7 NP",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.05503207523073064,
+        "p50": 0.06002460268162978,
+        "p75": 0.06621789108931797,
+        "p90": 0.07322901677055613
+      },
+      "ev": 0.0614070229335068,
+      "prob_above_spot": 0.03203,
+      "prob_3x": 0.0
+    }
+  ],
+  "caveats": [
+    "Market data (spot, supply, financials) locked at 2026-05-08; re-run sky_data_collection to refresh.",
+    "USDS growth is modeled on broad money-market TVL returns dampened by 0.65 \u2014 Sky may diverge from sector.",
+    "No buybacks or SKY supply reduction modeled; treasury accumulates cash only.",
+    "Savings rate (3.65%) and USDS savings penetration (81.2%) are point-in-time inputs."
+  ],
+  "data_freshness": "2026-05-08"
+}

@@ -23,9 +23,11 @@ OUTPUT_FILE  = REPO_ROOT / "data" / "valuations.json"
 sys.path.insert(0, str(BUNDLE_WEBAPP))
 
 TOKENS = [
-    ("uni",   "agents.uni",   "Uniswap",  "UNI",   "Ethereum", "uniswap"),
-    ("ethfi", "agents.ethfi", "ether.fi", "ETHFI",  "Ethereum", "ether-fi"),
-    ("jup",   "agents.jup",  "Jupiter",  "JUP",    "Solana",   "jupiter-exchange-solana"),
+    ("uni",   "agents.uni",   "Uniswap",     "UNI",   "Ethereum",  "uniswap"),
+    ("ethfi", "agents.ethfi", "ether.fi",    "ETHFI", "Ethereum",  "ether-fi"),
+    ("jup",   "agents.jup",   "Jupiter",     "JUP",   "Solana",    "jupiter-exchange-solana"),
+    ("hype",  "agents.hype",  "Hyperliquid", "HYPE",  "HyperEVM",  "hyperliquid"),
+    ("sky",   "agents.sky",   "Sky",         "SKY",   "Ethereum",  "sky-governance-token"),
 ]
 
 UA = "Mozilla/5.0 Hermes valuation cron"
