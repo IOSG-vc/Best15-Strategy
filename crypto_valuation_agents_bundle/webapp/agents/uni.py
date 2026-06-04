@@ -18,9 +18,15 @@ import numpy as np
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
 UA = "Mozilla/5.0 Hermes UNI locked valuation cron"
 
+_CG_KEY = os.environ.get("COINGECKO_API_KEY", "")
+_CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
+
 
 def get_json(url, timeout=30):
-    req = Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    hdrs = {"User-Agent": UA, "Accept": "application/json"}
+    if _CG_KEY and "coingecko.com" in url:
+        hdrs["x-cg-pro-api-key"] = _CG_KEY
+    req = Request(url, headers=hdrs)
     with urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
@@ -109,7 +115,7 @@ def run() -> dict:
     y3_ttm_vol = paths[:, -12:].sum(axis=1)
 
     cg = get_json(
-        "https://api.coingecko.com/api/v3/coins/uniswap?localization=false&tickers=false"
+        f"{_CG_BASE}/coins/uniswap?localization=false&tickers=false"
         "&market_data=true&community_data=false&developer_data=false&sparkline=false"
     )
     md = cg["market_data"]
@@ -148,7 +154,7 @@ def run() -> dict:
 
     try:
         uni_hist = get_json(
-            "https://api.coingecko.com/api/v3/coins/uniswap/market_chart?vs_currency=usd&days=365&interval=daily"
+            f"{_CG_BASE}/coins/uniswap/market_chart?vs_currency=usd&days=365&interval=daily"
         )
         prices = []
         seen = set()

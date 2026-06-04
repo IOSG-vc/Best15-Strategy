@@ -19,6 +19,9 @@ import numpy as np
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
 
+_CG_KEY = os.environ.get("COINGECKO_API_KEY", "")
+_CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
+
 N_PATHS = 100_000
 MONTHS = 36
 DISCOUNT = 0.244
@@ -35,7 +38,10 @@ PREMIUMS = {
 
 
 def fetch_json(url: str, timeout=30):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    hdrs = {"User-Agent": "Mozilla/5.0"}
+    if _CG_KEY and "coingecko.com" in url:
+        hdrs["x-cg-pro-api-key"] = _CG_KEY
+    req = urllib.request.Request(url, headers=hdrs)
     for i in range(3):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -47,7 +53,7 @@ def fetch_json(url: str, timeout=30):
 
 
 def cg_market():
-    url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=jupiter-exchange-solana"
+    url = f"{_CG_BASE}/coins/markets?vs_currency=usd&ids=jupiter-exchange-solana"
     arr = fetch_json(url)
     if not arr:
         raise RuntimeError("CoinGecko returned no JUP market data")

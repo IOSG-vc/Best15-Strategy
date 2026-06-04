@@ -27,6 +27,8 @@ jobs:
         run: pip install -r crypto_valuation_agents_bundle/webapp/requirements.txt
 
       - name: Run valuation agents
+        env:
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
         run: python scripts/update_valuations.py
 
       - name: Commit updated valuations

@@ -9,6 +9,10 @@ import requests
 OUTDIR = os.path.dirname(__file__)
 np.random.seed(42)
 
+_CG_KEY = os.environ.get("COINGECKO_API_KEY", "")
+_CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
+_CG_HEADERS = {"x-cg-pro-api-key": _CG_KEY} if _CG_KEY else {}
+
 CG_ID = "hyperliquid"
 N_PATHS = 100_000
 MONTHS = 36
@@ -28,23 +32,24 @@ MULT_BULL_PEAK = 10.0
 
 
 def get_json(url, params=None, method="GET", payload=None, timeout=30):
+    hdrs = _CG_HEADERS if "coingecko.com" in url else {}
     if method == "POST":
-        r = requests.post(url, json=payload, timeout=timeout)
+        r = requests.post(url, json=payload, headers=hdrs, timeout=timeout)
     else:
-        r = requests.get(url, params=params, timeout=timeout)
+        r = requests.get(url, params=params, headers=hdrs, timeout=timeout)
     r.raise_for_status()
     return r.json()
 
 
 def cg_market():
     return get_json(
-        "https://api.coingecko.com/api/v3/coins/markets",
+        f"{_CG_BASE}/coins/markets",
         params={"vs_currency":"usd","ids":CG_ID,"sparkline":"false","price_change_percentage":"24h"},
     )[0]
 
 
 def cg_prices(days="max"):
-    data = get_json(f"https://api.coingecko.com/api/v3/coins/{CG_ID}/market_chart", params={"vs_currency":"usd","days":days})
+    data = get_json(f"{_CG_BASE}/coins/{CG_ID}/market_chart", params={"vs_currency":"usd","days":days})
     by_date = {}
     for ts_ms, price in data["prices"]:
         dt = datetime.fromtimestamp(ts_ms/1000, tz=timezone.utc).date()

@@ -16,6 +16,9 @@ from datetime import datetime, timezone
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
 UA = {"User-Agent": "Mozilla/5.0"}
 
+_CG_KEY = os.environ.get("COINGECKO_API_KEY", "")
+_CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
+
 CARD_TAKE = 0.0135
 CARD_MARGIN_BASE = 0.60
 CARD_MARGIN_BEAR = 0.50
@@ -35,7 +38,8 @@ MONTHLY_CARD_NOISE_SD = 0.015
 
 
 def fetch(url):
-    return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=45).read().decode())
+    hdrs = {**UA, "x-cg-pro-api-key": _CG_KEY} if (_CG_KEY and "coingecko.com" in url) else UA
+    return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=hdrs), timeout=45).read().decode())
 
 
 def chart(url):
@@ -56,7 +60,7 @@ def protocol_tvl(slug):
 
 
 def get_market():
-    d = fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ether-fi&sparkline=false")
+    d = fetch(f"{_CG_BASE}/coins/markets?vs_currency=usd&ids=ether-fi&sparkline=false")
     return d[0]
 
 

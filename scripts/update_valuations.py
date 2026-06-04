@@ -22,6 +22,9 @@ OUTPUT_FILE  = REPO_ROOT / "data" / "valuations.json"
 
 sys.path.insert(0, str(BUNDLE_WEBAPP))
 
+CG_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
+CG_BASE    = "https://pro-api.coingecko.com/api/v3" if CG_API_KEY else "https://api.coingecko.com/api/v3"
+
 TOKENS = [
     ("uni",   "agents.uni",   "Uniswap",     "UNI",   "Ethereum",  "uniswap"),
     ("ethfi", "agents.ethfi", "ether.fi",    "ETHFI", "Ethereum",  "ether-fi"),
@@ -34,12 +37,15 @@ UA = "Mozilla/5.0 Hermes valuation cron"
 
 
 def fetch_mcap_history(coingecko_id: str, days: int = 90) -> list[dict]:
-    """Fetch daily market cap history from CoinGecko public API."""
+    """Fetch daily market cap history from CoinGecko API."""
     url = (
-        f"https://api.coingecko.com/api/v3/coins/{coingecko_id}/market_chart"
+        f"{CG_BASE}/coins/{coingecko_id}/market_chart"
         f"?vs_currency=usd&days={days}&interval=daily"
     )
-    req = Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    headers = {"User-Agent": UA, "Accept": "application/json"}
+    if CG_API_KEY:
+        headers["x-cg-pro-api-key"] = CG_API_KEY
+    req = Request(url, headers=headers)
     try:
         with urlopen(req, timeout=20) as r:
             data = json.loads(r.read())
