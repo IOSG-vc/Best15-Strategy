@@ -55,6 +55,22 @@ const ETF_LIQ_SERIES: SeriesConfig[] = [
   { key: "onn_l", label: "1/N (Liq)", color: "#c084fc" },
 ];
 
+function computeTWR(
+  inceptionFundSize: number,
+  history: import("@/lib/loadPositions").RebalanceEntry[],
+  currentFundValue: number,
+): number | null {
+  let periodStart = inceptionFundSize;
+  let chainedFactor = 1;
+  for (const entry of history) {
+    if (entry.fundValueBeforeCashFlow === null) return null;
+    chainedFactor *= entry.fundValueBeforeCashFlow / periodStart;
+    periodStart = entry.fundValueBeforeCashFlow + entry.cashFlow;
+  }
+  chainedFactor *= currentFundValue / periodStart;
+  return chainedFactor - 1;
+}
+
 function fmtPrice(p: number): string {
   if (p >= 1000) return p.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (p >= 1) return p.toFixed(3);
@@ -229,20 +245,35 @@ export default function PrivateFundDashboard({
   const portfolioLiveReturn = totalPnlPct / 100;
   const isLive = livePrices !== null;
 
-  // Inception (May 1) banner figures
-  const inceptionDeployed = positions?.inceptionDeployed ?? totalDeployed;
-  const inceptionCurrentValue = totalDeployed + totalPnlDollar;
+  const inceptionFundSize = positions?.inceptionFundSize ?? totalDeployed;
+  const rebalanceHistory = positions?.rebalanceHistory ?? [];
 
-  // Deployed-only return (used for "Whole Exposure" card)
-  const inceptionPnlDollar = inceptionCurrentValue - inceptionDeployed;
-  const inceptionReturnPct = inceptionDeployed > 0 ? (inceptionPnlDollar / inceptionDeployed) * 100 : 0;
+  // Net invested capital: what the investor has put in minus withdrawals — used for P&L
+  const totalCashFlows = rebalanceHistory.reduce((s, e) => s + e.cashFlow, 0);
+  const netInvestedCapital = inceptionFundSize + totalCashFlows;
 
-  // Whole-fund return: deployed portion + cash sitting on the sidelines
-  const totalFundSize = positions?.totalFundSize ?? inceptionDeployed;
-  const cashPortion = totalFundSize - inceptionDeployed;
-  const wholeFundCurrentValue = inceptionCurrentValue + cashPortion;
-  const wholeFundPnl = wholeFundCurrentValue - totalFundSize;
-  const wholeFundReturnPct = totalFundSize > 0 ? (wholeFundPnl / totalFundSize) * 100 : 0;
+  // Cash portion: what's uninvested after the last rebalance.
+  // Derived from (fund value after that rebalance's cash flow) - deployed.
+  // Without rebalance history we fall back to inception split.
+  const lastRebalance = rebalanceHistory.length > 0 ? rebalanceHistory[rebalanceHistory.length - 1] : null;
+  const fundValueAfterLastCF = lastRebalance?.fundValueBeforeCashFlow != null
+    ? lastRebalance.fundValueBeforeCashFlow + lastRebalance.cashFlow
+    : inceptionFundSize;
+  const cashPortion = fundValueAfterLastCF - totalDeployed;
+
+  const wholeFundCurrentValue = totalDeployed + totalPnlDollar + cashPortion;
+  const wholeFundPnl = wholeFundCurrentValue - netInvestedCapital;
+
+  // TWR chains returns across rebalance periods, eliminating cash-flow distortion.
+  // Falls back to simple return if any period is missing fundValueBeforeCashFlow.
+  const twrRaw = computeTWR(inceptionFundSize, rebalanceHistory, wholeFundCurrentValue);
+  const wholeFundReturnPct = twrRaw !== null
+    ? twrRaw * 100
+    : netInvestedCapital > 0 ? (wholeFundPnl / netInvestedCapital) * 100 : 0;
+  const isTWR = twrRaw !== null;
+
+  // Deployed-only return (current positions vs their execution cost)
+  const inceptionReturnPct = totalDeployed > 0 ? (totalPnlDollar / totalDeployed) * 100 : 0;
 
   const btcPos = positionMap.get("bitcoin");
   const btcLive = livePrices?.["bitcoin"];
@@ -513,12 +544,17 @@ export default function PrivateFundDashboard({
               <section>
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144] flex flex-wrap gap-6 items-end">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Fund Size</div>
-                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalFundSize)}</div>
+                    <div className="text-xs text-gray-500 mb-1">Inception Capital</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionFundSize)}</div>
+                    {totalCashFlows !== 0 && (
+                      <div className="text-xs mt-0.5" style={{ color: totalCashFlows < 0 ? "#f87171" : "#4ade80" }}>
+                        {totalCashFlows < 0 ? "−" : "+"}${fmtUsd(Math.abs(totalCashFlows))} withdrawals
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Deployed (50% signal)</div>
-                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionDeployed)}</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalDeployed)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Current Value {isLive ? "· live" : "· eod"}</div>
@@ -531,10 +567,15 @@ export default function PrivateFundDashboard({
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Return since {positions.inceptionDate}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      {isTWR ? "TWR since" : "Return since"} {positions.inceptionDate}
+                    </div>
                     <div className="text-xl font-bold font-mono" style={{ color: wholeFundReturnPct >= 0 ? "#4ade80" : "#f87171" }}>
                       {wholeFundReturnPct >= 0 ? "+" : ""}{wholeFundReturnPct.toFixed(2)}%
                     </div>
+                    {!isTWR && (
+                      <div className="text-xs text-yellow-500 mt-0.5">fill fundValueBeforeCashFlow</div>
+                    )}
                   </div>
                   <div className="ml-auto text-xs text-gray-600 self-end">last rebalance: {positions.executionDate}</div>
                 </div>
@@ -555,7 +596,7 @@ export default function PrivateFundDashboard({
                     maxDrawdown: combinedMetrics.maxDrawdown,
                   },
                   {
-                    label: "Whole Exposure", color: "#06b6d4",
+                    label: "Deployed Return", color: "#06b6d4",
                     totalReturn: parseFloat(inceptionReturnPct.toFixed(2)),
                     sharpe: privateData?.metrics?.sharpe ?? null,
                     maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,

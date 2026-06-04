@@ -8,12 +8,19 @@ export interface Position {
   allocation: number;
 }
 
+export interface RebalanceEntry {
+  date: string;
+  fundValueBeforeCashFlow: number | null;
+  cashFlow: number;
+  deployed: number;
+}
+
 export interface PositionsData {
   executionDate: string;
   totalDeployed: number;
   inceptionDate: string;
-  inceptionDeployed: number;
-  totalFundSize?: number;
+  inceptionFundSize: number;
+  rebalanceHistory: RebalanceEntry[];
   positions: Position[];
 }
 
