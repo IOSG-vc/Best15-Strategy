@@ -218,7 +218,7 @@ def run_mc(market, gpdata):
         buy_tokens = (total_monthly[:, t] * BUYBACK_SHARE) / max(spot, 0.01)
         supply += SCHEDULED_UNLOCKS_PER_MONTH - buy_tokens
         buyback_tokens_accum += buy_tokens
-    supply = np.maximum(supply, 1.0)
+    supply = np.maximum(supply, circ * 0.10)
 
     y3_price_core = y3_gp * MULTIPLE / supply
     result_cases = {}
