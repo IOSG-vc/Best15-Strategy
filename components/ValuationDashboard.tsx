@@ -193,9 +193,12 @@ function ModelMethodology({ tokenKey }: { tokenKey: string }) {
 
   return (
     <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((v) => !v)}
-        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#1e2130] transition-colors"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpen((v) => !v); }}
+        className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#1e2130] transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-300">Model &amp; Assumptions</span>
@@ -209,7 +212,7 @@ function ModelMethodology({ tokenKey }: { tokenKey: string }) {
         >
           <path d="M6 9l6 6 6-6" />
         </svg>
-      </button>
+      </div>
 
       {open && (
         <div className="px-6 pb-6 space-y-4 border-t border-[#2d3144] pt-4">
