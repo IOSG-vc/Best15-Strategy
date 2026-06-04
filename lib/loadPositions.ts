@@ -13,6 +13,7 @@ export interface PositionsData {
   totalDeployed: number;
   inceptionDate: string;
   inceptionDeployed: number;
+  totalFundSize?: number;
   positions: Position[];
 }
 

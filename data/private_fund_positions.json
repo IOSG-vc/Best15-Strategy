@@ -3,6 +3,7 @@
   "totalDeployed": 106588,
   "inceptionDate": "2026-05-01",
   "inceptionDeployed": 105010.5,
+  "totalFundSize": 210021,
   "positions": [
     { "id": "bitcoin",      "executionPrice": 72606.00, "amount": 0.54,     "allocation": 39207 },
     { "id": "ethereum",     "executionPrice": 1981.75,  "amount": 2.63,     "allocation": 5213  },

@@ -230,11 +230,19 @@ export default function PrivateFundDashboard({
   const isLive = livePrices !== null;
 
   // Inception (May 1) banner figures
-  // Current value = actual market value of current positions (same number the positions table uses)
   const inceptionDeployed = positions?.inceptionDeployed ?? totalDeployed;
   const inceptionCurrentValue = totalDeployed + totalPnlDollar;
+
+  // Deployed-only return (used for "Whole Exposure" card)
   const inceptionPnlDollar = inceptionCurrentValue - inceptionDeployed;
   const inceptionReturnPct = inceptionDeployed > 0 ? (inceptionPnlDollar / inceptionDeployed) * 100 : 0;
+
+  // Whole-fund return: deployed portion + cash sitting on the sidelines
+  const totalFundSize = positions?.totalFundSize ?? inceptionDeployed;
+  const cashPortion = totalFundSize - inceptionDeployed;
+  const wholeFundCurrentValue = inceptionCurrentValue + cashPortion;
+  const wholeFundPnl = wholeFundCurrentValue - totalFundSize;
+  const wholeFundReturnPct = totalFundSize > 0 ? (wholeFundPnl / totalFundSize) * 100 : 0;
 
   const btcPos = positionMap.get("bitcoin");
   const btcLive = livePrices?.["bitcoin"];
@@ -505,23 +513,27 @@ export default function PrivateFundDashboard({
               <section>
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144] flex flex-wrap gap-6 items-end">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Deployed Capital</div>
+                    <div className="text-xs text-gray-500 mb-1">Fund Size</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(totalFundSize)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Deployed (50% signal)</div>
                     <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionDeployed)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Current Value {isLive ? "· live" : "· eod"}</div>
-                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(inceptionCurrentValue)}</div>
+                    <div className="text-xl font-bold text-white font-mono">${fmtUsd(wholeFundCurrentValue)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Total P&amp;L</div>
-                    <div className="text-xl font-bold font-mono" style={{ color: inceptionPnlDollar >= 0 ? "#4ade80" : "#f87171" }}>
-                      {inceptionPnlDollar >= 0 ? "+" : "−"}${fmtUsd(Math.abs(inceptionPnlDollar))}
+                    <div className="text-xl font-bold font-mono" style={{ color: wholeFundPnl >= 0 ? "#4ade80" : "#f87171" }}>
+                      {wholeFundPnl >= 0 ? "+" : "−"}${fmtUsd(Math.abs(wholeFundPnl))}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Return since {positions.inceptionDate}</div>
-                    <div className="text-xl font-bold font-mono" style={{ color: inceptionReturnPct >= 0 ? "#4ade80" : "#f87171" }}>
-                      {inceptionReturnPct >= 0 ? "+" : ""}{inceptionReturnPct.toFixed(2)}%
+                    <div className="text-xl font-bold font-mono" style={{ color: wholeFundReturnPct >= 0 ? "#4ade80" : "#f87171" }}>
+                      {wholeFundReturnPct >= 0 ? "+" : ""}{wholeFundReturnPct.toFixed(2)}%
                     </div>
                   </div>
                   <div className="ml-auto text-xs text-gray-600 self-end">last rebalance: {positions.executionDate}</div>
@@ -537,19 +549,19 @@ export default function PrivateFundDashboard({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   {
-                    label: "Private Fund Index", color: "#8b5cf6",
-                    totalReturn: parseFloat(privateFundInceptionReturn.toFixed(2)),
-                    sharpe: privateData?.metrics?.sharpe ?? null,
-                    maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
-                  },
-                  {
-                    label: "Index + Signal (50/50)", color: "#06b6d4",
-                    totalReturn: parseFloat(combinedInceptionReturn.toFixed(2)),
+                    label: "Private Fund", color: "#8b5cf6",
+                    totalReturn: parseFloat(wholeFundReturnPct.toFixed(2)),
                     sharpe: combinedMetrics.sharpe,
                     maxDrawdown: combinedMetrics.maxDrawdown,
                   },
                   {
-                    label: "Bitcoin", color: "#f97316",
+                    label: "Whole Exposure", color: "#06b6d4",
+                    totalReturn: parseFloat(inceptionReturnPct.toFixed(2)),
+                    sharpe: privateData?.metrics?.sharpe ?? null,
+                    maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
+                  },
+                  {
+                    label: "Bitcoin B&H", color: "#f97316",
                     totalReturn: parseFloat(btcInceptionReturn.toFixed(2)),
                     sharpe: btcMetrics.sharpe,
                     maxDrawdown: btcMetrics.maxDrawdown,
