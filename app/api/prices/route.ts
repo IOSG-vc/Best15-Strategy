@@ -23,14 +23,22 @@ const STOCK_TICKERS: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
+const CG_API_KEY = process.env.COINGECKO_API_KEY ?? "";
+const CG_BASE = CG_API_KEY
+  ? "https://pro-api.coingecko.com/api/v3"
+  : "https://api.coingecko.com/api/v3";
+
 export async function GET() {
   const prices: Record<string, number> = {};
 
-  // Crypto — CoinGecko free API
+  // Crypto — CoinGecko (Pro API when key is set, free otherwise)
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_IDS.join(",")}&vs_currencies=usd`,
-      { signal: AbortSignal.timeout(8000) },
+      `${CG_BASE}/simple/price?ids=${COINGECKO_IDS.join(",")}&vs_currencies=usd`,
+      {
+        signal: AbortSignal.timeout(8000),
+        headers: CG_API_KEY ? { "x-cg-pro-api-key": CG_API_KEY } : {},
+      },
     );
     if (res.ok) {
       const data = (await res.json()) as Record<string, { usd: number }>;
