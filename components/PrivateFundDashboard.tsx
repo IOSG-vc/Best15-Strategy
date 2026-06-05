@@ -197,6 +197,7 @@ export default function PrivateFundDashboard({
   );
 
   const portfolioAssets = useMemo((): AssetPerfEntry[] => {
+    const executionDate = positions?.executionDate;
     return (privateData?.latestWeights ?? []).flatMap((w) => {
       const pos = positionMap.get(w.coin);
       const assetData = allAssets[w.coin];
@@ -215,10 +216,16 @@ export default function PrivateFundDashboard({
         totalReturn = (livePrice / executionPrice - 1) * 100;
         pnlDollar = amount * (livePrice - executionPrice);
       } else if (assetData?.dailyData.length) {
-        const cumReturn = assetData.dailyData[assetData.dailyData.length - 1].cumReturn;
-        currentPrice = executionPrice * cumReturn;
-        totalReturn = (cumReturn - 1) * 100;
-        pnlDollar = allocation * (cumReturn - 1);
+        // Baseline at execution date so return reflects since-execution, not since May 1
+        const execPoint = executionDate
+          ? assetData.dailyData.find((d) => d.date === executionDate)
+          : undefined;
+        const baseCumReturn = execPoint?.cumReturn ?? 1;
+        const latestCumReturn = assetData.dailyData[assetData.dailyData.length - 1].cumReturn;
+        const returnSinceExec = latestCumReturn / baseCumReturn - 1;
+        currentPrice = executionPrice * (1 + returnSinceExec);
+        totalReturn = returnSinceExec * 100;
+        pnlDollar = allocation * returnSinceExec;
       } else {
         currentPrice = executionPrice;
         totalReturn = 0;
@@ -237,7 +244,7 @@ export default function PrivateFundDashboard({
         pnlDollar: parseFloat(pnlDollar.toFixed(2)),
       }];
     });
-  }, [privateData, allAssets, positionMap, livePrices]);
+  }, [privateData, allAssets, positionMap, livePrices, positions]);
 
   const totalDeployed = positions?.totalDeployed ?? 0;
   const totalPnlDollar = portfolioAssets.reduce((s, a) => s + a.pnlDollar, 0);

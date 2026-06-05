@@ -9,9 +9,9 @@ const COINGECKO_IDS = [
   "chainlink",
   "zcash",
   "uniswap",
-  "ether-fi",
-  "ethena",
   "morpho",
+  "sky",
+  "venice-token",
 ];
 
 const STOCK_TICKERS: Record<string, string> = {
