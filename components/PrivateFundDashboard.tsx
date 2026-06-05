@@ -611,8 +611,8 @@ export default function PrivateFundDashboard({
                     maxDrawdown: combinedMetrics.maxDrawdown,
                   },
                   {
-                    label: "Deployed Return", color: "#06b6d4",
-                    totalReturn: parseFloat(inceptionReturnPct.toFixed(2)),
+                    label: "100% Exposure", color: "#06b6d4",
+                    totalReturn: parseFloat(privateFundInceptionReturn.toFixed(2)),
                     sharpe: privateData?.metrics?.sharpe ?? null,
                     maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
                   },
