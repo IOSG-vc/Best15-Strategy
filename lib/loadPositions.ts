@@ -20,6 +20,7 @@ export interface PositionsData {
   totalDeployed: number;
   inceptionDate: string;
   inceptionFundSize: number;
+  inceptionDeployed: number;
   rebalanceHistory: RebalanceEntry[];
   positions: Position[];
 }

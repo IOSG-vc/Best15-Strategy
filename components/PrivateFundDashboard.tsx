@@ -55,23 +55,35 @@ const ETF_LIQ_SERIES: SeriesConfig[] = [
   { key: "onn_l", label: "1/N (Liq)", color: "#c084fc" },
 ];
 
-// exposureMultiplier=1 → actual fund (50% deployed), =2 → hypothetical 100% deployed
+// fullExposure=false → actual fund return, true → hypothetical 100% deployed
+// Exposure fraction per period is derived from the deployed field, so variable
+// exposure across rebalances is handled correctly.
 function computeTWR(
   inceptionFundSize: number,
+  inceptionDeployed: number,
   history: import("@/lib/loadPositions").RebalanceEntry[],
   currentFundValue: number,
-  exposureMultiplier: number = 1,
+  currentDeployed: number,
+  fullExposure: boolean = false,
 ): number | null {
   let periodStart = inceptionFundSize;
+  let periodDeployed = inceptionDeployed;
   let chainedFactor = 1;
   for (const entry of history) {
     if (entry.fundValueBeforeCashFlow === null) return null;
     const periodReturn = entry.fundValueBeforeCashFlow / periodStart - 1;
-    chainedFactor *= 1 + periodReturn * exposureMultiplier;
+    const factor = fullExposure
+      ? 1 + periodReturn / (periodDeployed / periodStart)
+      : 1 + periodReturn;
+    chainedFactor *= factor;
     periodStart = entry.fundValueBeforeCashFlow + entry.cashFlow;
+    periodDeployed = entry.deployed;
   }
-  const lastPeriodReturn = currentFundValue / periodStart - 1;
-  chainedFactor *= 1 + lastPeriodReturn * exposureMultiplier;
+  const lastReturn = currentFundValue / periodStart - 1;
+  const lastFactor = fullExposure
+    ? 1 + lastReturn / (currentDeployed / periodStart)
+    : 1 + lastReturn;
+  chainedFactor *= lastFactor;
   return chainedFactor - 1;
 }
 
@@ -277,14 +289,16 @@ export default function PrivateFundDashboard({
 
   // TWR chains returns across rebalance periods, eliminating cash-flow distortion.
   // Falls back to simple return if any period is missing fundValueBeforeCashFlow.
-  const twrRaw = computeTWR(inceptionFundSize, rebalanceHistory, wholeFundCurrentValue);
+  const inceptionDeployed = positions?.inceptionDeployed ?? totalDeployed;
+
+  const twrRaw = computeTWR(inceptionFundSize, inceptionDeployed, rebalanceHistory, wholeFundCurrentValue, totalDeployed);
   const wholeFundReturnPct = twrRaw !== null
     ? twrRaw * 100
     : netInvestedCapital > 0 ? (wholeFundPnl / netInvestedCapital) * 100 : 0;
   const isTWR = twrRaw !== null;
 
-  // 100% exposure: same TWR periods but each period's return doubled (cash=0%, deployment=50%)
-  const fullExposureTwrRaw = computeTWR(inceptionFundSize, rebalanceHistory, wholeFundCurrentValue, 2);
+  // 100% exposure: scale each period's return by its actual exposure fraction
+  const fullExposureTwrRaw = computeTWR(inceptionFundSize, inceptionDeployed, rebalanceHistory, wholeFundCurrentValue, totalDeployed, true);
   const fullExposureReturnPct = fullExposureTwrRaw !== null
     ? fullExposureTwrRaw * 100
     : wholeFundReturnPct * 2;
