@@ -332,11 +332,16 @@ export default function PrivateFundDashboard({
     return (val - 1) * 100;
   }, [privateData]);
 
-  // ── Client-side Sharpe + Max DD for Combined and Bitcoin ─────────────────
-  const combinedMetrics = useMemo(() => {
+  // ── Sharpe + Max DD computed from actual per-period exposure fractions ───
+  const privateFundMetrics = useMemo(() => {
     const data = privateData?.dailyData ?? [];
     if (data.length < 3) return { sharpe: null as number | null, maxDrawdown: 0 };
-    const rets = data.map(d => 0.5 * d.return);
+    const execDate = positions?.executionDate ?? "";
+    const p1Exposure = inceptionFundSize > 0 ? inceptionDeployed / inceptionFundSize : 0.5;
+    const p2Exposure = fundValueAfterLastCF > 0 ? totalDeployed / fundValueAfterLastCF : 0.5;
+    const rets = data.map(d =>
+      d.date < execDate ? d.return * p1Exposure : d.return * p2Exposure
+    );
     let cum = 1, peak = 1, maxDD = 0;
     for (const r of rets) {
       cum *= (1 + r);
@@ -347,14 +352,14 @@ export default function PrivateFundDashboard({
     const n = rets.length;
     const mean = rets.reduce((s, r) => s + r, 0) / n;
     const std = Math.sqrt(rets.reduce((s, r) => s + (r - mean) ** 2, 0) / (n - 1));
-    const annRet = (Math.pow(cum, 365 / n) - 1);
+    const annRet = Math.pow(cum, 365 / n) - 1;
     const annVol = std * Math.sqrt(365);
     const sharpe = annVol > 0 ? annRet / annVol : null;
     return {
       sharpe: sharpe !== null && isFinite(sharpe) ? parseFloat(sharpe.toFixed(4)) : null,
       maxDrawdown: parseFloat((maxDD * 100).toFixed(2)),
     };
-  }, [privateData]);
+  }, [privateData, positions, inceptionFundSize, inceptionDeployed, fundValueAfterLastCF, totalDeployed]);
 
   const btcMetrics = useMemo(() => {
     const data = btcData?.dailyData ?? [];
@@ -631,8 +636,8 @@ export default function PrivateFundDashboard({
                   {
                     label: "Private Fund", color: "#8b5cf6",
                     totalReturn: parseFloat(wholeFundReturnPct.toFixed(2)),
-                    sharpe: combinedMetrics.sharpe,
-                    maxDrawdown: combinedMetrics.maxDrawdown,
+                    sharpe: privateFundMetrics.sharpe,
+                    maxDrawdown: privateFundMetrics.maxDrawdown,
                   },
                   {
                     label: "100% Exposure", color: "#06b6d4",
