@@ -55,19 +55,23 @@ const ETF_LIQ_SERIES: SeriesConfig[] = [
   { key: "onn_l", label: "1/N (Liq)", color: "#c084fc" },
 ];
 
+// exposureMultiplier=1 → actual fund (50% deployed), =2 → hypothetical 100% deployed
 function computeTWR(
   inceptionFundSize: number,
   history: import("@/lib/loadPositions").RebalanceEntry[],
   currentFundValue: number,
+  exposureMultiplier: number = 1,
 ): number | null {
   let periodStart = inceptionFundSize;
   let chainedFactor = 1;
   for (const entry of history) {
     if (entry.fundValueBeforeCashFlow === null) return null;
-    chainedFactor *= entry.fundValueBeforeCashFlow / periodStart;
+    const periodReturn = entry.fundValueBeforeCashFlow / periodStart - 1;
+    chainedFactor *= 1 + periodReturn * exposureMultiplier;
     periodStart = entry.fundValueBeforeCashFlow + entry.cashFlow;
   }
-  chainedFactor *= currentFundValue / periodStart;
+  const lastPeriodReturn = currentFundValue / periodStart - 1;
+  chainedFactor *= 1 + lastPeriodReturn * exposureMultiplier;
   return chainedFactor - 1;
 }
 
@@ -278,6 +282,12 @@ export default function PrivateFundDashboard({
     ? twrRaw * 100
     : netInvestedCapital > 0 ? (wholeFundPnl / netInvestedCapital) * 100 : 0;
   const isTWR = twrRaw !== null;
+
+  // 100% exposure: same TWR periods but each period's return doubled (cash=0%, deployment=50%)
+  const fullExposureTwrRaw = computeTWR(inceptionFundSize, rebalanceHistory, wholeFundCurrentValue, 2);
+  const fullExposureReturnPct = fullExposureTwrRaw !== null
+    ? fullExposureTwrRaw * 100
+    : wholeFundReturnPct * 2;
 
   // Deployed-only return (current positions vs their execution cost)
   const inceptionReturnPct = totalDeployed > 0 ? (totalPnlDollar / totalDeployed) * 100 : 0;
@@ -612,7 +622,7 @@ export default function PrivateFundDashboard({
                   },
                   {
                     label: "100% Exposure", color: "#06b6d4",
-                    totalReturn: parseFloat(privateFundInceptionReturn.toFixed(2)),
+                    totalReturn: parseFloat(fullExposureReturnPct.toFixed(2)),
                     sharpe: privateData?.metrics?.sharpe ?? null,
                     maxDrawdown: privateData?.metrics?.maxDrawdown ?? 0,
                   },
