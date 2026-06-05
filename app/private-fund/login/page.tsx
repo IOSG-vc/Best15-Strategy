@@ -1,12 +1,8 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +18,7 @@ export default function LoginPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        router.push("/private-fund");
+        window.location.href = "/private-fund";
       } else {
         setError("Incorrect password");
         setPassword("");
