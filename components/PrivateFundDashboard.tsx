@@ -390,12 +390,20 @@ export default function PrivateFundDashboard({
   const assetBreakdown = useMemo((): AssetBreakdownRow[] => {
     const { strat } = activeStageWeights;
     if (!strat?.latestWeights) return [];
+    const executionDate = positions?.executionDate;
     return strat.latestWeights
       .filter((w) => w.weight > 0)
       .map((w) => {
         const asset = allAssets[w.coin];
         const lastData = asset?.dailyData.at(-1);
-        const returnPct = lastData ? parseFloat(((lastData.cumReturn - 1) * 100).toFixed(2)) : null;
+        let returnPct: number | null = null;
+        if (lastData) {
+          const execPoint = executionDate
+            ? asset?.dailyData.find((d) => d.date === executionDate)
+            : undefined;
+          const baseCumReturn = execPoint?.cumReturn ?? 1;
+          returnPct = parseFloat(((lastData.cumReturn / baseCumReturn - 1) * 100).toFixed(2));
+        }
         return {
           id: w.coin,
           name: asset?.displayName ?? w.coin,
@@ -405,7 +413,7 @@ export default function PrivateFundDashboard({
           available: !!asset,
         };
       });
-  }, [activeStageWeights, allAssets]);
+  }, [activeStageWeights, allAssets, positions]);
 
   const breakdownTotalWeight = useMemo(
     () => parseFloat(assetBreakdown.filter((r) => r.available).reduce((s, r) => s + r.weightPct, 0).toFixed(2)),
@@ -786,7 +794,7 @@ export default function PrivateFundDashboard({
                       <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">#</th>
                       <th className="text-left px-4 py-3 text-gray-400 font-medium text-xs">Asset</th>
                       <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Weight</th>
-                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Return (since first rebalance)</th>
+                      <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Return (since {positions?.executionDate ?? "last rebalance"})</th>
                       <th className="text-right px-4 py-3 text-gray-400 font-medium text-xs">Contribution</th>
                     </tr>
                   </thead>
