@@ -11,7 +11,9 @@ import os
 import random
 import statistics
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
+
+import numpy as np
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
 UA = {"User-Agent": "Mozilla/5.0"}
@@ -121,6 +123,86 @@ def summarize(arr, spot=None):
     return d
 
 
+# Top LRT peers by TVL (excluding ether.fi itself)
+LRT_PEER_SLUGS = ["kelp", "renzo", "puffer-stake", "swell-liquid-restaking"]
+
+
+def fetch_protocol_tvl_daily(slug):
+    """Return [(date_str, tvl_usd)] from DefiLlama protocol TVL history."""
+    try:
+        d = fetch(f"https://api.llama.fi/protocol/{slug}")
+        rows = []
+        for item in d.get("tvl", []):
+            dt = str(datetime.fromtimestamp(item["date"], tz=timezone.utc).date())
+            rows.append((dt, float(item["totalLiquidityUSD"])))
+        return sorted(rows)
+    except Exception:
+        return []
+
+
+def fetch_lst_total_tvl():
+    """Return current total liquid staking TVL from DefiLlama protocols list."""
+    try:
+        protos = fetch("https://api.llama.fi/protocols")
+        total = sum(p.get("tvl") or 0.0 for p in protos if p.get("category") == "Liquid Staking")
+        return float(total)
+    except Exception:
+        return None
+
+
+def compute_ethfi_ms(ethfi_rows, peer_rows_list):
+    """Compute rolling 30D/90D mean LRT market share; return snapshot + daily history."""
+    ethfi_by_date = dict(ethfi_rows)
+    peer_by_date: dict[str, float] = {}
+    for rows in peer_rows_list:
+        for d, v in rows:
+            peer_by_date[d] = peer_by_date.get(d, 0.0) + v
+
+    common = sorted(set(ethfi_by_date) & set(peer_by_date))
+    if not common:
+        return None, []
+
+    ethfi_arr = np.array([ethfi_by_date.get(d, 0.0) for d in common], dtype=float)
+    total_arr  = np.array([ethfi_arr[i] + peer_by_date.get(d, 0.0) for i, d in enumerate(common)], dtype=float)
+    ratio = np.where(total_arr > 0, ethfi_arr / total_arr, np.nan)
+
+    def rolling_mean(arr, w):
+        out = np.full(len(arr), np.nan)
+        for i in range(w - 1, len(arr)):
+            window = arr[i - w + 1: i + 1]
+            valid = window[~np.isnan(window)]
+            if len(valid) > 0:
+                out[i] = float(valid.mean())
+        return out
+
+    ms30  = rolling_mean(ratio, 30)
+    ms90  = rolling_mean(ratio, 90)
+    ms180 = rolling_mean(ratio, 180)
+
+    def _f(arr): return float(arr[-1]) if not np.isnan(arr[-1]) else None
+
+    snapshot = {
+        "ms30": _f(ms30),
+        "ms90": _f(ms90),
+        "ms180": _f(ms180),
+        "lrt_total_tvl": float(total_arr[-1]),
+        "ethfi_stake_tvl": float(ethfi_arr[-1]),
+    }
+
+    start = max(0, len(common) - 365)
+    history = []
+    for i, d in enumerate(common[start:], start=start):
+        if np.isnan(ms30[i]):
+            continue
+        history.append({
+            "date": d,
+            "ms30": round(float(ms30[i]), 5),
+            "ms90": round(float(ms90[i]), 5) if not np.isnan(ms90[i]) else None,
+        })
+
+    return snapshot, history
+
+
 def run() -> dict:
     """Fetch live data, run ETHFI MC, return standardized result dict."""
     random.seed(SEED)
@@ -141,6 +223,18 @@ def run() -> dict:
 
     stake_tvl = protocol_tvl("ether.fi-stake")
     vault_tvl = protocol_tvl("ether.fi-liquid")
+
+    # ── LRT market share ──────────────────────────────────────────────────────
+    ms_snapshot, ms_history = None, []
+    lst_total_tvl = None
+    try:
+        ethfi_tvl_rows = fetch_protocol_tvl_daily("ether.fi-stake")
+        peer_tvl_rows  = [fetch_protocol_tvl_daily(s) for s in LRT_PEER_SLUGS]
+        ms_snapshot, ms_history = compute_ethfi_ms(ethfi_tvl_rows, peer_tvl_rows)
+        lst_total_tvl = fetch_lst_total_tvl()
+    except Exception as _e:
+        pass
+
     market = get_market()
     staking_apy, apy_sources = get_avg_staking_apy()
     eth_logs = get_eth_daily_logs()
@@ -335,8 +429,19 @@ def run() -> dict:
             "vault_tvl": float(vault_tvl),
             "card_take_bps_30d": float(take_bps_30),
             "card_mom": float(card_mom),
+            # LRT market share
+            **({"ms30_vs_lrt":      ms_snapshot["ms30"],
+                "ms90_vs_lrt":      ms_snapshot["ms90"],
+                "ms180_vs_lrt":     ms_snapshot["ms180"],
+                "lrt_total_tvl":    ms_snapshot["lrt_total_tvl"],
+                "ms30_ms180_trend": (ms_snapshot["ms30"] / ms_snapshot["ms180"])
+                                    if ms_snapshot and ms_snapshot["ms30"] and ms_snapshot["ms180"] else None,
+                **({"ms30_vs_all_staking": ms_snapshot["ethfi_stake_tvl"] / (lst_total_tvl + ms_snapshot["lrt_total_tvl"])
+                    } if lst_total_tvl and lst_total_tvl > 0 else {}),
+               } if ms_snapshot else {}),
         },
         "scenarios": frontend_scenarios,
+        "ms_history": ms_history,
         "raw_results": results,
     }
 

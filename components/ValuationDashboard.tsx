@@ -796,6 +796,22 @@ const MS_CONFIG: Record<string, MsConfig> = {
       ["GP full activation (ann.)",      fmtLarge(gp["annualized_full_activation"] as number)],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
+  ethfi: {
+    yCapPct: 0.90,
+    chartNote: "Rolling 30D and 90D mean of ether.fi staking TVL / total LRT TVL (ether.fi + Kelp + Renzo + Puffer + Swell). Shows ether.fi dominance within the liquid restaking niche.",
+    tableNote: "Denominator sums top LRT protocols from DefiLlama; excludes traditional liquid staking (Lido, Rocket Pool).",
+    driversTitle: "LRT restaking market share",
+    driversBody: null,
+    tableRows: (gp) => ([
+      ["MS30 vs Total LRT",              pct(gp["ms30_vs_lrt"] as number)],
+      ["MS90 vs Total LRT",              pct(gp["ms90_vs_lrt"] as number)],
+      ["MS180 vs Total LRT",             pct(gp["ms180_vs_lrt"] as number)],
+      ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
+      ["LRT market total TVL",           fmtLarge(gp["lrt_total_tvl"] as number)],
+      ["MS vs all liquid staking",       pct(gp["ms30_vs_all_staking"] as number)],
+      ["Staking TVL",                    fmtLarge(gp["stake_tvl"] as number)],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
+  },
 };
 
 function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
@@ -877,6 +893,11 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           {tokenKey === "uni" && (
             <p className="text-sm text-gray-400 leading-relaxed">
               UNI revenue = LP fees × protocol take-rate. Current state: ~0.83bps LP protocol share + 0.30bps frontend. Full activation: 25% of LP fees + 0.30bps frontend. Market share trend shows UNI's share of total DEX volume across all on-chain protocols (DefiLlama).
+            </p>
+          )}
+          {tokenKey === "ethfi" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              ether.fi GP = Card GDV × 135bps take × margin + staking TVL × ETH APY × 5% + vault TVL × 1%. Market share trend shows ether.fi's rolling TVL share of the liquid restaking market (vs Kelp, Renzo, Puffer, Swell). Table also shows share of all liquid staking (LRT + LST including Lido).
             </p>
           )}
         </div>
@@ -1346,7 +1367,10 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           {tokenKey === "ethfi" && <>
             <MetricCard label="Total GP (ann.)" value={fmtLarge(gp["total_annualized"] as number)} sub="Card + staking + vault" />
             <MetricCard label="Card GDV (ann.)" value={fmtLarge(gp["card_gdv_30d_ann"] as number)} sub={`Take: ${((gp["card_take_bps_30d"] as number) ?? 0).toFixed(2)} bps`} />
-            <MetricCard label="Staking APY / TVL" value={pct(gp["staking_apy"] as number)} sub={`TVL ${fmtLarge(gp["stake_tvl"] as number)}`} />
+            {gp["ms30_vs_lrt"] != null
+              ? <MetricCard label="MS30 vs Total LRT" value={pct(gp["ms30_vs_lrt"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "default" : "red"} />
+              : <MetricCard label="Staking APY / TVL" value={pct(gp["staking_apy"] as number)} sub={`TVL ${fmtLarge(gp["stake_tvl"] as number)}`} />
+            }
           </>}
           {tokenKey === "jup" && <>
             <MetricCard label="Total 30D GP" value={fmtLarge(gp["total_30d"] as number)} sub="Perps + aggregator + Jupiterz" />
@@ -1387,7 +1411,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       </div>
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {(tokenKey === "hype" || tokenKey === "uni") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}
