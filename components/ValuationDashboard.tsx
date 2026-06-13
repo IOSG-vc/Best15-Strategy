@@ -752,130 +752,133 @@ Horizon: 3 years`}</pre>
   );
 }
 
-// ── HypeMarketShareSection ────────────────────────────────────────────────────
+// ── MarketShareSection (shared for HYPE + UNI) ───────────────────────────────
 
-function HypeMarketShareSection({ data }: { data: ValuationData }) {
+interface MsConfig {
+  chartNote: string;
+  tableNote: string;
+  driversTitle: string;
+  driversBody: React.ReactNode;
+  tableRows: (gp: Record<string, number>) => [string, string][];
+  yCapPct: number;   // y-axis max cap as decimal
+}
+
+const MS_CONFIG: Record<string, MsConfig> = {
+  hype: {
+    yCapPct: 0.35,
+    chartNote: "Chart uses daily revenue-implied HL volume for rolling continuity; headline cards use DefiLlama MCP derivatives-volume aggregates.",
+    tableNote: "DefiLlama MCP checked: revenue excludes Coinbase/USDC yield; stablecoin yield is modeled separately.",
+    driversTitle: "Perps + stablecoin yield",
+    driversBody: null,   // filled inline below
+    tableRows: (gp) => ([
+      ["MS30 vs Binance Futures",        pct(gp["ms30_vs_binance"] as number)],
+      ["MS180 vs Binance Futures",       pct(gp["ms180_vs_binance"] as number)],
+      ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`],
+      ["DefiLlama 30D fee rev. ann.",    fmtLarge(gp["defillama_30d_ann"] as number)],
+      ["DefiLlama 180D fee rev. ann.",   fmtLarge(gp["defillama_180d_ann"] as number)],
+      ["Buyback yrs (fees + USDC)",      `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
+      ["Fee-only buyback years",         `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y"),
+  },
+  uni: {
+    yCapPct: 0.50,
+    chartNote: "Rolling 30D and 90D UNI DEX volume / Binance BTCUSDT spot volume. Shows DEX-vs-CEX penetration trend.",
+    tableNote: "Volume from DefiLlama DEX aggregator; Binance denominator is BTCUSDT spot quoteAssetVolume.",
+    driversTitle: "DEX spot vs CEX spot",
+    driversBody: null,
+    tableRows: (gp) => ([
+      ["MS30 vs Binance spot",           pct(gp["ms30_vs_binance"] as number)],
+      ["MS90 vs Binance spot",           pct(gp["ms90_vs_binance"] as number)],
+      ["MS180 vs Binance spot",          pct(gp["ms180_vs_binance"] as number)],
+      ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
+      ["UNI 30D volume (ann.)",          fmtLarge(gp["ann_volume"] as number)],
+      ["GP current state (ann.)",        fmtLarge(gp["annualized_current_state"] as number)],
+      ["GP full activation (ann.)",      fmtLarge(gp["annualized_full_activation"] as number)],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
+  },
+};
+
+function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
   const history = data.ms_history;
   if (!history?.length) return null;
+  const cfg = MS_CONFIG[tokenKey];
+  if (!cfg) return null;
 
   const gp = data.current_gp;
-
-  // Format x-axis ticks: show ~6 evenly-spaced dates
   const step  = Math.max(1, Math.floor(history.length / 6));
   const ticks = history
     .filter((_, i) => i % step === 0 || i === history.length - 1)
     .map((d) => d.date);
 
-  const yMin = Math.max(0, Math.min(...history.map((d) => d.ms30)) - 0.01);
-  const yMax = Math.min(0.35, Math.max(...history.map((d) => d.ms90 ?? d.ms30)) + 0.01);
+  const ms30Vals = history.map((d) => d.ms30).filter(Boolean) as number[];
+  const ms90Vals = history.map((d) => d.ms90).filter((v): v is number => v != null);
+  const yMin = Math.max(0, Math.min(...ms30Vals) - 0.01);
+  const yMax = Math.min(cfg.yCapPct, Math.max(...ms90Vals.concat(ms30Vals)) + 0.01);
 
-  const tableRows: [string, string][] = [
-    ["MS30 vs Binance",                 pct(gp["ms30_vs_binance"] as number)],
-    ["MS180 vs Binance",                pct(gp["ms180_vs_binance"] as number)],
-    ["MS30/MS180 trend",                `${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`],
-    ["DefiLlama 30D fee revenue ann.",  fmtLarge(gp["defillama_30d_ann"] as number)],
-    ["DefiLlama 180D fee revenue ann.", fmtLarge(gp["defillama_180d_ann"] as number)],
-    ["Buyback years: 30D fees + USDC yield", `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
-    ["Fee-only 30D buyback years",      `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
-  ].filter(([, v]) => v && v !== "$0" && v !== "0.0y") as [string, string][];
+  const tableRows = cfg.tableRows(gp);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
       {/* ── Left: chart ─────────────────────────────────────────────── */}
       <div className="lg:col-span-3 bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
         <h3 className="text-xl font-bold text-white mb-5">Market share trend</h3>
-
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={history} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
             <XAxis
               dataKey="date"
               ticks={ticks}
-              tickFormatter={(d: string) => {
-                const [, m, day] = d.split("-");
-                return `${parseInt(m)}/${parseInt(day)}`;
-              }}
-              tick={{ fill: "#6b7280", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
+              tickFormatter={(d: string) => { const [, m, day] = d.split("-"); return `${parseInt(m)}/${parseInt(day)}`; }}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
             />
             <YAxis
               domain={[yMin, yMax]}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              tick={{ fill: "#6b7280", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              width={36}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={36}
             />
             <Tooltip
               contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
               labelStyle={{ color: "#9ca3af", marginBottom: 2 }}
               formatter={(v: number, name: string) => [`${(v * 100).toFixed(2)}%`, name === "ms30" ? "MS30" : "MS90"]}
             />
-            {/* MS90 — grey, slightly thicker */}
-            <Line
-              type="monotone"
-              dataKey="ms90"
-              stroke="#6b7280"
-              strokeWidth={1.5}
-              dot={false}
-              connectNulls
-            />
-            {/* MS30 — white/bright, thinner */}
-            <Line
-              type="monotone"
-              dataKey="ms30"
-              stroke="#e5e7eb"
-              strokeWidth={1.5}
-              dot={false}
-            />
+            <Line type="monotone" dataKey="ms90" stroke="#6b7280" strokeWidth={1.5} dot={false} connectNulls />
+            <Line type="monotone" dataKey="ms30" stroke="#e5e7eb" strokeWidth={1.5} dot={false} />
           </LineChart>
         </ResponsiveContainer>
-
-        <p className="text-xs text-gray-600 mt-4 leading-relaxed">
-          Chart uses daily revenue-implied HL volume for rolling continuity; headline cards use DefiLlama MCP derivatives-volume aggregates.
-        </p>
+        <p className="text-xs text-gray-600 mt-4 leading-relaxed">{cfg.chartNote}</p>
       </div>
 
       {/* ── Right: table + drivers card ─────────────────────────────── */}
       <div className="lg:col-span-2 flex flex-col gap-4">
-
-        {/* Data table */}
         <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5 flex-1">
-          <div className="text-xs font-mono text-gray-500 mb-4 tracking-wide">
-            Current data — MCP checked
-          </div>
+          <div className="text-xs font-mono text-gray-500 mb-4 tracking-wide">Current snapshot</div>
           <table className="w-full">
             <tbody>
               {tableRows.map(([label, value]) => (
                 <tr key={label} className="border-b border-[#252836] last:border-0">
                   <td className="py-2.5 text-sm text-gray-400 pr-3">{label}</td>
-                  <td className="py-2.5 text-sm font-mono font-semibold text-gray-200 text-right whitespace-nowrap">
-                    {value}
-                  </td>
+                  <td className="py-2.5 text-sm font-mono font-semibold text-gray-200 text-right whitespace-nowrap">{value}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-gray-600 mt-4 leading-relaxed">
-            DefiLlama MCP checked: revenue excludes Coinbase/USDC yield; stablecoin yield is modeled separately.
-          </p>
+          <p className="text-xs text-gray-600 mt-4 leading-relaxed">{cfg.tableNote}</p>
         </div>
 
-        {/* Revenue drivers card */}
         <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5">
-          <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">
-            Core revenue drivers
-          </div>
-          <div className="text-lg font-bold text-white mb-3">
-            Perps + stablecoin yield
-          </div>
-          <p className="text-sm text-gray-400 leading-relaxed">
-            DefiLlama rows above are observed fee revenue. In the MC, future perps GP is modeled from Binance volume × HL share × 0.034% take-rate. Stablecoin yield is modeled separately as USDC TVL × net yield × 90% capture; current USDC-yield run-rate is{" "}
-            <span className="text-gray-200 font-medium">
-              {fmtLarge(gp["usdc_gp_annual"] as number)}
-            </span>.
-          </p>
+          <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Core revenue drivers</div>
+          <div className="text-lg font-bold text-white mb-3">{cfg.driversTitle}</div>
+          {tokenKey === "hype" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              DefiLlama rows are observed fee revenue. MC models future perps GP from Binance volume × HL share × 0.034% take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
+              <span className="text-gray-200 font-medium">{fmtLarge(gp["usdc_gp_annual"] as number)}</span>.
+            </p>
+          )}
+          {tokenKey === "uni" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              UNI revenue = LP fees × protocol take-rate. Current state: ~0.83bps LP protocol share + 0.30bps frontend. Full activation: 25% of LP fees + 0.30bps frontend. Market share trend above shows how UNI volume compares to Binance spot as a CEX benchmark.
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -1335,7 +1338,10 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           {tokenKey === "uni" && <>
             <MetricCard label="GP current state (ann.)" value={fmtLarge(gp["annualized_current_state"] as number)} sub="Protocol fees at current take rate" />
             <MetricCard label="GP full activation (ann.)" value={fmtLarge(gp["annualized_full_activation"] as number)} sub="25% of LP fees → protocol" />
-            <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
+            {gp["ms30_vs_binance"] != null
+              ? <MetricCard label="MS30 vs Binance spot" value={pct(gp["ms30_vs_binance"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.05 ? "green" : "default"} />
+              : <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
+            }
           </>}
           {tokenKey === "ethfi" && <>
             <MetricCard label="Total GP (ann.)" value={fmtLarge(gp["total_annualized"] as number)} sub="Card + staking + vault" />
@@ -1381,7 +1387,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       </div>
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {tokenKey === "hype" && <HypeMarketShareSection data={d} />}
+      {(tokenKey === "hype" || tokenKey === "uni") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}
