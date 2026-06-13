@@ -18,6 +18,15 @@ from urllib.request import Request, urlopen
 from pathlib import Path
 
 REPO_ROOT    = Path(__file__).parent.parent
+
+# Load .env.local so API keys are available to Python agents
+_env_file = REPO_ROOT / ".env.local"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
 BUNDLE_WEBAPP = REPO_ROOT / "crypto_valuation_agents_bundle" / "webapp"
 OUTPUT_FILE  = REPO_ROOT / "data" / "valuations.json"
 

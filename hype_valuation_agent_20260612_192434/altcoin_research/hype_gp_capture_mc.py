@@ -10,8 +10,6 @@ OUTDIR = os.path.dirname(__file__)
 np.random.seed(42)
 
 CG_ID = "hyperliquid"
-DEFILLAMA_API_KEY = os.environ.get("DEFILLAMA_API_KEY", "")
-DEFILLAMA_PRO_BASE = "https://pro-api.llama.fi"
 N_PATHS = 100_000
 MONTHS = 36
 GP_MARGIN = 0.985
@@ -36,43 +34,6 @@ def get_json(url, params=None, method="GET", payload=None, timeout=30):
         r = requests.get(url, params=params, timeout=timeout)
     r.raise_for_status()
     return r.json()
-
-
-def fetch_hl_derivatives_volume() -> dict:
-    """Fetch Hyperliquid 30D/90D/180D derivatives volume from DefiLlama pro API.
-
-    Returns dict with volume_derivatives_{30,90,180}d_usd keys, or {} if
-    DEFILLAMA_API_KEY is unset or the request fails.
-    """
-    if not DEFILLAMA_API_KEY:
-        return {}
-    url = f"{DEFILLAMA_PRO_BASE}/{DEFILLAMA_API_KEY}/api/summary/derivatives/hyperliquid"
-    try:
-        r = requests.get(url, params={"dataType": "dailyVolume"}, timeout=30)
-        r.raise_for_status()
-        d = r.json()
-
-        # Some endpoints use totalDataChart [[ts, vol], ...]
-        chart = sorted(d.get("totalDataChart") or [], key=lambda x: x[0])
-
-        def _sum_last(n: int) -> float:
-            if not chart:
-                return 0.0
-            recent = chart[-n:] if len(chart) >= n else chart
-            return float(sum(v for _, v in recent))
-
-        vol30  = float(d.get("total30d") or _sum_last(30))
-        vol90  = _sum_last(90)
-        vol180 = _sum_last(180)
-
-        return {
-            "volume_derivatives_30d_usd":  vol30,
-            "volume_derivatives_90d_usd":  vol90,
-            "volume_derivatives_180d_usd": vol180,
-        }
-    except Exception as e:
-        print(f"[DefiLlama pro] derivatives volume fetch failed: {e}")
-        return {}
 
 
 def cg_market():

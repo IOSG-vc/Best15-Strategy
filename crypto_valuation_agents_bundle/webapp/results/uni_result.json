@@ -1,75 +1,75 @@
 {
   "token": "UNI",
   "name": "Uniswap",
-  "as_of_utc": "2026-06-03T20:52:42.628484+00:00",
+  "as_of_utc": "2026-06-13T12:07:46.041610+00:00",
   "market": {
-    "spot": 2.79,
-    "market_cap": 1739845084.0,
-    "fdv": 2499967785.0,
-    "circulating_supply": 622889561.5538775,
+    "spot": 2.55,
+    "market_cap": 1584151731.0,
+    "fdv": 2277134527.0,
+    "circulating_supply": 622097561.5538775,
     "max_supply": 1000000000.0
   },
   "model": {
     "type": "3Y GP-Capture Monte Carlo",
-    "discount_rate": 0.24939576932094606,
+    "discount_rate": 0.2351846612556016,
     "multiple": 15.0,
     "paths": 80000,
     "note": "25% fee-switch GP on LP fees + 0.30bps frontend fee; volume bootstrapped from 2021+ monthly history"
   },
   "current_gp": {
-    "annualized_current_state": 51866076.137530394,
-    "annualized_full_activation": 158822460.66578665,
-    "lp_fee_bps_30d": 12.591989217419982,
+    "annualized_current_state": 57029908.5037032,
+    "annualized_full_activation": 175298899.78096,
+    "lp_fee_bps_30d": 12.644424185989623,
     "take_bps_current": 1.126,
-    "take_bps_full": 3.4479973043549954,
-    "ann_volume": 460622345804.0,
-    "mcap_current_state_gp": 33.54495295511751,
-    "mcap_full_activation_gp": 10.954653873932804
+    "take_bps_full": 3.4611060464974055,
+    "ann_volume": 506482313532.0,
+    "mcap_current_state_gp": 27.777560451410057,
+    "mcap_full_activation_gp": 9.036860659019732
   },
   "scenarios": [
     {
       "key": "current_state",
       "label": "Current-state economics",
       "pv": {
-        "p25": 0.2548981833515343,
-        "p50": 0.8021058902622742,
-        "p75": 2.5706979713642584,
-        "p90": 7.212839784133981
+        "p25": 0.29045673227206614,
+        "p50": 0.9139974265331667,
+        "p75": 2.9287721848991684,
+        "p90": 8.220972947015063
       },
-      "ev": 3.782183173522612,
-      "prob_above_spot": 0.23515,
-      "prob_3x": 0.0857875,
+      "ev": 4.308666763137996,
+      "prob_above_spot": 0.2759625,
+      "prob_3x": 0.10785,
       "is_primary": false
     },
     {
       "key": "full_activation",
       "label": "Full-activation (fee switch on)",
       "pv": {
-        "p25": 0.7805401856847918,
-        "p50": 2.4561802375058486,
-        "p75": 7.871900244737849,
-        "p90": 22.086902426677117
+        "p25": 0.8928077729242684,
+        "p50": 2.809451171809069,
+        "p75": 9.002478790380046,
+        "p90": 25.269679551514596
       },
-      "ev": 11.581667306290223,
-      "prob_above_spot": 0.47025,
-      "prob_3x": 0.238475,
+      "ev": 13.244007625434568,
+      "prob_above_spot": 0.522225,
+      "prob_3x": 0.2806625,
       "is_primary": true
     },
     {
       "key": "full_activation_fdv",
       "label": "Full-activation (max supply)",
       "pv": {
-        "p25": 0.48619033403638207,
-        "p50": 1.5299290312373164,
-        "p75": 4.903324492040619,
-        "p90": 13.757700968636183
+        "p25": 0.5554135384725354,
+        "p50": 1.7477527232871055,
+        "p75": 5.600420103435927,
+        "p90": 15.72020603024511
       },
-      "ev": 7.214099670477993,
-      "prob_above_spot": 0.36185,
-      "prob_3x": 0.161225,
+      "ev": 8.239064848983803,
+      "prob_above_spot": 0.4115625,
+      "prob_3x": 0.1959875,
       "is_primary": false
     }
   ],
   "caveats": [],
-  "data_freshness": "2026-06-03"
+  "data_freshness": "2026-06-13"
 }

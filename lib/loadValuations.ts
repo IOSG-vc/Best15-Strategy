@@ -24,6 +24,13 @@ export interface ScenarioPV {
   p90: number;
 }
 
+export interface Y3Volume {
+  min: number;
+  avg: number;
+  max: number;
+  eoy_market_share: number;
+}
+
 export interface ValuationScenario {
   key: string;
   label: string;
@@ -32,6 +39,41 @@ export interface ValuationScenario {
   ev: number;
   prob_above_spot: number;
   prob_3x?: number;
+  /** Full percentile ladder P5–P95, present when the agent produces CHART_QS output */
+  distribution?: Record<string, number>;
+  /** HYPE model outputs */
+  y3_price_p50?: number;
+  y3_mcap_p50?: number;
+  y3_supply_p50?: number;
+  y3_gp_p50?: number;
+  ev_mcap?: number;
+  burn_3y_est?: number;
+  y3_volume?: Y3Volume;
+}
+
+export interface BacktestSignal {
+  obs: number;
+  avg_30d: number | null;
+  avg_90d: number | null;
+  recent_dates: string[];
+}
+
+export interface BacktestRow {
+  date: string;
+  spot: number;
+  pv: number;
+  signal: "GOOD" | "NEUTRAL" | "BAD";
+}
+
+export interface HistCharts {
+  backtest: {
+    chart: BacktestRow[];
+    signals: Record<string, BacktestSignal>;
+    latest_signal: string;
+    last_realized_row: string | null;
+  };
+  buyback_horizon: { date: string; years: number }[];
+  eoy3_ms: { date: string; eoy3: number; ms90: number; ms30: number }[];
 }
 
 export interface ValuationData {
@@ -44,11 +86,20 @@ export interface ValuationData {
   scenarios: ValuationScenario[];
   caveats?: string[];
   data_freshness?: string;
+  ms_history?: MsPoint[];
+  hist_charts?: HistCharts;
+  mcp_bullets?: string[];
 }
 
 export interface McapPoint {
   date: string;
   mcap: number;
+}
+
+export interface MsPoint {
+  date: string;
+  ms30: number;
+  ms90: number | null;
 }
 
 export interface TokenResult {
