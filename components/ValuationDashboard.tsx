@@ -796,6 +796,23 @@ const MS_CONFIG: Record<string, MsConfig> = {
       ["GP full activation (ann.)",      fmtLarge(gp["annualized_full_activation"] as number)],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
+  sky: {
+    yCapPct: 0.08,
+    chartNote: "Rolling 30D and 90D mean of (USDS + DAI) / total USD stablecoin supply (DefiLlama). Directly drives gross income — higher share → more revenue at current yield.",
+    tableNote: "Total stablecoin denominator from DefiLlama /stablecoincharts/all (includes USDT, USDC, FDUSD, PYUSD, etc.).",
+    driversTitle: "Decentralized stablecoin market",
+    driversBody: null,
+    tableRows: (gp) => ([
+      ["MS30 vs All Stablecoins",        pct(gp["ms30_vs_stables"] as number)],
+      ["MS90 vs All Stablecoins",        pct(gp["ms90_vs_stables"] as number)],
+      ["MS180 vs All Stablecoins",       pct(gp["ms180_vs_stables"] as number)],
+      ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
+      ["Total stablecoin market",        fmtLarge(gp["total_stablecoin_supply"] as number)],
+      ["USDS supply",                    fmtLarge(gp["usds_supply"] as number)],
+      ["DAI supply",                     fmtLarge(gp["dai_supply"] as number)],
+      ["Gross income (ann.)",            fmtLarge(gp["gross_income"] as number)],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
+  },
   jup: {
     yCapPct: 1.00,
     chartNote: "Rolling 30D and 90D JUP Perps fees / total tracked Solana perps fees (JUP + Drift + Flash Trade). Fee revenue is a proxy for perps volume share.",
@@ -919,6 +936,11 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           {tokenKey === "jup" && (
             <p className="text-sm text-gray-400 leading-relaxed">
               JUP GP = 25% of Perps fees + aggregator rake + Jupiterz volume × 3.55bps. Market share uses Perps fee revenue as a volume proxy, comparing JUP vs Drift and Flash Trade (only Solana perps protocols with accessible fee history on DefiLlama). Zeta and Ranger excluded — no fee data available.
+            </p>
+          )}
+          {tokenKey === "sky" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Sky GP = gross income − savings-rate cost − stUSDS expense. Gross income = (USDS + DAI supply) × yield. Market share trend tracks Sky&apos;s share of total USD stablecoin supply (USDT, USDC, FDUSD, PYUSD, etc.) — growing share means more gross income at the same yield.
             </p>
           )}
         </div>
@@ -1401,8 +1423,16 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               : <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
             }
           </>}
+          {tokenKey === "sky" && <>
+            <MetricCard label="Gross income (ann.)" value={fmtLarge(gp["gross_income"] as number)} sub={`Yield ${((gp["gross_income_yield_pct"] as number) ?? 0).toFixed(2)}% on USDS+DAI supply`} />
+            <MetricCard label="Current GP (ann.)" value={fmtLarge(gp["current_gp"] as number)} sub={`After savings rate & stUSDS cost`} />
+            {gp["ms30_vs_stables"] != null
+              ? <MetricCard label="MS30 vs All Stablecoins" value={pct(gp["ms30_vs_stables"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "default"} />
+              : <MetricCard label="USDS + DAI supply" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky stablecoin total" />
+            }
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "sky"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
@@ -1435,7 +1465,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       </div>
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}

@@ -20,6 +20,10 @@ from pathlib import Path
 
 import numpy as np
 
+# DefiLlama stablecoin IDs
+_USDS_ID = 209   # Sky Dollar (USDS)
+_DAI_ID  = 5     # Dai (DAI)
+
 BUNDLE_ROOT = Path(__file__).parent.parent.parent
 DATA_PATH = BUNDLE_ROOT / "sky_data_collection.json"
 EXTRA_PATH = BUNDLE_ROOT / "sky_research_extra.json"
@@ -155,6 +159,95 @@ def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float) -
     }
 
 
+def _get_json(url: str):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 SKY valuation"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.load(r)
+
+
+def _parse_stable_tokens(data: dict):
+    """Return [(date_str, usd_supply)] from a DefiLlama stablecoin detail response."""
+    rows = []
+    for item in data.get("tokens", []):
+        ts  = item.get("date")
+        val = (item.get("circulating") or {}).get("peggedUSD", 0)
+        if ts and val:
+            d = str(datetime.fromtimestamp(int(ts), tz=timezone.utc).date())
+            rows.append((d, float(val)))
+    return sorted(rows)
+
+
+def _parse_stable_total(data: list):
+    """Return [(date_str, total_usd)] from the /stablecoincharts/all response."""
+    rows = []
+    for item in data:
+        ts  = item.get("date")
+        val = (item.get("totalCirculating") or {}).get("peggedUSD", 0)
+        if ts and val:
+            d = str(datetime.fromtimestamp(int(ts), tz=timezone.utc).date())
+            rows.append((d, float(val)))
+    return sorted(rows)
+
+
+def fetch_sky_stablecoin_ms():
+    """Compute SKY stablecoin market share (USDS+DAI / total) history and snapshot."""
+    usds_data  = _get_json(f"https://stablecoins.llama.fi/stablecoin/{_USDS_ID}")
+    dai_data   = _get_json(f"https://stablecoins.llama.fi/stablecoin/{_DAI_ID}")
+    total_data = _get_json("https://stablecoins.llama.fi/stablecoincharts/all")
+
+    usds_by_d = dict(_parse_stable_tokens(usds_data))
+    dai_by_d  = dict(_parse_stable_tokens(dai_data))
+    tot_by_d  = dict(_parse_stable_total(total_data))
+
+    # Dates where we have all three (USDS launched ~Sep 2024; before that sky_supply = DAI only)
+    # Use DAI + USDS (defaulting USDS to 0 before launch)
+    common = sorted(set(dai_by_d) & set(tot_by_d))
+    if not common:
+        return None, []
+
+    sky_arr = np.array([dai_by_d.get(d, 0.0) + usds_by_d.get(d, 0.0) for d in common], dtype=float)
+    tot_arr = np.array([tot_by_d.get(d, 0.0) for d in common], dtype=float)
+    ratio   = np.where(tot_arr > 0, sky_arr / tot_arr, np.nan)
+
+    def rolling_mean(arr, w):
+        out = np.full(len(arr), np.nan)
+        for i in range(w - 1, len(arr)):
+            window = arr[i - w + 1: i + 1]
+            valid  = window[~np.isnan(window)]
+            if len(valid) > 0:
+                out[i] = float(valid.mean())
+        return out
+
+    ms30  = rolling_mean(ratio, 30)
+    ms90  = rolling_mean(ratio, 90)
+    ms180 = rolling_mean(ratio, 180)
+
+    def _f(a): return float(a[-1]) if not np.isnan(a[-1]) else None
+
+    snapshot = {
+        "ms30":            _f(ms30),
+        "ms90":            _f(ms90),
+        "ms180":           _f(ms180),
+        "sky_supply":      float(sky_arr[-1]),
+        "usds_supply":     float(usds_by_d.get(common[-1], 0.0)),
+        "dai_supply":      float(dai_by_d.get(common[-1], 0.0)),
+        "total_stablecoin_supply": float(tot_arr[-1]),
+    }
+
+    start = max(0, len(common) - 365)
+    history = []
+    for i, d in enumerate(common[start:], start=start):
+        if np.isnan(ms30[i]):
+            continue
+        history.append({
+            "date": d,
+            "ms30": round(float(ms30[i]), 6),
+            "ms90": round(float(ms90[i]), 6) if not np.isnan(ms90[i]) else None,
+        })
+
+    return snapshot, history
+
+
 def run() -> dict:
     """Fetch live SKY market data, run MC model, return standardized result dict."""
     # Live market data — fallback to locked values if CoinGecko is unavailable
@@ -163,6 +256,13 @@ def run() -> dict:
     except Exception as e:
         print(f"[SKY] CoinGecko fetch failed ({e}); using fallback market data")
         spot, mcap, fdv, sky_supply = _FALLBACK_SPOT, _FALLBACK_MCAP, _FALLBACK_FDV, _FALLBACK_SUPPLY
+
+    # ── Stablecoin market share ───────────────────────────────────────────────
+    ms_snapshot, ms_history = None, []
+    try:
+        ms_snapshot, ms_history = fetch_sky_stablecoin_ms()
+    except Exception:
+        pass
 
     scenarios_raw = {}
     for name, opex in OPEX_SCENARIOS.items():
@@ -224,8 +324,17 @@ def run() -> dict:
             "usds_supply": USDS_SUPPLY,
             "dai_supply": DAI_SUPPLY,
             "gross_income_yield_pct": GROSS_INCOME_YIELD * 100,
+            # Stablecoin market share
+            **({"ms30_vs_stables":  ms_snapshot["ms30"],
+                "ms90_vs_stables":  ms_snapshot["ms90"],
+                "ms180_vs_stables": ms_snapshot["ms180"],
+                "ms30_ms180_trend": (ms_snapshot["ms30"] / ms_snapshot["ms180"])
+                                    if ms_snapshot and ms_snapshot["ms30"] and ms_snapshot["ms180"] else None,
+                "total_stablecoin_supply": ms_snapshot["total_stablecoin_supply"],
+               } if ms_snapshot else {}),
         },
         "scenarios": scenarios,
+        "ms_history": ms_history,
         "caveats": [
             "Protocol financials (gross income, savings rate, USDS/DAI supply) locked at 2026-05-08; re-run sky_data_collection to refresh.",
             "USDS growth is modeled on broad money-market TVL returns dampened by 0.65 — Sky may diverge from sector.",
