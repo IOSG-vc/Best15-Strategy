@@ -796,6 +796,22 @@ const MS_CONFIG: Record<string, MsConfig> = {
       ["GP full activation (ann.)",      fmtLarge(gp["annualized_full_activation"] as number)],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
+  jup: {
+    yCapPct: 1.00,
+    chartNote: "Rolling 30D and 90D JUP Perps fees / total tracked Solana perps fees (JUP + Drift + Flash Trade). Fee revenue is a proxy for perps volume share.",
+    tableNote: "Denominator covers DefiLlama-tracked Solana perps protocols with active fee data; excludes Zeta/Ranger (no fee data available).",
+    driversTitle: "Solana perps fee share",
+    driversBody: null,
+    tableRows: (gp) => ([
+      ["MS30 vs Solana Perps",            pct(gp["ms30_vs_sol_perps"] as number)],
+      ["MS90 vs Solana Perps",            pct(gp["ms90_vs_sol_perps"] as number)],
+      ["MS180 vs Solana Perps",           pct(gp["ms180_vs_sol_perps"] as number)],
+      ["MS30/MS180 trend",                `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
+      ["JUP Perps 30D fees",              fmtLarge(gp["jup_perps_30d_fees"] as number)],
+      ["Solana Perps 30D fees (tracked)", fmtLarge(gp["sol_perps_30d_fees"] as number)],
+      ["Perps 30D GP",                    fmtLarge(gp["perps_30d"] as number)],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
+  },
   ethfi: {
     yCapPct: 0.90,
     chartNote: "Rolling 30D and 90D mean of ether.fi staking TVL / total LRT TVL (ether.fi + Kelp + Renzo + Puffer + Swell). Shows ether.fi dominance within the liquid restaking niche.",
@@ -898,6 +914,11 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           {tokenKey === "ethfi" && (
             <p className="text-sm text-gray-400 leading-relaxed">
               ether.fi GP = Card GDV × 135bps take × margin + staking TVL × ETH APY × 5% + vault TVL × 1%. Market share trend shows ether.fi's rolling TVL share of the liquid restaking market (vs Kelp, Renzo, Puffer, Swell). Table also shows share of all liquid staking (LRT + LST including Lido).
+            </p>
+          )}
+          {tokenKey === "jup" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              JUP GP = 25% of Perps fees + aggregator rake + Jupiterz volume × 3.55bps. Market share uses Perps fee revenue as a volume proxy, comparing JUP vs Drift and Flash Trade (only Solana perps protocols with accessible fee history on DefiLlama). Zeta and Ranger excluded — no fee data available.
             </p>
           )}
         </div>
@@ -1375,7 +1396,10 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           {tokenKey === "jup" && <>
             <MetricCard label="Total 30D GP" value={fmtLarge(gp["total_30d"] as number)} sub="Perps + aggregator + Jupiterz" />
             <MetricCard label="Seed GP (ann.)" value={fmtLarge(gp["seed_annualized"] as number)} sub={`Seed monthly ${fmtLarge(gp["seed_monthly"] as number)}`} />
-            <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
+            {gp["ms30_vs_sol_perps"] != null
+              ? <MetricCard label="MS30 vs Solana Perps" value={pct(gp["ms30_vs_sol_perps"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "default"} />
+              : <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
+            }
           </>}
           {/* Fallback for unknown tokens */}
           {!["uni", "ethfi", "jup"].includes(tokenKey) && <>
@@ -1411,7 +1435,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       </div>
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}

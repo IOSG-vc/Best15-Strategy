@@ -13,7 +13,7 @@ import statistics
 import time
 import urllib.request
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 
 import numpy as np
 
@@ -255,11 +255,92 @@ def run_mc(market, gpdata):
     }
 
 
+# Solana perps peers tracked in DefiLlama fees (volume proxy)
+PERPS_PEER_SLUGS = ["drift", "flash-trade"]
+
+
+def fetch_perps_fees_daily(slug: str):
+    """Return [(date_str, fees_usd)] from DefiLlama fees endpoint."""
+    try:
+        data = fetch_json(f"https://api.llama.fi/summary/fees/{slug}?dataType=dailyFees")
+        rows = []
+        for ts, val in data.get("totalDataChart", []) or []:
+            rows.append((datetime.fromtimestamp(int(ts), tz=timezone.utc).date().isoformat(), float(val or 0)))
+        rows.sort()
+        return rows
+    except Exception:
+        return []
+
+
+def compute_jup_ms(jup_rows, peer_rows_list):
+    """Compute rolling 30D/90D/180D JUP perps fee share vs Solana perps peers."""
+    jup_by_date = dict(jup_rows)
+    peer_by_date: dict[str, float] = {}
+    for rows in peer_rows_list:
+        for d, v in rows:
+            peer_by_date[d] = peer_by_date.get(d, 0.0) + v
+
+    common = sorted(set(jup_by_date) & set(peer_by_date))
+    if not common:
+        return None, []
+
+    jup_arr  = np.array([jup_by_date.get(d, 0.0)  for d in common], dtype=float)
+    peer_arr = np.array([peer_by_date.get(d, 0.0) for d in common], dtype=float)
+    total_arr = jup_arr + peer_arr
+
+    def rolling_sum(arr, w):
+        cs = np.concatenate([[0.0], np.cumsum(arr)])
+        out = np.full(len(arr), np.nan)
+        if len(arr) >= w:
+            out[w - 1:] = cs[w:] - cs[:-w]
+        return out
+
+    rj30  = rolling_sum(jup_arr, 30);  rt30  = rolling_sum(total_arr, 30)
+    rj90  = rolling_sum(jup_arr, 90);  rt90  = rolling_sum(total_arr, 90)
+    rj180 = rolling_sum(jup_arr, 180); rt180 = rolling_sum(total_arr, 180)
+
+    def safe_ratio(j, t): return float(np.clip(j / t, 0, 1.0)) if t > 0 else None
+
+    ms30  = safe_ratio(rj30[-1],  rt30[-1])
+    ms90  = safe_ratio(rj90[-1],  rt90[-1])
+    ms180 = safe_ratio(rj180[-1], rt180[-1])
+
+    snapshot = {
+        "ms30": ms30,
+        "ms90": ms90,
+        "ms180": ms180,
+        "jup_perps_30d_fees": float(rj30[-1]) if not np.isnan(rj30[-1]) else None,
+        "solana_perps_30d_fees": float(rt30[-1]) if not np.isnan(rt30[-1]) else None,
+    }
+
+    start = max(0, len(common) - 365)
+    history = []
+    for i, d in enumerate(common[start:], start=start):
+        if np.isnan(rj30[i]) or rt30[i] <= 0:
+            continue
+        ms30_i = safe_ratio(rj30[i], rt30[i])
+        ms90_i = safe_ratio(rj90[i], rt90[i]) if not np.isnan(rj90[i]) and rt90[i] > 0 else None
+        if ms30_i is not None:
+            history.append({"date": d, "ms30": round(ms30_i, 5),
+                            "ms90": round(ms90_i, 5) if ms90_i is not None else None})
+
+    return snapshot, history
+
+
 def run() -> dict:
     """Fetch live data, run MC, return standardized result dict for the frontend."""
     market = cg_market()
     gpdata = gp_series_and_seeds()
     valuation = run_mc(market, gpdata)
+
+    # ── Solana perps market share ─────────────────────────────────────────────
+    ms_snapshot, ms_history = None, []
+    try:
+        jup_perps_rows  = fetch_perps_fees_daily("jupiter-perpetual-exchange")
+        peer_perps_rows = [fetch_perps_fees_daily(s) for s in PERPS_PEER_SLUGS]
+        ms_snapshot, ms_history = compute_jup_ms(jup_perps_rows, peer_perps_rows)
+    except Exception:
+        pass
 
     spot = float(market["current_price"])
     s = gpdata["seeds"]
@@ -309,9 +390,19 @@ def run() -> dict:
             "seed_monthly": s["total_seed_gp"],
             "seed_annualized": s["total_seed_gp"] * 12,
             "optional_tracked_30d": s["tracked_optional_30d_revenue"],
+            # Solana perps market share (fee-based)
+            **({"ms30_vs_sol_perps":  ms_snapshot["ms30"],
+                "ms90_vs_sol_perps":  ms_snapshot["ms90"],
+                "ms180_vs_sol_perps": ms_snapshot["ms180"],
+                "ms30_ms180_trend": (ms_snapshot["ms30"] / ms_snapshot["ms180"])
+                                    if ms_snapshot and ms_snapshot["ms30"] and ms_snapshot["ms180"] else None,
+                "jup_perps_30d_fees": ms_snapshot["jup_perps_30d_fees"],
+                "sol_perps_30d_fees": ms_snapshot["solana_perps_30d_fees"],
+               } if ms_snapshot else {}),
         },
         "y3_state": valuation["y3_state"],
         "scenarios": scenarios,
+        "ms_history": ms_history,
     }
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
