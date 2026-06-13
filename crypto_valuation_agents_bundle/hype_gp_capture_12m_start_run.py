@@ -162,22 +162,51 @@ def fetch_hyperliquid_usdc_history() -> list:
     return sorted(rows)
 
 def estimate_usdc_volume_elasticity(rev_rows) -> dict:
-    """Estimate USDC TVL elasticity to activity using 30D changes in revenue as volume proxy."""
-    import pandas as pd
-    rev_df = pd.DataFrame(rev_rows, columns=["date", "rev"])
-    tvl_df = pd.DataFrame(fetch_hyperliquid_usdc_history(), columns=["date", "usdc"])
-    rev_df["date"] = pd.to_datetime(rev_df["date"])
-    tvl_df["date"] = pd.to_datetime(tvl_df["date"])
-    x = rev_df.set_index("date").join(tvl_df.set_index("date"), how="inner").dropna()
-    x["rev30"] = x["rev"].rolling(30).sum()
-    x["usdc30"] = x["usdc"].rolling(30).mean()
-    x["dlog_rev30"] = np.log(x["rev30"]).diff(30)
-    x["dlog_usdc30"] = np.log(x["usdc30"]).diff(30)
-    y = x.dropna().tail(365)
-    beta = float(np.cov(y["dlog_rev30"], y["dlog_usdc30"])[0, 1] / np.var(y["dlog_rev30"])) if len(y) > 60 and np.var(y["dlog_rev30"]) > 0 else 0.20
-    corr = float(np.corrcoef(y["dlog_rev30"], y["dlog_usdc30"])[0, 1]) if len(y) > 60 else float("nan")
+    """Estimate USDC TVL elasticity to activity using 30D rolling sums — pure numpy, no pandas."""
+    rev_by_date = dict(rev_rows)
+    tvl_rows = fetch_hyperliquid_usdc_history()
+    tvl_by_date = dict(tvl_rows)
+
+    # Intersect dates
+    dates = sorted(set(rev_by_date) & set(tvl_by_date))
+    if len(dates) < 60:
+        return {"source": "insufficient overlap", "lookback_days": len(dates), "raw_beta": 0.20, "elasticity": 0.20, "corr": float("nan")}
+
+    rev_arr  = np.array([rev_by_date[d]  for d in dates], dtype=float)
+    usdc_arr = np.array([tvl_by_date[d] for d in dates], dtype=float)
+
+    # 30D rolling sum for revenue, 30D rolling mean for USDC TVL
+    def rolling_sum(a, w):
+        out = np.full_like(a, np.nan)
+        for i in range(w - 1, len(a)):
+            out[i] = a[i - w + 1 : i + 1].sum()
+        return out
+
+    def rolling_mean(a, w):
+        out = np.full_like(a, np.nan)
+        for i in range(w - 1, len(a)):
+            out[i] = a[i - w + 1 : i + 1].mean()
+        return out
+
+    rev30  = rolling_sum(rev_arr, 30)
+    usdc30 = rolling_mean(usdc_arr, 30)
+
+    # 30D log-differences
+    dlog_rev  = np.log(rev30[30:])  - np.log(rev30[:-30])
+    dlog_usdc = np.log(usdc30[30:]) - np.log(usdc30[:-30])
+
+    # Keep last 365 valid rows
+    mask = np.isfinite(dlog_rev) & np.isfinite(dlog_usdc)
+    dr = dlog_rev[mask][-365:]
+    du = dlog_usdc[mask][-365:]
+
+    if len(dr) < 60 or np.var(dr) == 0:
+        return {"source": "insufficient variance", "lookback_days": int(len(dr)), "raw_beta": 0.20, "elasticity": 0.20, "corr": float("nan")}
+
+    beta = float(np.cov(dr, du)[0, 1] / np.var(dr))
+    corr = float(np.corrcoef(dr, du)[0, 1])
     beta_clipped = float(np.clip(beta, 0.0, 0.50))
-    return {"source": "DefiLlama USDC history + Hyperliquid dailyRevenue proxy", "lookback_days": int(len(y)), "raw_beta": beta, "elasticity": beta_clipped, "corr": corr}
+    return {"source": "DefiLlama USDC history + Hyperliquid dailyRevenue proxy", "lookback_days": int(len(dr)), "raw_beta": beta, "elasticity": beta_clipped, "corr": corr}
 
 def median_monthly_start_12m(rev_rows, trailing_30):
     months = h.monthly_sums(rev_rows)
