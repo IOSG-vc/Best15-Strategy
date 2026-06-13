@@ -67,29 +67,27 @@ def parse_chart(data):
     return out
 
 
-MS_CAP = 0.50   # UNI/Binance spot ratio cap (spot DEX is smaller than perps CEX)
+MS_CAP = 0.70   # UNI/total-DEX ratio cap
 
 
-def fetch_binance_spot_daily(limit=400):
-    """Fetch BTCUSDT daily spot klines from Binance; return [(date, usd_volume)]."""
-    url = f"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit={limit}"
-    data = get_json(url)
+def fetch_total_dex_daily():
+    """Fetch total DEX daily volume from DefiLlama overview; return [(date, usd_volume)]."""
+    data = get_json("https://api.llama.fi/overview/dexs?dataType=dailyVolume")
     rows = []
-    for k in data:
-        d = ts_date(int(k[0]) / 1000)
-        quote_vol = float(k[7])   # quoteAssetVolume = USD volume for BTCUSDT
-        rows.append((d, quote_vol))
+    for ts, val in data.get("totalDataChart", []):
+        if val:
+            rows.append((ts_date(ts), float(val)))
     return sorted(rows)
 
 
-def compute_uni_ms(vol_by_date, bn_by_date):
-    """Compute current MS30/MS90/MS180 and daily history for UNI vs Binance spot."""
-    common = sorted(set(vol_by_date) & set(bn_by_date))
+def compute_uni_ms(vol_by_date, dex_total_by_date):
+    """Compute MS30/MS90/MS180 for UNI vs total DEX volume and return daily history."""
+    common = sorted(set(vol_by_date) & set(dex_total_by_date))
     if not common:
         return None, []
 
-    uni_arr = np.array([vol_by_date.get(d, 0.0) for d in common], dtype=float)
-    bn_arr  = np.array([bn_by_date.get(d, 0.0)  for d in common], dtype=float)
+    uni_arr = np.array([vol_by_date.get(d, 0.0)       for d in common], dtype=float)
+    dex_arr = np.array([dex_total_by_date.get(d, 0.0) for d in common], dtype=float)
 
     def rolling_sum(arr, w):
         cs = np.concatenate([[0.0], np.cumsum(arr)])
@@ -98,24 +96,23 @@ def compute_uni_ms(vol_by_date, bn_by_date):
             out[w - 1:] = cs[w:] - cs[:-w]
         return out
 
-    rs30  = rolling_sum(uni_arr, 30);  rb30  = rolling_sum(bn_arr, 30)
-    rs90  = rolling_sum(uni_arr, 90);  rb90  = rolling_sum(bn_arr, 90)
-    rs180 = rolling_sum(uni_arr, 180); rb180 = rolling_sum(bn_arr, 180)
+    rs30  = rolling_sum(uni_arr, 30);  rd30  = rolling_sum(dex_arr, 30)
+    rs90  = rolling_sum(uni_arr, 90);  rd90  = rolling_sum(dex_arr, 90)
+    rs180 = rolling_sum(uni_arr, 180); rd180 = rolling_sum(dex_arr, 180)
 
-    def safe_ratio(u, b): return float(np.clip(u / b, 0, MS_CAP)) if b > 0 else None
+    def safe_ratio(u, d): return float(np.clip(u / d, 0, MS_CAP)) if d > 0 else None
 
-    # Current snapshot (last available row)
-    ms30  = safe_ratio(rs30[-1],  rb30[-1])
-    ms90  = safe_ratio(rs90[-1],  rb90[-1])
-    ms180 = safe_ratio(rs180[-1], rb180[-1])
+    ms30  = safe_ratio(rs30[-1],  rd30[-1])
+    ms90  = safe_ratio(rs90[-1],  rd90[-1])
+    ms180 = safe_ratio(rs180[-1], rd180[-1])
 
-    # Daily history (last 365 rows with valid ms30)
     history = []
-    for i, d in enumerate(common[-365:], start=max(0, len(common) - 365)):
-        if np.isnan(rs30[i]) or rb30[i] <= 0:
+    start = max(0, len(common) - 365)
+    for i, d in enumerate(common[start:], start=start):
+        if np.isnan(rs30[i]) or rd30[i] <= 0:
             continue
-        ms30_i = safe_ratio(rs30[i], rb30[i])
-        ms90_i = safe_ratio(rs90[i], rb90[i]) if not np.isnan(rs90[i]) and rb90[i] > 0 else None
+        ms30_i = safe_ratio(rs30[i], rd30[i])
+        ms90_i = safe_ratio(rs90[i], rd90[i]) if not np.isnan(rs90[i]) and rd90[i] > 0 else None
         if ms30_i is not None:
             history.append({"date": str(d), "ms30": round(ms30_i, 5),
                             "ms90": round(ms90_i, 5) if ms90_i is not None else None})
@@ -134,13 +131,13 @@ def run() -> dict:
     vol_by_date = dict(vol_daily)
     fee_by_date = dict(fee_daily)
 
-    # ── Binance spot market share ─────────────────────────────────────────────
+    # ── DEX market share ─────────────────────────────────────────────────────
     try:
-        bn_daily = fetch_binance_spot_daily(limit=400)
-        bn_by_date = dict(bn_daily)
-        ms_snapshot, ms_history = compute_uni_ms(vol_by_date, bn_by_date)
+        dex_daily = fetch_total_dex_daily()
+        dex_by_date = dict(dex_daily)
+        ms_snapshot, ms_history = compute_uni_ms(vol_by_date, dex_by_date)
     except Exception as e:
-        caveats.append(f"Binance spot fetch failed: {e}")
+        caveats.append(f"DEX market share fetch failed: {e}")
         ms_snapshot, ms_history = None, []
     latest_vol_date = max(vol_by_date)
     latest_fee_date = max(fee_by_date)
@@ -335,10 +332,10 @@ def run() -> dict:
             "ann_volume": current_ann_vol,
             "mcap_current_state_gp": mcap_cur,
             "mcap_full_activation_gp": mcap_full,
-            # Market share vs Binance spot
-            **({"ms30_vs_binance":  ms_snapshot["ms30"],
-                "ms90_vs_binance":  ms_snapshot["ms90"],
-                "ms180_vs_binance": ms_snapshot["ms180"],
+            # Market share vs total DEX volume
+            **({"ms30_vs_dex":  ms_snapshot["ms30"],
+                "ms90_vs_dex":  ms_snapshot["ms90"],
+                "ms180_vs_dex": ms_snapshot["ms180"],
                 "ms30_ms180_trend": (ms_snapshot["ms30"] / ms_snapshot["ms180"])
                                     if ms_snapshot and ms_snapshot["ms30"] and ms_snapshot["ms180"] else None,
                } if ms_snapshot else {}),

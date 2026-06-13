@@ -782,14 +782,14 @@ const MS_CONFIG: Record<string, MsConfig> = {
   },
   uni: {
     yCapPct: 0.50,
-    chartNote: "Rolling 30D and 90D UNI DEX volume / Binance BTCUSDT spot volume. Shows DEX-vs-CEX penetration trend.",
-    tableNote: "Volume from DefiLlama DEX aggregator; Binance denominator is BTCUSDT spot quoteAssetVolume.",
-    driversTitle: "DEX spot vs CEX spot",
+    chartNote: "Rolling 30D and 90D UNI DEX volume / total DEX volume (all protocols, DefiLlama). Shows Uniswap's share of on-chain trading.",
+    tableNote: "Volume from DefiLlama; denominator is total DEX volume across all chains and protocols.",
+    driversTitle: "DEX spot market share",
     driversBody: null,
     tableRows: (gp) => ([
-      ["MS30 vs Binance spot",           pct(gp["ms30_vs_binance"] as number)],
-      ["MS90 vs Binance spot",           pct(gp["ms90_vs_binance"] as number)],
-      ["MS180 vs Binance spot",          pct(gp["ms180_vs_binance"] as number)],
+      ["MS30 vs Total DEX",              pct(gp["ms30_vs_dex"] as number)],
+      ["MS90 vs Total DEX",              pct(gp["ms90_vs_dex"] as number)],
+      ["MS180 vs Total DEX",             pct(gp["ms180_vs_dex"] as number)],
       ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
       ["UNI 30D volume (ann.)",          fmtLarge(gp["ann_volume"] as number)],
       ["GP current state (ann.)",        fmtLarge(gp["annualized_current_state"] as number)],
@@ -876,7 +876,7 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           )}
           {tokenKey === "uni" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              UNI revenue = LP fees × protocol take-rate. Current state: ~0.83bps LP protocol share + 0.30bps frontend. Full activation: 25% of LP fees + 0.30bps frontend. Market share trend above shows how UNI volume compares to Binance spot as a CEX benchmark.
+              UNI revenue = LP fees × protocol take-rate. Current state: ~0.83bps LP protocol share + 0.30bps frontend. Full activation: 25% of LP fees + 0.30bps frontend. Market share trend shows UNI's share of total DEX volume across all on-chain protocols (DefiLlama).
             </p>
           )}
         </div>
@@ -1338,8 +1338,8 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           {tokenKey === "uni" && <>
             <MetricCard label="GP current state (ann.)" value={fmtLarge(gp["annualized_current_state"] as number)} sub="Protocol fees at current take rate" />
             <MetricCard label="GP full activation (ann.)" value={fmtLarge(gp["annualized_full_activation"] as number)} sub="25% of LP fees → protocol" />
-            {gp["ms30_vs_binance"] != null
-              ? <MetricCard label="MS30 vs Binance spot" value={pct(gp["ms30_vs_binance"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.05 ? "green" : "default"} />
+            {gp["ms30_vs_dex"] != null
+              ? <MetricCard label="MS30 vs Total DEX" value={pct(gp["ms30_vs_dex"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.05 ? "green" : "default"} />
               : <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
             }
           </>}
