@@ -634,68 +634,120 @@ function ScenarioTable({
   );
 }
 
-// ── HypeMetrics: HYPE-specific panel ────────────────────────────────────────
+// ── Per-token GP metadata ────────────────────────────────────────────────────
 
-const HYPE_GP_LABELS: Record<string, { label: string; fmt: "pct" | "money" | "x" | "years" | "raw"; termKey?: string }> = {
-  ms90_vs_binance:  { label: "MS90 vs Binance",     fmt: "pct",   termKey: "ms90" },
-  ms30_vs_binance:  { label: "MS30 vs Binance",     fmt: "pct",   termKey: "ms30" },
-  ms30_ms90_trend:  { label: "MS30/MS90 trend",     fmt: "x" },
-  usdc_tvl:         { label: "USDC TVL on HL L1",   fmt: "money" },
-  usdc_net_yield:   { label: "USDC net yield",       fmt: "pct" },
-  perp_gp_annual:   { label: "Perp GP (annual)",     fmt: "money" },
-  usdc_gp_annual:   { label: "USDC yield GP (ann.)", fmt: "money" },
-  trailing_30d_revenue: { label: "30D revenue",      fmt: "money" },
-  ttm_gp:           { label: "TTM GP",               fmt: "money" },
-  buyback_years_base: { label: "Buyback horizon",    fmt: "years" },
+type GpFmt = "pct" | "money" | "x" | "years" | "bps" | "raw";
+type GpMeta = { label: string; fmt: GpFmt };
+
+const TOKEN_GP_META: Record<string, Record<string, GpMeta>> = {
+  uni: {
+    annualized_current_state:   { label: "GP current state (ann.)",   fmt: "money" },
+    annualized_full_activation: { label: "GP full activation (ann.)",  fmt: "money" },
+    ann_volume:                 { label: "Annual volume",              fmt: "money" },
+    lp_fee_bps_30d:             { label: "LP take 30D",               fmt: "bps"   },
+    take_bps_current:           { label: "Protocol take — current",    fmt: "bps"   },
+    take_bps_full:              { label: "Protocol take — full activ.", fmt: "bps"   },
+    mcap_current_state_gp:      { label: "Mcap / GP (current)",        fmt: "x"     },
+    mcap_full_activation_gp:    { label: "Mcap / GP (full activ.)",    fmt: "x"     },
+  },
+  ethfi: {
+    card_annualized:   { label: "Card GP (ann.)",    fmt: "money" },
+    staking_annualized:{ label: "Staking GP (ann.)", fmt: "money" },
+    vault_annualized:  { label: "Vault GP (ann.)",   fmt: "money" },
+    total_annualized:  { label: "Total GP (ann.)",   fmt: "money" },
+    card_gdv_30d_ann:  { label: "Card GDV (ann.)",   fmt: "money" },
+    staking_apy:       { label: "Staking APY",        fmt: "pct"   },
+    stake_tvl:         { label: "Stake TVL",          fmt: "money" },
+    vault_tvl:         { label: "Vault TVL",          fmt: "money" },
+    card_take_bps_30d: { label: "Card take 30D",      fmt: "bps"   },
+    card_mom:          { label: "Card MoM growth",    fmt: "pct"   },
+  },
+  jup: {
+    perps_30d:          { label: "Perps 30D GP",      fmt: "money" },
+    aggregator_30d:     { label: "Aggregator 30D GP", fmt: "money" },
+    jupiterz_30d:       { label: "Jupiterz 30D GP",   fmt: "money" },
+    total_30d:          { label: "Total 30D GP",      fmt: "money" },
+    seed_monthly:       { label: "Seed monthly GP",   fmt: "money" },
+    seed_annualized:    { label: "Seed GP (ann.)",    fmt: "money" },
+    optional_tracked_30d:{ label: "Optional 30D",     fmt: "money" },
+  },
 };
 
-function fmtGpVal(val: number, fmt: "pct" | "money" | "x" | "years" | "raw"): string {
+function fmtGpVal(val: number, fmt: GpFmt): string {
   if (fmt === "pct")   return `${(val * 100).toFixed(1)}%`;
   if (fmt === "money") return fmtLarge(val);
-  if (fmt === "x")     return `${val.toFixed(2)}×`;
+  if (fmt === "x")     return `${val.toFixed(1)}×`;
   if (fmt === "years") return `${val.toFixed(1)}y`;
+  if (fmt === "bps")   return `${val.toFixed(2)} bps`;
   return val.toFixed(4);
 }
 
-function GpMetricsGrid({
-  currentGp,
-  tokenKey,
-}: {
-  currentGp: Record<string, number>;
-  tokenKey: string;
-}) {
-  const isHype = tokenKey === "hype";
+// ── TokenKeyMetrics ───────────────────────────────────────────────────────────
 
-  const entries = Object.entries(currentGp).filter(([, v]) => typeof v === "number" && v !== 0 && isFinite(v));
+function TokenKeyMetrics({ currentGp, tokenKey }: { currentGp: Record<string, number>; tokenKey: string }) {
+  const meta = TOKEN_GP_META[tokenKey] ?? {};
+  const entries = Object.entries(currentGp)
+    .filter(([k, v]) => meta[k] && typeof v === "number" && isFinite(v) && v !== 0)
+    .map(([k, v]) => ({ key: k, label: meta[k].label, value: fmtGpVal(v, meta[k].fmt) }));
 
   if (!entries.length) return null;
 
   return (
     <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
-      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-        {isHype ? "Key Metrics" : "Current GP Metrics (annualized)"}
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {entries.map(([k, v]) => {
-          const meta = HYPE_GP_LABELS[k];
-          const label = meta?.label ?? k.replace(/_/g, " ");
-          const display = meta
-            ? fmtGpVal(v, meta.fmt)
-            : Math.abs(v) >= 1000
-            ? fmtLarge(v)
-            : v.toFixed(4);
-
-          return (
-            <div key={k} className="bg-[#252836] rounded-lg px-4 py-3">
-              <div className="text-xs text-gray-500 mb-1 flex items-center gap-0.5">
-                {label}
-                {meta?.termKey && <InfoTooltip termKey={meta.termKey} />}
-              </div>
-              <div className="text-sm font-mono font-semibold text-gray-100">{display}</div>
-            </div>
-          );
-        })}
+      <h3 className="text-xl font-bold text-white mb-4">Key metrics</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {entries.map(({ key, label, value }) => (
+          <div key={key} className="bg-[#252836] rounded-xl border border-[#2d3144] px-4 py-3 flex flex-col gap-0.5">
+            <div className="text-xs text-gray-500">{label}</div>
+            <div className="text-lg font-bold font-mono text-white leading-tight">{value}</div>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
+
+// ── TokenModelAssumptions ─────────────────────────────────────────────────────
+
+function TokenModelAssumptions({ tokenKey, model }: {
+  tokenKey: string;
+  model: { type: string; discount_rate: number; multiple: number; paths: number; note?: string };
+}) {
+  const m = METHODOLOGY[tokenKey];
+  if (!m) return null;
+
+  const drPct = (model.discount_rate * 100).toFixed(1);
+
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6 space-y-4">
+      <h3 className="text-xl font-bold text-white">Model assumptions</h3>
+
+      {/* Top row: two code-block cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-[#0d1117] rounded-xl border border-[#2d3144] px-5 py-4">
+          <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Core revenue model</div>
+          <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{m.sections[0]?.text ?? ""}</pre>
+        </div>
+        <div className="bg-[#0d1117] rounded-xl border border-[#2d3144] px-5 py-4">
+          <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Valuation logic</div>
+          <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{`Multiple: ${model.multiple}× GP
+Discount rate: ${drPct}%
+Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo
+Horizon: 3 years`}</pre>
+        </div>
+      </div>
+
+      {/* Bottom rows: remaining methodology sections */}
+      {m.sections.slice(1).length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {m.sections.slice(1).map((s) => (
+            <div key={s.heading} className="bg-[#252836] rounded-xl border border-[#2d3144] px-4 py-3">
+              <div className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wider">{s.heading}</div>
+              <div className="text-xs text-gray-400 leading-relaxed">{s.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1271,19 +1323,37 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           />
         </div>
       ) : (
-        /* Generic cards for all other tokens */
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <MetricCard label="Spot" value={fmtPrice(spot)} />
+        /* Per-token cards matching HYPE style */
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {/* Card 1: always spot/mcap */}
           <MetricCard
-            label="Market Cap"
-            value={fmtLarge(d.market.market_cap)}
-            sub={`FDV ${fmtLarge(d.market.fdv)}`}
+            label="Spot / mcap / circ"
+            value={fmtPrice(spot)}
+            sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
           />
-          <MetricCard
-            label="Circ. Supply"
-            value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`}
-            sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`}
-          />
+          {/* Card 2–4: token-specific GP metrics */}
+          {tokenKey === "uni" && <>
+            <MetricCard label="GP current state (ann.)" value={fmtLarge(gp["annualized_current_state"] as number)} sub="Protocol fees at current take rate" />
+            <MetricCard label="GP full activation (ann.)" value={fmtLarge(gp["annualized_full_activation"] as number)} sub="25% of LP fees → protocol" />
+            <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
+          </>}
+          {tokenKey === "ethfi" && <>
+            <MetricCard label="Total GP (ann.)" value={fmtLarge(gp["total_annualized"] as number)} sub="Card + staking + vault" />
+            <MetricCard label="Card GDV (ann.)" value={fmtLarge(gp["card_gdv_30d_ann"] as number)} sub={`Take: ${((gp["card_take_bps_30d"] as number) ?? 0).toFixed(2)} bps`} />
+            <MetricCard label="Staking APY / TVL" value={pct(gp["staking_apy"] as number)} sub={`TVL ${fmtLarge(gp["stake_tvl"] as number)}`} />
+          </>}
+          {tokenKey === "jup" && <>
+            <MetricCard label="Total 30D GP" value={fmtLarge(gp["total_30d"] as number)} sub="Perps + aggregator + Jupiterz" />
+            <MetricCard label="Seed GP (ann.)" value={fmtLarge(gp["seed_annualized"] as number)} sub={`Seed monthly ${fmtLarge(gp["seed_monthly"] as number)}`} />
+            <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
+          </>}
+          {/* Fallback for unknown tokens */}
+          {!["uni", "ethfi", "jup"].includes(tokenKey) && <>
+            <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
+            <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
+            <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
+          </>}
+          {/* Card 5–6: always P50 + P(spot) */}
           <MetricCard
             label="P50 Fair Value"
             value={fmtPrice(primary.pv.p50)}
@@ -1292,15 +1362,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             termKey="p50"
           />
           <MetricCard
-            label="EV (mean)"
-            value={fmtPrice(primary.ev)}
-            accent="blue"
-            termKey="ev"
-          />
-          <MetricCard
             label="P(above spot)"
             value={pct(primary.prob_above_spot)}
-            sub={`P50 ${p50Upside >= 0 ? "+" : ""}${p50Upside.toFixed(0)}% vs spot`}
+            sub={`P50 ${p50Upside >= 0 ? "+" : ""}${p50Upside.toFixed(0)}% vs spot · EV ${fmtPrice(primary.ev)}`}
             accent={probColor as "green" | "red" | "yellow"}
             termKey="prob_above_spot"
           />
@@ -1327,11 +1391,22 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
         <HypeModelOutputs scenario={primary} spot={spot} />
       )}
 
+      {/* ── Non-HYPE: key metrics ─────────────────────────────────────── */}
+      {tokenKey !== "hype" && <TokenKeyMetrics currentGp={d.current_gp} tokenKey={tokenKey} />}
+
+      {/* ── Non-HYPE: model assumptions ───────────────────────────────── */}
+      {tokenKey !== "hype" && <TokenModelAssumptions tokenKey={tokenKey} model={d.model} />}
+
       {/* ── Scenario comparison table ─────────────────────────────────── */}
       <ScenarioTable scenarios={d.scenarios} spot={spot} />
 
       {/* ── PV price distribution ─────────────────────────────────────── */}
       <DistributionChart scenario={primary} spot={spot} ev={primary.ev} />
+
+      {/* ── Non-HYPE: market cap chart ────────────────────────────────── */}
+      {tokenKey !== "hype" && token.mcap_history && token.mcap_history.length > 0 && (
+        <McapChart history={token.mcap_history} symbol={d.token} color={chartColor} />
+      )}
 
       {/* ── HYPE: Historical charts (backtest, buyback, EOY3 MS) ─────── */}
       {tokenKey === "hype" && d.hist_charts && <HypeHistoricalCharts hc={d.hist_charts} />}
@@ -1340,17 +1415,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
         <HypeMcpWeekly bullets={d.mcp_bullets} asOf={d.data_freshness} />
       )}
-
-      {/* ── Non-HYPE: market cap chart ────────────────────────────────── */}
-      {tokenKey !== "hype" && token.mcap_history && token.mcap_history.length > 0 && (
-        <McapChart history={token.mcap_history} symbol={d.token} color={chartColor} />
-      )}
-
-      {/* ── Non-HYPE: key metrics grid ────────────────────────────────── */}
-      {tokenKey !== "hype" && <GpMetricsGrid currentGp={d.current_gp} tokenKey={tokenKey} />}
-
-      {/* ── Non-HYPE: model methodology ───────────────────────────────── */}
-      {tokenKey !== "hype" && <ModelMethodology tokenKey={tokenKey} />}
 
       {d.as_of_utc && (
         <div className="text-xs text-gray-600 text-right">
