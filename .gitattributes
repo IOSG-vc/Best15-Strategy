@@ -1,0 +1,3 @@
+# valuations.json is written exclusively by GitHub Actions.
+# Always take the incoming (Actions) version on conflicts.
+data/valuations.json merge=take-incoming
