@@ -13,12 +13,63 @@ Model framework:
 from __future__ import annotations
 
 import json
+import math
 import os
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
+
+_MS_AMPLIFIER_CAP = 1.5
+_MS_DECAY_MONTHS = 12
+_MS_MONTHS = 36
+_SKY_STABLE_CAP = 0.20
+
+
+def _ms_eoy3(ms90: float, ms30: float, ms_anchor: float, ms_cap: float) -> float:
+    velocity = min(max(ms30 / max(ms_anchor, 1e-12), 1.0), _MS_AMPLIFIER_CAP)
+    log_v = math.log(velocity) / 6.0
+    acc = 0.0
+    for m in range(_MS_MONTHS):
+        acc += log_v * max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+    return min(ms90 * math.exp(acc), ms_cap)
+
+
+def _backtest_signals(backtest_chart: list) -> dict:
+    if not backtest_chart:
+        return {"chart": [], "signals": {}, "latest_signal": "NEUTRAL", "last_realized_row": None}
+    price_lookup = {row["date"]: row["spot"] for row in backtest_chart}
+    all_dates = sorted(price_lookup)
+    today = date.fromisoformat(max(all_dates))
+
+    def _near_price(from_str: str, offset: int):
+        tgt = str(date.fromisoformat(from_str) + timedelta(days=offset))
+        best = sorted((abs((date.fromisoformat(d) - date.fromisoformat(tgt)).days), price_lookup[d]) for d in all_dates)
+        return best[0][1] if best and best[0][0] <= 5 else None
+
+    groups: dict = {s: {"r30": [], "r90": [], "dates": []} for s in ["GOOD", "NEUTRAL", "BAD"]}
+    last_real = None
+    for row in backtest_chart:
+        d, sig, p0 = row["date"], row["signal"], row["spot"]
+        days_ago = (today - date.fromisoformat(d)).days
+        if days_ago >= 30:
+            p30 = _near_price(d, 30)
+            if p30:
+                groups[sig]["r30"].append(p30 / p0 - 1)
+                last_real = d
+        if days_ago >= 90:
+            p90 = _near_price(d, 90)
+            if p90:
+                groups[sig]["r90"].append(p90 / p0 - 1)
+        groups[sig]["dates"].append(d)
+    signals = {s: {"obs": len(g["dates"]),
+                   "avg_30d": float(np.mean(g["r30"])) if g["r30"] else None,
+                   "avg_90d": float(np.mean(g["r90"])) if g["r90"] else None,
+                   "recent_dates": g["dates"][-3:]}
+               for s, g in groups.items()}
+    return {"chart": backtest_chart, "signals": signals,
+            "latest_signal": backtest_chart[-1]["signal"], "last_realized_row": last_real}
 
 # DefiLlama stablecoin IDs
 _USDS_ID = 209   # Sky Dollar (USDS)
@@ -236,16 +287,115 @@ def fetch_sky_stablecoin_ms():
 
     start = max(0, len(common) - 365)
     history = []
+    ms_full = []
+    sky_by_date_full = {d: float(dai_by_d.get(d, 0.0) + usds_by_d.get(d, 0.0)) for d in common}
     for i, d in enumerate(common[start:], start=start):
         if np.isnan(ms30[i]):
             continue
-        history.append({
-            "date": d,
-            "ms30": round(float(ms30[i]), 6),
-            "ms90": round(float(ms90[i]), 6) if not np.isnan(ms90[i]) else None,
-        })
+        ms30_i  = float(ms30[i])
+        ms90_i  = float(ms90[i])  if not np.isnan(ms90[i])  else None
+        ms180_i = float(ms180[i]) if not np.isnan(ms180[i]) else None
+        history.append({"date": d, "ms30": round(ms30_i, 6),
+                        "ms90": round(ms90_i, 6) if ms90_i is not None else None})
+        ms_full.append({"date": d, "ms30": ms30_i, "ms90": ms90_i, "ms180": ms180_i,
+                        "sky_supply": sky_by_date_full.get(d, 0.0),
+                        "total_supply": float(tot_arr[i])})
 
-    return snapshot, history
+    return snapshot, history, ms_full
+
+
+def fetch_sky_price_history():
+    """Return (price_by_date, mcap_by_date) from CoinGecko."""
+    try:
+        url = f"{_CG_BASE}/coins/sky/market_chart?vs_currency=usd&days=365&interval=daily"
+        hdrs = {"User-Agent": "Mozilla/5.0"}
+        if _CG_KEY:
+            hdrs["x-cg-pro-api-key"] = _CG_KEY
+        req = urllib.request.Request(url, headers=hdrs)
+        with urllib.request.urlopen(req, timeout=30) as r:
+            d = json.load(r)
+        price_by_date: dict = {}
+        mcap_by_date: dict = {}
+        seen_p: set = set()
+        for ms, p in d.get("prices", []):
+            ds = str(datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date())
+            if ds not in seen_p:
+                seen_p.add(ds)
+                price_by_date[ds] = float(p)
+        seen_m: set = set()
+        for ms, m_v in d.get("market_caps", []):
+            ds = str(datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date())
+            if ds not in seen_m:
+                seen_m.add(ds)
+                mcap_by_date[ds] = float(m_v)
+        return price_by_date, mcap_by_date
+    except Exception:
+        return {}, {}
+
+
+def compute_sky_hist_charts(ms_full_with_supply, price_by_date, mcap_by_date,
+                             sky_supply, DR, gp_multiple, p50_pv):
+    """Build hist_charts for SKY: backtest + Mcap/GP secondary + EOY3 stablecoin share."""
+    gp_rate = GROSS_INCOME_YIELD * (1.0 - SAVINGS_RATE * USDS_SAVINGS_PENETRATION)  # rough GP/supply
+
+    # ── EOY3 stablecoin MS history ────────────────────────────────────────────
+    eoy3_ms_out = []
+    for row in ms_full_with_supply:
+        ms30 = row["ms30"]; ms90 = row["ms90"]; ms180 = row.get("ms180")
+        if ms30 is None or ms90 is None:
+            continue
+        anchor = ms180 if ms180 is not None else ms90
+        eoy3 = _ms_eoy3(ms90, ms30, anchor, _SKY_STABLE_CAP)
+        eoy3_ms_out.append({"date": row["date"], "eoy3": round(eoy3, 6),
+                             "ms90": round(ms90, 6), "ms30": round(ms30, 6)})
+
+    # ── Secondary chart: Mcap / GP ratio over time ────────────────────────────
+    secondary_data = []
+    for row in ms_full_with_supply:
+        d = row["date"]
+        sky_sup_d = row.get("sky_supply", 0.0)
+        ann_gp_d = sky_sup_d * gp_rate
+        mcap = mcap_by_date.get(d)
+        if mcap and ann_gp_d > 0:
+            ratio = mcap / ann_gp_d
+            if 0 < ratio < 2000:
+                secondary_data.append({"date": d, "value": round(ratio, 1)})
+
+    # ── Backtest: model-shaped PV from stablecoin supply ─────────────────────
+    pv_raw_list = []
+    for row in ms_full_with_supply:
+        d = row["date"]
+        sky_sup_d = row.get("sky_supply", 0.0)
+        ann_gp_d = sky_sup_d * gp_rate
+        pv_raw = ann_gp_d * gp_multiple / ((1 + DR) ** 3) / max(sky_supply, 1.0)
+        price = price_by_date.get(d)
+        if price and price > 0 and pv_raw > 0:
+            pv_raw_list.append((d, pv_raw, price))
+
+    if not pv_raw_list:
+        return {"backtest": {"chart": [], "signals": {}, "latest_signal": "NEUTRAL", "last_realized_row": None},
+                "secondary_chart": {"label": "Mcap / GP", "subtitle": "", "note": "", "unit": "x",
+                                    "data": secondary_data},
+                "eoy3_ms": eoy3_ms_out}
+
+    norm = (p50_pv / pv_raw_list[-1][1]) if pv_raw_list[-1][1] > 0 else 1.0
+    bt_chart = []
+    for d, pv_r, price in pv_raw_list:
+        pv_n = pv_r * norm
+        sig = "GOOD" if pv_n / price >= 1.25 else ("BAD" if pv_n / price <= 0.75 else "NEUTRAL")
+        bt_chart.append({"date": d, "spot": round(price, 4), "pv": round(pv_n, 4), "signal": sig})
+
+    return {
+        "backtest": _backtest_signals(bt_chart),
+        "secondary_chart": {
+            "label": "Historical Mcap / GP (supply-anchored proxy)",
+            "subtitle": "Market cap ÷ (USDS+DAI supply × net GP/supply rate)",
+            "note": "GP proxy = (USDS+DAI supply) × yield × (1 − savings penetration × savings rate). Fixed rates.",
+            "unit": "x",
+            "data": secondary_data,
+        },
+        "eoy3_ms": eoy3_ms_out,
+    }
 
 
 def run() -> dict:
@@ -258,9 +408,9 @@ def run() -> dict:
         spot, mcap, fdv, sky_supply = _FALLBACK_SPOT, _FALLBACK_MCAP, _FALLBACK_FDV, _FALLBACK_SUPPLY
 
     # ── Stablecoin market share ───────────────────────────────────────────────
-    ms_snapshot, ms_history = None, []
+    ms_snapshot, ms_history, ms_full_hist = None, [], []
     try:
-        ms_snapshot, ms_history = fetch_sky_stablecoin_ms()
+        ms_snapshot, ms_history, ms_full_hist = fetch_sky_stablecoin_ms()
     except Exception:
         pass
 
@@ -347,6 +497,17 @@ def run() -> dict:
         ],
         "data_freshness": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
+
+    # ── Historical charts (backtest / secondary / EOY3 stablecoin MS) ────────
+    try:
+        price_hist, mcap_hist = fetch_sky_price_history()
+        p50_pv_sky = scenarios_raw["base_70m_opex"]["pv_np"]["p50"]
+        result["hist_charts"] = compute_sky_hist_charts(
+            ms_full_hist, price_hist, mcap_hist,
+            sky_supply, DISCOUNT_RATE, GP_MULTIPLE, p50_pv_sky,
+        )
+    except Exception:
+        pass
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     with open(os.path.join(RESULTS_DIR, "sky_result.json"), "w") as f:

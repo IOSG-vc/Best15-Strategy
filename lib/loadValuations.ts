@@ -65,6 +65,14 @@ export interface BacktestRow {
   signal: "GOOD" | "NEUTRAL" | "BAD";
 }
 
+export interface SecondaryChart {
+  label: string;
+  subtitle: string;
+  note: string;
+  unit: "x" | "y" | "pct";
+  data: { date: string; value: number }[];
+}
+
 export interface HistCharts {
   backtest: {
     chart: BacktestRow[];
@@ -72,7 +80,8 @@ export interface HistCharts {
     latest_signal: string;
     last_realized_row: string | null;
   };
-  buyback_horizon: { date: string; years: number }[];
+  buyback_horizon?: { date: string; years: number }[];
+  secondary_chart?: SecondaryChart;
   eoy3_ms: { date: string; eoy3: number; ms90: number; ms30: number }[];
 }
 

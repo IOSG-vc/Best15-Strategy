@@ -11,7 +11,7 @@ import os
 import random
 import statistics
 import urllib.request
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timedelta, timezone
 
 import numpy as np
 
@@ -123,6 +123,57 @@ def summarize(arr, spot=None):
     return d
 
 
+_MS_AMPLIFIER_CAP = 1.5
+_MS_DECAY_MONTHS = 12
+_MS_MONTHS = 36
+_ETHFI_LRT_CAP = 0.95
+
+
+def _ms_eoy3(ms90: float, ms30: float, ms_anchor: float, ms_cap: float) -> float:
+    velocity = min(max(ms30 / max(ms_anchor, 1e-12), 1.0), _MS_AMPLIFIER_CAP)
+    log_v = math.log(velocity) / 6.0
+    acc = 0.0
+    for m in range(_MS_MONTHS):
+        acc += log_v * max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+    return min(ms90 * math.exp(acc), ms_cap)
+
+
+def _backtest_signals(backtest_chart: list) -> dict:
+    if not backtest_chart:
+        return {"chart": [], "signals": {}, "latest_signal": "NEUTRAL", "last_realized_row": None}
+    price_lookup = {row["date"]: row["spot"] for row in backtest_chart}
+    all_dates = sorted(price_lookup)
+    today = date.fromisoformat(max(all_dates))
+
+    def _near_price(from_str: str, offset: int):
+        tgt = str(date.fromisoformat(from_str) + timedelta(days=offset))
+        best = sorted((abs((date.fromisoformat(d) - date.fromisoformat(tgt)).days), price_lookup[d]) for d in all_dates)
+        return best[0][1] if best and best[0][0] <= 5 else None
+
+    groups: dict = {s: {"r30": [], "r90": [], "dates": []} for s in ["GOOD", "NEUTRAL", "BAD"]}
+    last_real = None
+    for row in backtest_chart:
+        d, sig, p0 = row["date"], row["signal"], row["spot"]
+        days_ago = (today - date.fromisoformat(d)).days
+        if days_ago >= 30:
+            p30 = _near_price(d, 30)
+            if p30:
+                groups[sig]["r30"].append(p30 / p0 - 1)
+                last_real = d
+        if days_ago >= 90:
+            p90 = _near_price(d, 90)
+            if p90:
+                groups[sig]["r90"].append(p90 / p0 - 1)
+        groups[sig]["dates"].append(d)
+    signals = {s: {"obs": len(g["dates"]),
+                   "avg_30d": float(np.mean(g["r30"])) if g["r30"] else None,
+                   "avg_90d": float(np.mean(g["r90"])) if g["r90"] else None,
+                   "recent_dates": g["dates"][-3:]}
+               for s, g in groups.items()}
+    return {"chart": backtest_chart, "signals": signals,
+            "latest_signal": backtest_chart[-1]["signal"], "last_realized_row": last_real}
+
+
 # Top LRT peers by TVL (excluding ether.fi itself)
 LRT_PEER_SLUGS = ["kelp", "renzo", "puffer-stake", "swell-liquid-restaking"]
 
@@ -151,7 +202,7 @@ def fetch_lst_total_tvl():
 
 
 def compute_ethfi_ms(ethfi_rows, peer_rows_list):
-    """Compute rolling 30D/90D mean LRT market share; return snapshot + daily history."""
+    """Compute rolling 30D/90D mean LRT market share; return snapshot, history, ms_full."""
     ethfi_by_date = dict(ethfi_rows)
     peer_by_date: dict[str, float] = {}
     for rows in peer_rows_list:
@@ -160,7 +211,7 @@ def compute_ethfi_ms(ethfi_rows, peer_rows_list):
 
     common = sorted(set(ethfi_by_date) & set(peer_by_date))
     if not common:
-        return None, []
+        return None, [], []
 
     ethfi_arr = np.array([ethfi_by_date.get(d, 0.0) for d in common], dtype=float)
     total_arr  = np.array([ethfi_arr[i] + peer_by_date.get(d, 0.0) for i, d in enumerate(common)], dtype=float)
@@ -191,16 +242,109 @@ def compute_ethfi_ms(ethfi_rows, peer_rows_list):
 
     start = max(0, len(common) - 365)
     history = []
+    ms_full = []
     for i, d in enumerate(common[start:], start=start):
         if np.isnan(ms30[i]):
             continue
-        history.append({
-            "date": d,
-            "ms30": round(float(ms30[i]), 5),
-            "ms90": round(float(ms90[i]), 5) if not np.isnan(ms90[i]) else None,
-        })
+        ms30_i  = float(ms30[i])
+        ms90_i  = float(ms90[i])  if not np.isnan(ms90[i])  else None
+        ms180_i = float(ms180[i]) if not np.isnan(ms180[i]) else None
+        history.append({"date": d, "ms30": round(ms30_i, 5),
+                        "ms90": round(ms90_i, 5) if ms90_i is not None else None})
+        ms_full.append({"date": d, "ms30": ms30_i, "ms90": ms90_i, "ms180": ms180_i})
 
-    return snapshot, history
+    return snapshot, history, ms_full
+
+
+def fetch_ethfi_price_history():
+    """Return (price_by_date, mcap_by_date) dicts from CoinGecko market_chart."""
+    try:
+        url = f"{_CG_BASE}/coins/ether-fi/market_chart?vs_currency=usd&days=365&interval=daily"
+        d = fetch(url)
+        price_by_date: dict = {}
+        mcap_by_date: dict = {}
+        seen_p: set = set()
+        for ms, p in d.get("prices", []):
+            ds = str(datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date())
+            if ds not in seen_p:
+                seen_p.add(ds)
+                price_by_date[ds] = float(p)
+        seen_m: set = set()
+        for ms, m_v in d.get("market_caps", []):
+            ds = str(datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date())
+            if ds not in seen_m:
+                seen_m.add(ds)
+                mcap_by_date[ds] = float(m_v)
+        return price_by_date, mcap_by_date
+    except Exception:
+        return {}, {}
+
+
+def compute_ethfi_hist_charts(ethfi_tvl_rows, ms_full, price_by_date, mcap_by_date,
+                               circ, total_annualized, stake_tvl, vault_tvl,
+                               DR, multiple, p50_pv):
+    """Build hist_charts for ETHFI: backtest + Mcap/GP secondary + EOY3 LRT share."""
+    tvl_by_date = dict(ethfi_tvl_rows)
+    total_tvl_cur = max(stake_tvl + vault_tvl, 1.0)
+    gp_rate = total_annualized / total_tvl_cur  # GP / total TVL (fixed current rate)
+
+    # ── EOY3 LRT market share history ────────────────────────────────────────
+    eoy3_ms_out = []
+    for row in ms_full:
+        ms30 = row["ms30"]; ms90 = row["ms90"]; ms180 = row.get("ms180")
+        if ms30 is None or ms90 is None:
+            continue
+        anchor = ms180 if ms180 is not None else ms90
+        eoy3 = _ms_eoy3(ms90, ms30, anchor, _ETHFI_LRT_CAP)
+        eoy3_ms_out.append({"date": row["date"], "eoy3": round(eoy3, 5),
+                             "ms90": round(ms90, 5), "ms30": round(ms30, 5)})
+
+    # ── Secondary chart: Mcap / GP ratio over time ───────────────────────────
+    secondary_data = []
+    for d in sorted(set(tvl_by_date) & set(mcap_by_date)):
+        tvl_d = tvl_by_date.get(d, 0.0)
+        ann_gp_d = tvl_d * gp_rate
+        mcap = mcap_by_date.get(d)
+        if mcap and ann_gp_d > 0:
+            ratio = mcap / ann_gp_d
+            if 0 < ratio < 2000:
+                secondary_data.append({"date": d, "value": round(ratio, 1)})
+
+    # ── Backtest: model-shaped PV proxy (TVL-anchored GP) ────────────────────
+    common_bt = sorted(set(tvl_by_date) & set(price_by_date))
+    pv_raw_list = []
+    for d in common_bt:
+        tvl_d = tvl_by_date.get(d, 0.0)
+        ann_gp_d = tvl_d * gp_rate
+        pv_raw = ann_gp_d * multiple / ((1 + DR) ** 3) / max(circ, 1.0)
+        price = price_by_date.get(d)
+        if price and price > 0 and pv_raw > 0:
+            pv_raw_list.append((d, pv_raw, price))
+
+    if not pv_raw_list:
+        return {"backtest": {"chart": [], "signals": {}, "latest_signal": "NEUTRAL", "last_realized_row": None},
+                "secondary_chart": {"label": "Mcap / GP (TVL-proxy)", "subtitle": "",
+                                    "note": "", "unit": "x", "data": secondary_data},
+                "eoy3_ms": eoy3_ms_out}
+
+    norm = (p50_pv / pv_raw_list[-1][1]) if pv_raw_list[-1][1] > 0 else 1.0
+    bt_chart = []
+    for d, pv_r, price in pv_raw_list:
+        pv_n = pv_r * norm
+        sig = "GOOD" if pv_n / price >= 1.25 else ("BAD" if pv_n / price <= 0.75 else "NEUTRAL")
+        bt_chart.append({"date": d, "spot": round(price, 4), "pv": round(pv_n, 4), "signal": sig})
+
+    return {
+        "backtest": _backtest_signals(bt_chart),
+        "secondary_chart": {
+            "label": "Historical Mcap / GP (TVL-anchored proxy)",
+            "subtitle": "Market cap ÷ TVL × current GP/TVL rate",
+            "note": "TVL-anchored GP proxy; card business growth is not captured historically.",
+            "unit": "x",
+            "data": secondary_data,
+        },
+        "eoy3_ms": eoy3_ms_out,
+    }
 
 
 def run() -> dict:
@@ -225,12 +369,13 @@ def run() -> dict:
     vault_tvl = protocol_tvl("ether.fi-liquid")
 
     # ── LRT market share ──────────────────────────────────────────────────────
-    ms_snapshot, ms_history = None, []
+    ms_snapshot, ms_history, ms_full_hist = None, [], []
     lst_total_tvl = None
+    ethfi_tvl_rows_saved = []
     try:
-        ethfi_tvl_rows = fetch_protocol_tvl_daily("ether.fi-stake")
+        ethfi_tvl_rows_saved = fetch_protocol_tvl_daily("ether.fi-stake")
         peer_tvl_rows  = [fetch_protocol_tvl_daily(s) for s in LRT_PEER_SLUGS]
-        ms_snapshot, ms_history = compute_ethfi_ms(ethfi_tvl_rows, peer_tvl_rows)
+        ms_snapshot, ms_history, ms_full_hist = compute_ethfi_ms(ethfi_tvl_rows_saved, peer_tvl_rows)
         lst_total_tvl = fetch_lst_total_tvl()
     except Exception as _e:
         pass
@@ -449,6 +594,21 @@ def run() -> dict:
         "ms_history": ms_history,
         "raw_results": results,
     }
+
+    # ── Historical charts (backtest / secondary / EOY3 LRT MS) ──────────────
+    try:
+        price_hist, mcap_hist = fetch_ethfi_price_history()
+        w = results["weighted_20_40_40"]
+        p50_pv_ethfi = w["pv_15x_gp"]["p50"]
+        result["hist_charts"] = compute_ethfi_hist_charts(
+            ethfi_tvl_rows_saved, ms_full_hist,
+            price_hist, mcap_hist,
+            float(market.get("circulating_supply") or 0),
+            float(current_gp), float(stake_tvl), float(vault_tvl),
+            DISCOUNT_RATE, Y3_GP_MULTIPLE, p50_pv_ethfi,
+        )
+    except Exception as _hce:
+        pass  # hist_charts is optional
 
     with open(os.path.join(RESULTS_DIR, "ethfi_result.json"), "w") as f:
         json.dump(result, f, indent=2)

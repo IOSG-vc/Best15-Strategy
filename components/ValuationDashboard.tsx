@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell, LabelList,
 } from "recharts";
-import type { ValuationsFile, TokenResult, ValuationScenario, McapPoint, MsPoint, ValuationData, Y3Volume, HistCharts, BacktestRow } from "@/lib/loadValuations";
+import type { ValuationsFile, TokenResult, ValuationScenario, McapPoint, MsPoint, ValuationData, Y3Volume, HistCharts, BacktestRow, SecondaryChart } from "@/lib/loadValuations";
 import { LineChart, Line, ReferenceLine } from "recharts";
 import Nav from "./Nav";
 
@@ -959,9 +959,227 @@ const TOKEN_COLORS: Record<string, string> = {
   sky:   "#f59e0b",
 };
 
-// ── HypeHistoricalCharts ─────────────────────────────────────────────────────
+// ── TokenHistoricalCharts (UNI / ETHFI / JUP / SKY) ─────────────────────────
 
 const SIGNAL_COLOR: Record<string, string> = { GOOD: "#4ade80", NEUTRAL: "#9ca3af", BAD: "#f87171" };
+
+const TOKEN_BACKTEST_NOTE: Record<string, string> = {
+  uni:   "PV proxy = rolling 30D full-activation GP × 15× / DR³ / circ supply, normalised to current P50.",
+  ethfi: "PV proxy = historical staking TVL × estimated GP/TVL rate × 15× / DR³ / supply, normalised to current P50.",
+  jup:   "PV proxy = rolling 30D perps fees × 25% take × 15× / DR³ / circ supply, normalised to current P50.",
+  sky:   "PV proxy = historical (USDS+DAI) supply × net GP/supply rate × GP multiple / DR³ / supply, normalised to current P50.",
+};
+
+const TOKEN_EOY3_LABEL: Record<string, string> = {
+  uni:   "Model implied EOY3 UNI/Total DEX market share",
+  ethfi: "Model implied EOY3 ether.fi/LRT market share",
+  jup:   "Model implied EOY3 JUP/Solana Perps fee share",
+  sky:   "Model implied EOY3 Sky/Total stablecoin supply share",
+};
+
+function TokenHistoricalCharts({ hc, tokenKey }: { hc: HistCharts; tokenKey: string }) {
+  const bt      = hc.backtest;
+  const chart   = bt?.chart ?? [];
+  const signals = bt?.signals ?? {};
+  const sec     = hc.secondary_chart;
+  const eoy3    = hc.eoy3_ms ?? [];
+
+  const fmtRet = (v: number | null) => v == null ? "n/a" : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+  const dateLbl = (d: string) => { const [, m, day] = d.split("-"); return `${parseInt(m)}/${parseInt(day)}`; };
+
+  const fmtSecVal = (v: number, unit: string) => {
+    if (unit === "y") return `${v.toFixed(1)}y`;
+    if (unit === "pct") return `${(v * 100).toFixed(1)}%`;
+    return `${v.toFixed(0)}×`;
+  };
+
+  // Backtest chart: colored spot segments + blue PV
+  const lastRealized = bt.last_realized_row ?? "";
+  const btData = chart.map((row, i) => {
+    const isUnscored = lastRealized && row.date > lastRealized;
+    const prev = chart[i - 1];
+    const next = chart[i + 1];
+    const prevSig = prev ? (lastRealized && prev.date > lastRealized ? "unscored" : prev.signal) : row.signal;
+    const nextSig = next ? (lastRealized && next.date > lastRealized ? "unscored" : next.signal) : row.signal;
+    const curSig  = isUnscored ? "unscored" : row.signal;
+    const v = row.spot;
+    const inGood    = (curSig === "GOOD"    || prevSig === "GOOD"    || nextSig === "GOOD")    && !isUnscored;
+    const inNeutral = (curSig === "NEUTRAL" || prevSig === "NEUTRAL" || nextSig === "NEUTRAL") && !isUnscored;
+    const inBad     = (curSig === "BAD"     || prevSig === "BAD"     || nextSig === "BAD")     && !isUnscored;
+    const isBoundaryToUnscored = !isUnscored && nextSig === "unscored";
+    const unscoredSig = isUnscored ? row.signal : (isBoundaryToUnscored ? row.signal : null);
+    return {
+      ...row,
+      spot_good:             inGood    ? v : null,
+      spot_neutral:          inNeutral ? v : null,
+      spot_bad:              inBad     ? v : null,
+      spot_unscored_good:    (isUnscored || isBoundaryToUnscored) && unscoredSig === "GOOD"    ? v : null,
+      spot_unscored_neutral: (isUnscored || isBoundaryToUnscored) && unscoredSig === "NEUTRAL" ? v : null,
+      spot_unscored_bad:     (isUnscored || isBoundaryToUnscored) && unscoredSig === "BAD"     ? v : null,
+    };
+  });
+  const btTicks = chart.length > 6
+    ? chart.filter((_, i) => i % Math.floor(chart.length / 6) === 0).map(r => r.date)
+    : chart.map(r => r.date);
+
+  // Secondary chart
+  const secData   = sec?.data ?? [];
+  const secLatest = secData[secData.length - 1];
+  const secStep   = Math.max(1, Math.floor(secData.length / 180));
+  const secSampled = secData.filter((_, i) => i % secStep === 0);
+  const secTicks   = secSampled.filter((_, i) => i % Math.floor(Math.max(secSampled.length / 5, 1)) === 0).map(r => r.date);
+  const secVals    = secSampled.map(r => r.value);
+  const secMin     = secVals.length ? Math.max(0, Math.min(...secVals) - 2) : 0;
+  const secMax     = secVals.length ? Math.max(...secVals) + 2 : 100;
+
+  // EOY3 chart
+  const e3Step    = Math.max(1, Math.floor(eoy3.length / 180));
+  const e3Sampled = eoy3.filter((_, i) => i % e3Step === 0);
+  const e3Ticks   = e3Sampled.filter((_, i) => i % Math.floor(Math.max(e3Sampled.length / 5, 1)) === 0).map(r => r.date);
+  const e3Latest  = eoy3[eoy3.length - 1];
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── 1. Historical entry backtest ────────────────────────────── */}
+      {chart.length > 0 && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Left: description */}
+            <div className="lg:col-span-1">
+              <h3 className="text-xl font-bold text-white mb-3">Historical entry backtest</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Historical model-shaped diagnostic, not a full MC replay: <span className="text-gray-200">GOOD</span> if model PV/spot &gt; 1.25, <span className="text-gray-200">BAD</span> if &lt; 0.75.{" "}
+                Latest signal: <span className="font-bold" style={{ color: SIGNAL_COLOR[bt.latest_signal] }}>{bt.latest_signal}</span>
+                {bt.last_realized_row && <>; last realized-return row: <span className="font-bold text-gray-200">{bt.last_realized_row}</span></>}.
+              </p>
+            </div>
+            {/* Right: signal table */}
+            <div className="lg:col-span-2 bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#2d3144]">
+                    {["SIGNAL", "OBS", "AVG +30D", "AVG +90D", "RECENT DATES"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {["GOOD", "NEUTRAL", "BAD"].map(sig => {
+                    const s = signals[sig];
+                    if (!s) return null;
+                    return (
+                      <tr key={sig} className="border-b border-[#2d3144] last:border-0">
+                        <td className="px-4 py-3 font-semibold text-xs tracking-wider" style={{ color: SIGNAL_COLOR[sig] }}>{sig}</td>
+                        <td className="px-4 py-3 font-mono text-gray-200">{s.obs}</td>
+                        <td className="px-4 py-3 font-mono text-gray-200">{fmtRet(s.avg_30d)}</td>
+                        <td className="px-4 py-3 font-mono text-gray-200">{fmtRet(s.avg_90d)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500">
+                          {s.recent_dates.slice(-3).join(",\n").split(",").map((d, i) => <div key={i}>{d.trim()}</div>)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Backtest chart */}
+          <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold text-gray-200">Backtest visual: spot vs model-shaped PV</div>
+              <div className="text-xs text-gray-600">black=spot · blue=model-shaped PV normalised</div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={btData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+                <XAxis dataKey="date" ticks={btTicks} tickFormatter={dateLbl}
+                  tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v: number) => `$${v.toFixed(2)}`} tick={{ fill: "#6b7280", fontSize: 10 }}
+                  axisLine={false} tickLine={false} width={42} domain={["auto", "auto"]} scale="log" />
+                <Tooltip contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+                  formatter={(v: number, name: string) => {
+                    if (name === "pv") return [`$${v.toFixed(4)}`, "Model PV"];
+                    if (typeof v === "number") return [`$${v.toFixed(4)}`, "Spot"];
+                    return [null, null];
+                  }} />
+                <Line type="monotone" dataKey="spot_good"             stroke="#4ade80" strokeWidth={2} dot={{ r: 3, fill: "#4ade80", strokeWidth: 0 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="spot_neutral"          stroke="#6b7280" strokeWidth={2} dot={{ r: 3, fill: "#6b7280", strokeWidth: 0 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="spot_bad"              stroke="#f87171" strokeWidth={2} dot={{ r: 3, fill: "#f87171", strokeWidth: 0 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="spot_unscored_good"    stroke="#4ade80" strokeWidth={1.5} strokeOpacity={0.35} dot={{ r: 3, fill: "#4ade80", strokeWidth: 0, fillOpacity: 0.35 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="spot_unscored_neutral" stroke="#6b7280" strokeWidth={1.5} strokeOpacity={0.35} dot={{ r: 3, fill: "#6b7280", strokeWidth: 0, fillOpacity: 0.35 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="spot_unscored_bad"     stroke="#f87171" strokeWidth={1.5} strokeOpacity={0.35} dot={{ r: 3, fill: "#f87171", strokeWidth: 0, fillOpacity: 0.35 }} connectNulls={false} legendType="none" />
+                <Line type="monotone" dataKey="pv" stroke="#60a5fa" strokeWidth={1.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="text-xs text-gray-600 mt-3 leading-relaxed">
+              Colored line = {tokenKey.toUpperCase()} spot (green=GOOD, grey=NEUTRAL, red=BAD). Faded tail = recent unscored dates without enough forward return history yet. Blue line = model-shaped PV proxy normalised to current P50.{" "}
+              {TOKEN_BACKTEST_NOTE[tokenKey] ?? "Preliminary diagnostic, not a full historical MC replay."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── 2. Secondary chart (Mcap/GP or buyback horizon) ─────────── */}
+      {sec && secSampled.length > 0 && (
+        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-sm font-semibold text-gray-200">{sec.label}</div>
+            {secLatest && <div className="text-xs text-gray-500 font-mono">latest {fmtSecVal(secLatest.value, sec.unit)}</div>}
+          </div>
+          {sec.subtitle && <div className="text-xs text-gray-600 text-right mb-1">{sec.subtitle}</div>}
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={secSampled} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+              <XAxis dataKey="date" ticks={secTicks} tickFormatter={dateLbl}
+                tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v: number) => fmtSecVal(v, sec.unit)}
+                tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={38}
+                domain={[secMin, secMax]} />
+              <Tooltip contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+                formatter={(v: number) => [fmtSecVal(v, sec.unit), sec.label]} />
+              <Line type="monotone" dataKey="value" stroke="#e5e7eb" strokeWidth={1.5} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+          {sec.note && <p className="text-xs text-gray-600 mt-3 leading-relaxed">{sec.note}</p>}
+        </div>
+      )}
+
+      {/* ── 3. Model implied EOY3 market share ──────────────────────── */}
+      {e3Sampled.length > 0 && (
+        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-sm font-semibold text-gray-200">{TOKEN_EOY3_LABEL[tokenKey] ?? "Model implied EOY3 market share"}</div>
+            {e3Latest && <div className="text-xs text-gray-500 font-mono">12M {pct(e3Latest.eoy3)}</div>}
+          </div>
+          <div className="text-xs text-gray-600 text-right mb-2">blue=EOY3 decay · grey=MS90 · dashed=MS30</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={e3Sampled} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+              <XAxis dataKey="date" ticks={e3Ticks} tickFormatter={dateLbl}
+                tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={36} />
+              <Tooltip contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+                formatter={(v: number, name: string) => [`${(v * 100).toFixed(1)}%`,
+                  name === "eoy3" ? "EOY3 decay" : name === "ms90" ? "MS90" : "MS30"]} />
+              <Line type="monotone" dataKey="eoy3" stroke="#60a5fa" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ms90" stroke="#6b7280" strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="ms30" stroke="#9ca3af" strokeWidth={1} dot={false} strokeDasharray="4 2" />
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="text-xs text-gray-600 mt-3 leading-relaxed">
+            Historical time series of the model-implied Year-3 terminal market share using MS90 as seed and MS30/MS180 velocity-decay rule (12M linear decay). The current EOY3 model point is {e3Latest ? pct(e3Latest.eoy3) : "—"}.
+          </p>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// ── HypeHistoricalCharts ─────────────────────────────────────────────────────
 
 function HypeHistoricalCharts({ hc }: { hc: HistCharts }) {
   const bt = hc.backtest;
@@ -1585,6 +1803,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
       {/* ── HYPE: Historical charts (backtest, buyback, EOY3 MS) ─────── */}
       {tokenKey === "hype" && d.hist_charts && <HypeHistoricalCharts hc={d.hist_charts} />}
+
+      {/* ── Non-HYPE: Historical charts (backtest, secondary, EOY3 MS) ─ */}
+      {tokenKey !== "hype" && d.hist_charts && <TokenHistoricalCharts hc={d.hist_charts} tokenKey={tokenKey} />}
 
       {/* ── HYPE: DefiLlama MCP weekly answer ────────────────────────── */}
       {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
