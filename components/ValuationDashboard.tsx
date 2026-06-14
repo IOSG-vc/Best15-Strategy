@@ -1310,6 +1310,99 @@ Multiple: 20× trough / 15× normal / 10× peak`}
   );
 }
 
+// ── TokenModelOutputs ────────────────────────────────────────────────────────
+
+type GpFn = (gp: Record<string, number>) => string;
+interface Y3CardCfg { label: string; value: GpFn; sub: GpFn | string }
+
+const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
+  uni: [
+    { label: "Y3 TTM Volume P50",        value: (gp) => fmtLarge(gp["y3_volume_p50"]),   sub: "P50 3-year trailing volume" },
+    { label: "Y3 GP P50 (full activ.)",  value: (gp) => fmtLarge(gp["y3_gp_p50"]),       sub: (gp) => `P25 ${fmtLarge(gp["y3_gp_p25"])} · P75 ${fmtLarge(gp["y3_gp_p75"])}` },
+    { label: "Mcap / GP (full activ.)",  value: (gp) => `${(gp["mcap_full_activation_gp"] ?? 0).toFixed(1)}×`, sub: "At current mcap and full-activation take-rate" },
+  ],
+  ethfi: [
+    { label: "Y3 GP P50 (weighted)",     value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "Weighted 20/40/40 bear/base/bull" },
+    { label: "Y3 Card GDV P50",          value: (gp) => fmtLarge(gp["y3_card_gdv_ann_p50"]), sub: "Annualized card volume at Year 3" },
+    { label: "Y3 Stake TVL P50",         value: (gp) => fmtLarge(gp["y3_stake_tvl_p50"]),    sub: "ether.fi staking TVL at Year 3" },
+    { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
+  ],
+  jup: [
+    { label: "Y3 Total GP P50",          value: (gp) => fmtLarge(gp["y3_gp_p50"]),            sub: "Perps + spot at P50 path" },
+    { label: "Y3 Perps GP P50",          value: (gp) => fmtLarge(gp["y3_perps_gp_p50"]),      sub: "Jupiter Perps only" },
+    { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Cumulative JUP buyback over 3 years" },
+    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B`, sub: "Circ. supply after buybacks at Year 3" },
+  ],
+  sky: [
+    { label: "Y3 USDS Supply P50",       value: (gp) => fmtLarge(gp["y3_usds_supply_p50"]),  sub: "Base $70M OPEX scenario" },
+    { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "GP after savings rate & stUSDS cost" },
+    { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
+  ],
+};
+
+function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  const cards = TOKEN_Y3_CARDS[tokenKey];
+  if (!cards) return null;
+
+  const gp   = data.current_gp;
+  const circ = data.market.circulating_supply;
+  const spot = data.market.spot;
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-xl font-bold text-white">Model outputs</h3>
+
+      {/* ── Scenario table ──────────────────────────────────────────────── */}
+      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#2d3144]">
+                {["SCENARIO", "P50 PV", "P50 MCAP", "EV PV", "EV MCAP", "P(SPOT)", "P(3×)"].map((h) => (
+                  <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.scenarios.map((s, i) => {
+                const p50mcap = circ > 0 ? s.pv.p50 * circ : 0;
+                const evMcap  = circ > 0 ? s.ev  * circ : 0;
+                const isPrimary = s.is_primary;
+                return (
+                  <tr key={s.key} className={i < data.scenarios.length - 1 ? "border-b border-[#2d3144]" : ""}>
+                    <td className={`px-5 py-4 whitespace-nowrap ${isPrimary ? "text-white font-semibold" : "text-gray-400"}`}>{s.label}</td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.pv.p50)}</td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50mcap)}</td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.ev)}</td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(evMcap)}</td>
+                    <td className="px-5 py-4 font-mono whitespace-nowrap" style={{ color: s.prob_above_spot >= 0.5 ? "#4ade80" : "#f87171" }}>
+                      {pct(s.prob_above_spot)}
+                    </td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
+                      {s.prob_3x != null ? pct(s.prob_3x) : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Y3 metric cards ─────────────────────────────────────────────── */}
+      <div className={`grid grid-cols-2 ${cards.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3`}>
+        {cards.map((c) => (
+          <div key={c.label} className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1">{c.label}</div>
+            <div className="text-2xl font-bold text-white font-mono">{c.value(gp)}</div>
+            <div className="text-xs text-gray-600 mt-1">{typeof c.sub === "function" ? c.sub(gp) : c.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── TokenView ────────────────────────────────────────────────────────────────
 
 function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }) {
@@ -1479,6 +1572,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
       {/* ── Non-HYPE: model assumptions ───────────────────────────────── */}
       {tokenKey !== "hype" && <TokenModelAssumptions tokenKey={tokenKey} model={d.model} />}
+
+      {/* ── Non-HYPE: model outputs ────────────────────────────────────── */}
+      {tokenKey !== "hype" && <TokenModelOutputs data={d} tokenKey={tokenKey} />}
 
       {/* ── Scenario comparison table ─────────────────────────────────── */}
       <ScenarioTable scenarios={d.scenarios} spot={spot} />

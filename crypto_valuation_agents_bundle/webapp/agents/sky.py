@@ -324,6 +324,10 @@ def run() -> dict:
             "usds_supply": USDS_SUPPLY,
             "dai_supply": DAI_SUPPLY,
             "gross_income_yield_pct": GROSS_INCOME_YIELD * 100,
+            # Y3 model outputs (base $70M OPEX scenario)
+            "y3_gp_p50":          scenarios_raw["base_70m_opex"]["y3_ttm_gp"]["p50"],
+            "y3_usds_supply_p50": scenarios_raw["base_70m_opex"]["y3_usds_supply"]["p50"],
+            "treasury_cash_p50":  scenarios_raw["base_70m_opex"]["accumulated_treasury_cash"]["p50"],
             # Stablecoin market share
             **({"ms30_vs_stables":  ms_snapshot["ms30"],
                 "ms90_vs_stables":  ms_snapshot["ms90"],

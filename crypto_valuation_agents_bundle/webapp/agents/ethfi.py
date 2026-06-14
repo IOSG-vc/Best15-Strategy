@@ -429,6 +429,11 @@ def run() -> dict:
             "vault_tvl": float(vault_tvl),
             "card_take_bps_30d": float(take_bps_30),
             "card_mom": float(card_mom),
+            # Y3 model outputs (weighted 20/40/40)
+            "y3_gp_p50":          results["weighted_20_40_40"]["y3_gp"]["p50"],
+            "y3_card_gdv_ann_p50": results["weighted_20_40_40"]["y3_card_gdv_ann"]["p50"],
+            "y3_stake_tvl_p50":   results["weighted_20_40_40"]["y3_stake_tvl"]["p50"],
+            "treasury_cash_p50":  results["weighted_20_40_40"]["treasury_cash"]["p50"],
             # LRT market share
             **({"ms30_vs_lrt":      ms_snapshot["ms30"],
                 "ms90_vs_lrt":      ms_snapshot["ms90"],

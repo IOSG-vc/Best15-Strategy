@@ -332,6 +332,13 @@ def run() -> dict:
             "ann_volume": current_ann_vol,
             "mcap_current_state_gp": mcap_cur,
             "mcap_full_activation_gp": mcap_full,
+            # Y3 model outputs
+            "y3_gp_p50":     full_gp_q[1],
+            "y3_gp_p25":     full_gp_q[0],
+            "y3_gp_p75":     full_gp_q[2],
+            "y3_volume_p50": vol_q[1],
+            "y3_volume_p25": vol_q[0],
+            "y3_volume_p75": vol_q[2],
             # Market share vs total DEX volume
             **({"ms30_vs_dex":  ms_snapshot["ms30"],
                 "ms90_vs_dex":  ms_snapshot["ms90"],

@@ -390,6 +390,11 @@ def run() -> dict:
             "seed_monthly": s["total_seed_gp"],
             "seed_annualized": s["total_seed_gp"] * 12,
             "optional_tracked_30d": s["tracked_optional_30d_revenue"],
+            # Y3 model outputs
+            "y3_gp_p50":          valuation["y3_state"]["y3_ttm_gp"]["p50"],
+            "y3_perps_gp_p50":    valuation["y3_state"]["y3_perps_gp"]["p50"],
+            "y3_supply_p50":      valuation["y3_state"]["y3_effective_supply"]["p50"],
+            "buyback_tokens_p50": valuation["y3_state"]["buyback_accum_tokens"]["p50"],
             # Solana perps market share (fee-based)
             **({"ms30_vs_sol_perps":  ms_snapshot["ms30"],
                 "ms90_vs_sol_perps":  ms_snapshot["ms90"],
