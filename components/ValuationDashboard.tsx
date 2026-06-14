@@ -1475,8 +1475,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
         <HypeModelOutputs scenario={primary} spot={spot} />
       )}
 
-      {/* ── Non-HYPE: key metrics ─────────────────────────────────────── */}
-      {tokenKey !== "hype" && <TokenKeyMetrics currentGp={d.current_gp} tokenKey={tokenKey} />}
+      {/* ── Non-HYPE: key metrics (HYPE only) ────────────────────────── */}
 
       {/* ── Non-HYPE: model assumptions ───────────────────────────────── */}
       {tokenKey !== "hype" && <TokenModelAssumptions tokenKey={tokenKey} model={d.model} />}
@@ -1487,10 +1486,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       {/* ── PV price distribution ─────────────────────────────────────── */}
       <DistributionChart scenario={primary} spot={spot} ev={primary.ev} />
 
-      {/* ── Non-HYPE: market cap chart ────────────────────────────────── */}
-      {tokenKey !== "hype" && token.mcap_history && token.mcap_history.length > 0 && (
-        <McapChart history={token.mcap_history} symbol={d.token} color={chartColor} />
-      )}
 
       {/* ── HYPE: Historical charts (backtest, buyback, EOY3 MS) ─────── */}
       {tokenKey === "hype" && d.hist_charts && <HypeHistoricalCharts hc={d.hist_charts} />}
