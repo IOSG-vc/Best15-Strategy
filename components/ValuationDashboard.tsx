@@ -81,7 +81,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
     sections: [
       {
         heading: "Core revenue model",
-        text: "Perp GP = Binance Futures monthly volume × HL market share × 0.034% take-rate. USDC yield = USDC TVL × net yield × 90% capture. TVL follows the simulated HL volume path via live-estimated elasticity. Both streams are simulated over 36 months.",
+        text: "Perp treasury revenue = Binance Futures monthly volume × HL market share × 0.026% clean revenue take-rate. The ~0.034% total fee rate is tracked as activity context only because DefiLlama dailyFees can include builder-code fees that do not accrue to the treasury. USDC yield = USDC TVL × net yield × 90% capture.",
       },
       {
         heading: "Market share momentum",
@@ -97,7 +97,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "Data sources",
-        text: "Binance volume: BTCUSDT Binance Futures ZIP data scaled by Blockworks annual totals. Market share: DefiLlama MCP derivatives volume (fallback: revenue ÷ 0.034% take-rate). USDC TVL: DefiLlama stablecoins API. Yield: FRED SOFR minus 50bp haircut.",
+        text: "Binance volume: BTCUSDT Binance Futures ZIP data scaled by Blockworks annual totals. Market share: DefiLlama MCP derivatives volume (fallback: clean treasury revenue ÷ 0.026% take-rate). USDC TVL: DefiLlama stablecoins API. Yield: FRED SOFR minus 50bp haircut.",
       },
     ],
   },
@@ -767,17 +767,18 @@ const MS_CONFIG: Record<string, MsConfig> = {
   hype: {
     yCapPct: 0.35,
     chartNote: "Chart uses daily revenue-implied HL volume for rolling continuity; headline cards use DefiLlama MCP derivatives-volume aggregates.",
-    tableNote: "DefiLlama MCP checked: revenue excludes Coinbase/USDC yield; stablecoin yield is modeled separately.",
+    tableNote: "DefiLlama fee rows include builder-code fees in dailyFees. Valuation uses clean treasury revenue at ~0.026% of notional; stablecoin yield is modeled separately.",
     driversTitle: "Perps + stablecoin yield",
     driversBody: null,   // filled inline below
     tableRows: (gp) => ([
       ["MS30 vs Binance Futures",        pct(gp["ms30_vs_binance"] as number)],
       ["MS180 vs Binance Futures",       pct(gp["ms180_vs_binance"] as number)],
       ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`],
-      ["DefiLlama 30D fee rev. ann.",    fmtLarge(gp["defillama_30d_ann"] as number)],
-      ["DefiLlama 180D fee rev. ann.",   fmtLarge(gp["defillama_180d_ann"] as number)],
-      ["Buyback yrs (fees + USDC)",      `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
-      ["Fee-only buyback years",         `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+      ["DefiLlama 30D total fees ann.",  fmtLarge(gp["defillama_30d_ann"] as number)],
+      ["Clean treasury rev. ann.",       fmtLarge(gp["clean_treasury_revenue_ann"] as number)],
+      ["DefiLlama 180D total fees ann.", fmtLarge(gp["defillama_180d_ann"] as number)],
+      ["Buyback yrs (clean rev + USDC)", `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
+      ["Clean-rev-only buyback years",   `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y"),
   },
   uni: {
@@ -919,7 +920,7 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           <div className="text-lg font-bold text-white mb-3">{cfg.driversTitle}</div>
           {tokenKey === "hype" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              DefiLlama rows are observed fee revenue. MC models future perps GP from Binance volume × HL share × 0.034% take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
+              DefiLlama rows show total fee activity, but builder-code fees do not accrue to the Hyperliquid treasury. MC models future perps treasury revenue from Binance volume × HL share × 0.026% clean revenue take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
               <span className="text-gray-200 font-medium">{fmtLarge(gp["usdc_gp_annual"] as number)}</span>.
             </p>
           )}
@@ -1343,7 +1344,7 @@ function HypeHistoricalCharts({ hc }: { hc: HistCharts }) {
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-gray-600 mt-3 leading-relaxed">
-            Uses each date&apos;s HYPE price and trailing-30D annualized DefiLlama fee revenue only. Target = current circulating supply + modeled 3Y gross issuance. Current fee-only 30D horizon is {bbLatest ? fmtYr(bbLatest.years) : "—"}.
+            Historical line uses each date&apos;s HYPE price and trailing-30D annualized DefiLlama total fees for continuity. Target = current circulating supply + modeled 3Y gross issuance. Corrected current clean-revenue-only horizon is shown in the snapshot table.
           </p>
         </div>
       )}
@@ -1487,7 +1488,7 @@ function HypeModelAssumptions({ data }: { data: ValuationData }) {
         <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
           <div className="text-sm font-semibold text-gray-200 mb-3">Core revenue lines</div>
           <pre className="text-xs font-mono text-gray-400 leading-relaxed bg-[#252836] rounded-lg p-4 overflow-x-auto whitespace-pre-wrap">
-{`perp_GP_t = BinanceVol_t × HLShare_t × 0.034%
+{`perp_treasury_revenue_t = BinanceVol_t × HLShare_t × 0.026%
 USDC_GP_t = USDC_TVL_t × net_yield × 90% / 12
 USDC TVL follows HL volume path ^ 0.22`}
           </pre>
