@@ -1,7 +1,7 @@
 """HYPE webapp valuation agent — Binance/MS90 architecture.
 
-Uses hype_gp_capture_12m_start_run.run_once() which models perp GP as
-Binance volume × HL market share × 0.034% take-rate, plus separate
+Uses hype_gp_capture_12m_start_run.run_once() which models perp treasury
+revenue as Binance volume × HL market share × 0.026% clean revenue take-rate, plus separate
 USDC yield GP. Four supply/emission scenarios replace the old DR-sensitivity
 approach.
 """
@@ -174,8 +174,8 @@ def run() -> dict:
     # 5. Buyback horizon
     bby = current_gp["buyback_years_fee_only"]
     mcp_bullets.append(
-        f"At spot, fee-only buyback horizon is {bby:.1f}Y "
-        f"(trailing 30D annualised revenue / target supply at spot price)."
+        f"At spot, clean-revenue-only buyback horizon is {bby:.1f}Y "
+        f"(trailing 30D clean treasury revenue / target supply at spot price)."
     )
 
     result = {
@@ -195,7 +195,7 @@ def run() -> dict:
             "multiple":      15.0,
             "paths":         mc["paths"],
             "note": (
-                "HL vol × Binance market share × 0.034% take-rate + USDC yield; "
+                "HL vol × Binance market share × 0.026% clean treasury revenue take-rate + USDC yield; "
                 "MS30/MS90 momentum decays over 12 months; 4 supply/emission scenarios"
             ),
         },

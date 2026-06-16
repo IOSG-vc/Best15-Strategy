@@ -22,7 +22,8 @@ TOKEN_CAPTURE = 1.0
 BUYBACK_RATE = 1.0
 GP_MARGIN = 1.0
 
-NET_REVENUE_TAKE_RATE = 0.00034  # net revenue / perp notional; old HYPE agent fee-rate anchor
+TOTAL_FEE_TAKE_RATE = 0.00034  # total fee activity, including builder-code fees
+NET_REVENUE_TAKE_RATE = 0.00026  # clean treasury revenue / perp notional
 
 MS_SHARE_CAP = 0.35
 
@@ -65,7 +66,7 @@ def load_defillama_mcp_metrics() -> dict:
 def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     """Compute current HL/Binance share using reported DefiLlama MCP derivatives volume when cached.
 
-    Fallback infers HL volume from revenue / take-rate. The Binance denominator is always the
+    Fallback infers HL volume from revenue / clean treasury take-rate. The Binance denominator is always the
     same scaled BTCUSDT Binance Futures proxy used for the MC monthly draw pool.
     """
     vals = np.array([v for _, v in rev_rows], dtype=float)
@@ -97,7 +98,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     elif mcp.get("volume_derivatives_90d_usd"):
         source = "DefiLlama MCP reported derivatives volume"
     else:
-        source = "DeFiLlama revenue / fixed 0.034% take-rate"
+        source = "DeFiLlama clean treasury revenue / fixed 0.026% take-rate"
 
     ms30 = float(np.clip(hl30_volume / bn30, 0.0, MS_SHARE_CAP)) if bn30 > 0 else None
     ms90 = float(np.clip(hl90_volume / bn90, 0.0, MS_SHARE_CAP)) if bn90 > 0 else 0.125
@@ -641,7 +642,7 @@ def run_once():
             "buyback_years_simple": float(buyback_years),
         }
 
-    # Volume sanity: implied HYPE volume from Y3 GP using net revenue take-rate.
+    # Volume sanity: implied HYPE volume from Y3 treasury revenue using clean revenue take-rate.
     # Compare to total Binance futures current/peak daily volume from scaled BTCUSDT proxy.
     latest_month_vol = float(monthly_proxy[-1][1])
     current_binance_daily = latest_month_vol / 30.0
@@ -738,7 +739,7 @@ def write_report(res):
     lines.append(f"As of: {res['asof_utc']}")
     lines.append("")
     lines.append("## What changed")
-    lines.append("- Core perp GP is now generated from **sampled Binance monthly volume × MS90 × 0.034% take-rate**, not current HYPE revenue × generic growth.")
+    lines.append("- Core perp treasury revenue is now generated from **sampled Binance monthly volume × MS90 × 0.026% clean revenue take-rate**, not total fees.")
     lines.append("- Binance starting volume is a **uniform random draw** from historical monthly Binance Futures volumes since 2022.")
     lines.append("- HL/Binance **MS90** is from DefiLlama MCP reported 90D derivatives volume versus scaled Binance Futures 90D volume.")
     lines.append("- MS momentum treats **MS30/MS180** as the current 6M share-growth amplifier; monthly velocity linearly decays to 1.0x over 12M, then the gained share is held flat; share cap 35%.")
@@ -796,7 +797,7 @@ def write_report(res):
 
     lines.append("## P50 volume sanity")
     lines.append("```text")
-    lines.append("Assumed net revenue take-rate: 0.034% of notional volume")
+    lines.append("Assumed clean treasury revenue take-rate: 0.026% of notional volume")
     lines.append("")
     lines.append("Scenario                         Implied HYPE daily vol   vs Binance current   vs Binance peak")
     lines.append("-------------------------------  ----------------------   ------------------   ---------------")

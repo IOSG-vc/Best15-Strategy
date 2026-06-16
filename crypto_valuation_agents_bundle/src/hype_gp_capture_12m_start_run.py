@@ -21,7 +21,8 @@ TOKEN_CAPTURE = 1.0
 BUYBACK_RATE = 1.0
 GP_MARGIN = 1.0
 
-NET_REVENUE_TAKE_RATE = 0.00034  # net revenue / perp notional; old HYPE agent fee-rate anchor
+TOTAL_FEE_TAKE_RATE = 0.00034  # total fee activity, including builder-code fees
+NET_REVENUE_TAKE_RATE = 0.00026  # clean treasury revenue / perp notional
 
 def median_monthly_start_12m(rev_rows, trailing_30):
     months = h.monthly_sums(rev_rows)
@@ -148,7 +149,7 @@ def run_once():
             "buyback_years_simple": float(buyback_years),
         }
 
-    # Volume sanity: implied HYPE volume from Y3 GP using net revenue take-rate.
+    # Volume sanity: implied HYPE volume from Y3 treasury revenue using clean revenue take-rate.
     # Compare to total Binance futures current/peak daily volume from scaled BTCUSDT proxy.
     latest_month_vol = float(monthly_proxy[-1][1])
     current_binance_daily = latest_month_vol / 30.0
@@ -248,7 +249,7 @@ def write_report(res):
 
     lines.append("## P50 volume sanity")
     lines.append("```text")
-    lines.append("Assumed net revenue take-rate: 0.034% of notional volume")
+    lines.append("Assumed clean treasury revenue take-rate: 0.026% of notional volume")
     lines.append("")
     lines.append("Scenario                         Implied HYPE daily vol   vs Binance current   vs Binance peak")
     lines.append("-------------------------------  ----------------------   ------------------   ---------------")
