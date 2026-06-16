@@ -101,6 +101,30 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  lighter: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "Perps revenue = Binance Futures monthly volume proxy × Lighter/Binance market share × observed net revenue take-rate. The model uses the same HYPE-style MS90 seed and velocity-decay framework, with holder revenue used for token buybacks.",
+      },
+      {
+        heading: "Market share momentum",
+        text: "MS30/MS90/180 are measured against the Binance Futures proxy. MS90 is the valuation seed; MS30/MS180 is the current momentum read, floored at 1.0× in the model so short-term share deceleration does not mechanically punish the long-run terminal share below the MS90 base.",
+      },
+      {
+        heading: "Supply / unlock path",
+        text: "Fixed token supply increase is modeled per path from the post-cliff unlock schedule. Buybacks offset supply using holder revenue; Year-3 PV is calculated on the resulting supply after cumulative buyback tokens.",
+      },
+      {
+        heading: "Stablecoin yield sensitivity",
+        text: "A separate sensitivity adds a HYPE-style TVL yield line using collateral TVL proxy × SOFR-net yield × 90% capture. This is not treated as current Lighter revenue; it is shown as optional upside if the business adds a treasury/yield line.",
+      },
+      {
+        heading: "Multiple regime",
+        text: "20× trough / 15× normal / 10× peak regime, applied to Year-3 trailing revenue and discounted at 25%. The +10% optionality case sits on top of the stable-yield case.",
+      },
+    ],
+  },
   uni: {
     sections: [
       {
@@ -780,6 +804,24 @@ const MS_CONFIG: Record<string, MsConfig> = {
       ["Fee-only buyback years",         `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y"),
   },
+  lighter: {
+    yCapPct: 0.08,
+    chartNote: "Rolling-window snapshots only: 30D / 90D / 180D Lighter paid perps volume divided by Binance Futures proxy. Lighter history is still short, so this is a compact momentum read rather than a full daily market-share history.",
+    tableNote: "Revenue and holder revenue from DefiLlama; stablecoin yield is a HYPE-style sensitivity, not confirmed current Lighter protocol revenue.",
+    driversTitle: "Perps holder revenue + optional TVL yield",
+    driversBody: null,
+    tableRows: (gp) => ([
+      ["MS30 vs Binance Futures",             pct(gp["ms30_vs_binance"] as number)],
+      ["MS90 vs Binance Futures",             pct(gp["ms90_vs_binance"] as number)],
+      ["MS180 vs Binance Futures",            pct(gp["ms180_vs_binance"] as number)],
+      ["MS30/MS180 trend",                    `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
+      ["DefiLlama 30D revenue ann.",          fmtLarge(gp["defillama_30d_ann"] as number)],
+      ["Holder revenue 30D ann.",             fmtLarge(gp["holders_revenue_30d_ann"] as number)],
+      ["Revenue take-rate",                   `${((gp["net_revenue_take_rate"] as number) * 10000).toFixed(2)} bps`],
+      ["Supply-adj. buyback yrs (+yield)",    `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
+      ["Supply-adj. fee-only buyback yrs",    `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×" && v !== "NaNy"),
+  },
   uni: {
     yCapPct: 0.50,
     chartNote: "Rolling 30D and 90D UNI DEX volume / total DEX volume (all protocols, DefiLlama). Shows Uniswap's share of on-chain trading.",
@@ -923,6 +965,12 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
               <span className="text-gray-200 font-medium">{fmtLarge(gp["usdc_gp_annual"] as number)}</span>.
             </p>
           )}
+          {tokenKey === "lighter" && (
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Lighter MC mirrors the HYPE framework: Binance Futures proxy × Lighter market share × observed net take-rate. Holder revenue funds 100% buybacks while fixed unlocks increase supply. A separate HYPE-style TVL yield line adds{" "}
+              <span className="text-gray-200 font-medium">{fmtLarge(gp["yield_run_rate"] as number)}</span> annual run-rate sensitivity.
+            </p>
+          )}
           {tokenKey === "uni" && (
             <p className="text-sm text-gray-400 leading-relaxed">
               UNI revenue = LP fees × protocol take-rate. Current state: ~0.83bps LP protocol share + 0.30bps frontend. Full activation: 25% of LP fees + 0.30bps frontend. Market share trend shows UNI's share of total DEX volume across all on-chain protocols (DefiLlama).
@@ -956,6 +1004,7 @@ const TOKEN_COLORS: Record<string, string> = {
   ethfi: "#06b6d4",
   jup:   "#9945ff",
   hype:  "#00e5a0",
+  lighter: "#14b8a6",
   sky:   "#f59e0b",
 };
 
@@ -967,6 +1016,7 @@ const TOKEN_BACKTEST_NOTE: Record<string, string> = {
   uni:   "PV proxy = rolling 30D full-activation GP × 15× / DR³ / circ supply, normalised to current P50.",
   ethfi: "PV proxy = historical staking TVL × estimated GP/TVL rate × 15× / DR³ / supply, normalised to current P50.",
   jup:   "PV proxy = rolling 30D perps fees × 25% take × 15× / DR³ / circ supply, normalised to current P50.",
+  lighter: "PV proxy = trailing 30D Lighter revenue annualized × 15× / DR³ / circulating supply. Short-history diagnostic, not a full historical MC replay.",
   sky:   "PV proxy = historical (USDS+DAI) supply × net GP/supply rate × GP multiple / DR³ / supply, normalised to current P50.",
 };
 
@@ -974,6 +1024,7 @@ const TOKEN_EOY3_LABEL: Record<string, string> = {
   uni:   "Model implied EOY3 UNI/Total DEX market share",
   ethfi: "Model implied EOY3 ether.fi/LRT market share",
   jup:   "Model implied EOY3 JUP/Solana Perps fee share",
+  lighter: "Model implied EOY3 Lighter/Binance Futures market share",
   sky:   "Model implied EOY3 Sky/Total stablecoin supply share",
 };
 
@@ -1551,6 +1602,12 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Cumulative JUP buyback over 3 years" },
     { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B`, sub: "Circ. supply after buybacks at Year 3" },
   ],
+  lighter: [
+    { label: "Y3 Revenue P50",            value: (gp) => fmtLarge(gp["y3_revenue_p50"]),       sub: "Perps revenue + HYPE-style yield case" },
+    { label: "Y3 Monthly Volume P50",     value: (gp) => fmtLarge(gp["y3_monthly_volume_p50"]), sub: "Month-36 paid perps volume path" },
+    { label: "Buyback tokens P50",        value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Cumulative LIT buyback over 3 years" },
+    { label: "Effective supply P50",      value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Supply after fixed unlocks and buybacks" },
+  ],
   sky: [
     { label: "Y3 USDS Supply P50",       value: (gp) => fmtLarge(gp["y3_usds_supply_p50"]),  sub: "Base $70M OPEX scenario" },
     { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "GP after savings rate & stUSDS cost" },
@@ -1734,6 +1791,16 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               : <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
             }
           </>}
+          {tokenKey === "lighter" && <>
+            <MetricCard label="Holder revenue ann." value={fmtLarge(gp["holders_revenue_30d_ann"] as number)} sub={`Capture ${pct(gp["holder_capture_30d"] as number)} of 30D revenue`} />
+            <MetricCard label="MS90 valuation seed" value={pct(gp["ms90_vs_binance"] as number)} sub="Starting Lighter/Binance share used in model" termKey="ms90" />
+            <MetricCard
+              label="MS30 / MS180"
+              value={`${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`}
+              sub={`Model momentum floor ${(gp["model_momentum_floor"] as number)?.toFixed(2)}×`}
+              accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "red"}
+            />
+          </>}
           {tokenKey === "sky" && <>
             <MetricCard label="Gross income (ann.)" value={fmtLarge(gp["gross_income"] as number)} sub={`Yield ${((gp["gross_income_yield_pct"] as number) ?? 0).toFixed(2)}% on USDS+DAI supply`} />
             <MetricCard label="Current GP (ann.)" value={fmtLarge(gp["current_gp"] as number)} sub={`After savings rate & stUSDS cost`} />
@@ -1743,7 +1810,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             }
           </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "sky"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
@@ -1776,7 +1843,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       </div>
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {(tokenKey === "hype" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}
