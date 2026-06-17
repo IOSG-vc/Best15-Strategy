@@ -39,9 +39,15 @@ AGENTS = {
         "name": "Hyperliquid",
         "symbol": "HYPE",
         "chain": "HyperEVM",
-        "module": None,
-        "available": False,
-        "unavailable_reason": "Requires hype_gp_capture_mc module (not included in bundle — contact the originating analyst)",
+        "module": "agents.hype",
+        "available": True,
+    },
+    "lighter": {
+        "name": "Lighter",
+        "symbol": "LIT",
+        "chain": "Ethereum",
+        "module": "agents.lighter",
+        "available": True,
     },
     "sky": {
         "name": "Sky",

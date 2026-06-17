@@ -100,8 +100,8 @@
 </main>
 
 <script>
-const TOKENS = ["jup", "ethfi", "uni", "hype", "sky"];
-const COLORS = { jup:"#1FC7D4", ethfi:"#627EEA", uni:"#FF007A", hype:"#6EE7B7", sky:"#F0B429" };
+const TOKENS = ["jup", "ethfi", "uni", "hype", "lighter", "sky"];
+const COLORS = { jup:"#1FC7D4", ethfi:"#627EEA", uni:"#FF007A", hype:"#6EE7B7", lighter:"#14B8A6", sky:"#F0B429" };
 const UNAVAIL_COLOR = "#30363d";
 
 function fmt(x, decimals=2) {
@@ -213,7 +213,7 @@ function buildResult(token, data) {
 
     html += `<div class="section-title">Fair Value Distribution (discounted, 3Y horizon)</div>`;
     html += `<table class="pv-table"><thead><tr>`;
-    html += `<th>Scenario</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P(&gt;spot)</th>`;
+    html += `<th>Scenario</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P(&gt;spot)</th><th>2Y +30%</th><th>2Y -30%</th>`;
     html += `</tr></thead><tbody>`;
 
     for (const sc of r.scenarios) {
@@ -229,6 +229,8 @@ function buildResult(token, data) {
       html += `<td>${fmt(pv.p75)}</td>`;
       html += `<td>${fmt(pv.p90)}</td>`;
       html += `<td class="pspot ${pClass}">${pct(pAbove)}</td>`;
+      html += `<td>${pct(sc.prob_y2_undiscounted_up_30)}</td>`;
+      html += `<td>${pct(sc.prob_y2_undiscounted_down_30)}</td>`;
       html += `</tr>`;
 
       // Mini bar for primary scenario
@@ -236,13 +238,13 @@ function buildResult(token, data) {
         const p25pct = Math.min(100, (pv.p25 / barMax) * 100);
         const p75pct = Math.min(100, (pv.p75 / barMax) * 100);
         const spotPct = Math.min(100, (spot / barMax) * 100);
-        html += `<tr><td colspan="6" style="padding:4px 6px 8px;">`;
+        html += `<tr><td colspan="8" style="padding:4px 6px 8px;">`;
         html += `<div class="range-bar">`;
         html += `<div class="range-fill" style="left:${p25pct}%;width:${p75pct-p25pct}%;background:${color}33;"></div>`;
         html += `<div class="spot-line" style="left:${spotPct}%;" title="Current spot"></div>`;
         html += `</div>`;
         html += `<div style="font-size:10px;color:var(--muted);margin-top:3px;">`;
-        html += `<span style="color:var(--red);">|</span> spot ${fmt(spot)} &nbsp; `;
+        html += `<span style="color:var(--red);">|</span> current spot ${fmt(spot)} &nbsp; `;
         html += `<span style="color:${color};opacity:.7;">■</span> P25–P75 range`;
         html += `</div></td></tr>`;
       }

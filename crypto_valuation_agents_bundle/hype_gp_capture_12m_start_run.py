@@ -22,7 +22,10 @@ TOKEN_CAPTURE = 1.0
 BUYBACK_RATE = 1.0
 GP_MARGIN = 1.0
 
-NET_REVENUE_TAKE_RATE = 0.00034  # net revenue / perp notional; old HYPE agent fee-rate anchor
+# Hyperliquid dailyFees include builder-code/front-end fees that do not accrue to
+# the treasury. Use clean treasury revenue: ~99% of base fees, about 2.6bps.
+TOTAL_FEE_TAKE_RATE = 0.00034
+NET_REVENUE_TAKE_RATE = 0.00026
 
 MS_SHARE_CAP = 0.35
 
@@ -97,7 +100,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     elif mcp.get("volume_derivatives_90d_usd"):
         source = "DefiLlama MCP reported derivatives volume"
     else:
-        source = "DeFiLlama revenue / fixed 0.034% take-rate"
+        source = "DeFiLlama revenue / fixed 0.026% treasury take-rate"
 
     ms30 = float(np.clip(hl30_volume / bn30, 0.0, MS_SHARE_CAP)) if bn30 > 0 else None
     ms90 = float(np.clip(hl90_volume / bn90, 0.0, MS_SHARE_CAP)) if bn90 > 0 else 0.125
@@ -503,6 +506,26 @@ CHART_QS = [5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95]
 def pct_dict(x, qs):
     return {f"p{q}": float(np.percentile(x, q)) for q in qs}
 
+def velocity_ensemble_from_ms(ms_history, ms30, ms180):
+    """70/30 growth-velocity score from available HYPE market-share history."""
+    velocity_30_180 = math.exp(math.log(max(ms30, 1e-12) / max(ms180, 1e-12)) / 6.0) - 1.0
+    velocity_7_30 = None
+    if ms_history and len(ms_history) >= 8:
+        prior7 = float(ms_history[-8].get("ms30") or ms30)
+        if prior7 > 0:
+            velocity_7_30 = math.exp(math.log(max(ms30, 1e-12) / prior7) * (30.0 / 7.0)) - 1.0
+    capped_30_180 = float(np.clip(velocity_30_180, -0.05, 0.12))
+    capped_7_30 = float(np.clip(velocity_7_30, -0.05, 0.12)) if velocity_7_30 is not None else None
+    ensemble = capped_30_180 if capped_7_30 is None else 0.70 * capped_30_180 + 0.30 * capped_7_30
+    return {
+        "velocity_30_180": float(velocity_30_180),
+        "velocity_7_30": None if velocity_7_30 is None else float(velocity_7_30),
+        "capped_30_180": capped_30_180,
+        "capped_7_30": capped_7_30,
+        "ensemble": float(np.clip(ensemble, 0.0, 0.12)),
+        "weights": {"thirty_over_180": 0.70, "seven_over_30": 0.30},
+    }
+
 def fmt_money(x):
     if x is None or not (x == x):
         return "n/a"
@@ -546,6 +569,9 @@ def run_once():
     ms_history = _compute_ms_daily_history(rev, scaled_binance_daily)
     ms_full = _compute_ms_full_history(rev, scaled_binance_daily)
     price_by_date = _fetch_hype_price_history()
+    ms30_for_velocity = float(ms.get("ms30") or ms["ms90"])
+    ms180_for_velocity = float(ms.get("ms180") or ms["ms90"])
+    velocity_ensemble = velocity_ensemble_from_ms(ms_history, ms30_for_velocity, ms180_for_velocity)
 
     np.random.seed(42)
     start_pool = np.array([v for _, v in monthly_proxy], dtype=float)
@@ -580,6 +606,7 @@ def run_once():
         gross_monthly_release = gross_release_3y / MONTHS
         remaining_gross_release = gross_release_3y
         supply = np.full(N_PATHS, circ, dtype=float)
+        supply_m24 = None
         for t in range(MONTHS):
             start = max(0, t - 11)
             gp_window = monthly_gp[:, start:t+1].sum(axis=1) * (12.0 / (t - start + 1))
@@ -593,7 +620,15 @@ def run_once():
             supply = supply + emissions - buy_tokens
             max_modeled_supply = circ + gross_release_3y
             supply = np.minimum(np.maximum(supply, 1.0), max_modeled_supply)
+            if t == 23:
+                supply_m24 = supply.copy()
         y3_supply = supply
+        if supply_m24 is None:
+            supply_m24 = supply.copy()
+        y2_ttm_gp = monthly_gp[:, 12:24].sum(axis=1)
+        y2_rank = h.percentile_ranks(y2_ttm_gp)
+        y2_multiple = h.multiple_for_ranks(y2_rank)
+        y2_price = ((y2_ttm_gp * y2_multiple * TOKEN_CAPTURE) / np.maximum(supply_m24, 1)) * (1.0 + sc["optionality"])
         y3_price_core = (y3_ttm_gp * multiple * TOKEN_CAPTURE) / np.maximum(y3_supply, 1)
         y3_price = y3_price_core * (1.0 + sc["optionality"])
         pv = y3_price / ((1.0 + SELECTED_DR) ** 3)
@@ -622,15 +657,18 @@ def run_once():
             "probability_weighted_ev_price": float(np.mean(pv)),
             "probability_weighted_ev_mcap": float(np.mean(pv * y3_supply)),
             "y3_ttm_gp": pct_dict(y3_ttm_gp, CORE_QS),
+            "y3_perp_ttm_gp": pct_dict(perp_monthly_gp[:, -12:].sum(axis=1), CORE_QS),
+            "y3_usdc_yield_ttm_gp": pct_dict(usdc_monthly_gp[:, -12:].sum(axis=1), CORE_QS),
             "y3_supply": pct_dict(y3_supply, CORE_QS),
             "prob_current_spot_justified": float(np.mean(pv >= spot)),
             "prob_impairment_vs_spot": float(np.mean(pv < spot)),
             "prob_3x_vs_spot": float(np.mean(pv >= 3 * spot)),
+            "prob_y2_undiscounted_up_30": float(np.mean(y2_price >= 1.30 * spot)),
+            "prob_y2_undiscounted_down_30": float(np.mean(y2_price <= 0.70 * spot)),
             "current_monthly_gp": float(current_monthly_gp),
             "current_perp_monthly_gp": float(current_perp_monthly_gp),
             "current_usdc_yield_monthly_gp": float(current_usdc_monthly_gp),
             "current_usdc_yield_annual_gp": float(current_usdc_monthly_gp * 12.0),
-            "y3_usdc_yield_ttm_gp": pct_dict(usdc_monthly_gp[:, -12:].sum(axis=1), CORE_QS),
             "p50_path_y3_daily_volume": p50_volume_stats,
             "usdc_yield_net_rate": float(usdc_net_yield),
             "current_buy_tokens_per_month": float(current_buy_tokens),
@@ -717,6 +755,7 @@ def run_once():
             "monthly_log_return_std": float(np.std(ret_arr, ddof=1)),
             "btcusdt_shares": {str(k): float(v) for k, v in shares.items()},
             "market_share": ms,
+            "market_share_velocity": velocity_ensemble,
             "ms_momentum_amplifier": {
                 "initial": float(ms_momentum_initial),
                 "cap": MS_AMPLIFIER_CAP,
@@ -738,7 +777,7 @@ def write_report(res):
     lines.append(f"As of: {res['asof_utc']}")
     lines.append("")
     lines.append("## What changed")
-    lines.append("- Core perp GP is now generated from **sampled Binance monthly volume × MS90 × 0.034% take-rate**, not current HYPE revenue × generic growth.")
+    lines.append("- Core perp GP is now generated from **sampled Binance monthly volume × MS90 × 0.026% clean treasury take-rate**, not current HYPE total fees × generic growth.")
     lines.append("- Binance starting volume is a **uniform random draw** from historical monthly Binance Futures volumes since 2022.")
     lines.append("- HL/Binance **MS90** is from DefiLlama MCP reported 90D derivatives volume versus scaled Binance Futures 90D volume.")
     lines.append("- MS momentum treats **MS30/MS180** as the current 6M share-growth amplifier; monthly velocity linearly decays to 1.0x over 12M, then the gained share is held flat; share cap 35%.")
@@ -796,7 +835,7 @@ def write_report(res):
 
     lines.append("## P50 volume sanity")
     lines.append("```text")
-    lines.append("Assumed net revenue take-rate: 0.034% of notional volume")
+    lines.append("Assumed clean treasury revenue take-rate: 0.026% of notional volume")
     lines.append("")
     lines.append("Scenario                         Implied HYPE daily vol   vs Binance current   vs Binance peak")
     lines.append("-------------------------------  ----------------------   ------------------   ---------------")

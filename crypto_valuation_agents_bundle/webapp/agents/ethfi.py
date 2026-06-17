@@ -28,7 +28,7 @@ CARD_MARGIN_BULL = 0.70
 STAKE_TAKE = 0.05
 VAULT_FEE = 0.01
 SUPPLY_Y3 = 854.7e6
-OPEX_ANNUAL = 30e6
+OPEX_ANNUAL = 9e6
 DISCOUNT_RATE = 0.275
 N_PATHS = 50_000
 SEED = 42
@@ -52,6 +52,50 @@ def chart(url):
 
 def sum_last(arr, n):
     return sum(v for _, v in arr[-n:]) if arr else 0.0
+
+
+def clamp(x, lo, hi):
+    return max(lo, min(hi, x))
+
+
+def monthly_equivalent_growth(new_avg, old_avg, days_between_midpoints):
+    if new_avg <= 0 or old_avg <= 0 or days_between_midpoints <= 0:
+        return 0.0
+    return (new_avg / old_avg) ** (30 / days_between_midpoints) - 1
+
+
+def card_velocity_ensemble(vol):
+    gdv_7 = sum_last(vol, 7)
+    gdv_30 = sum_last(vol, 30)
+    gdv_180 = sum_last(vol, 180)
+    gdv_prev30 = sum(v for _, v in vol[-60:-30])
+    gdv_prev180 = sum(v for _, v in vol[-360:-180])
+
+    avg_7 = gdv_7 / 7 if gdv_7 else 0.0
+    avg_30 = gdv_30 / 30 if gdv_30 else 0.0
+    avg_180 = gdv_180 / 180 if gdv_180 else 0.0
+
+    raw_30d_mom = gdv_30 / gdv_prev30 - 1 if gdv_prev30 else 0.0
+    raw_180d_mom = gdv_180 / gdv_prev180 - 1 if gdv_prev180 else 0.0
+    velocity_30_180 = monthly_equivalent_growth(avg_30, avg_180, 75)
+    velocity_7_30 = monthly_equivalent_growth(avg_7, avg_30, 11.5)
+
+    capped_30_180 = clamp(velocity_30_180, -0.05, 0.12)
+    capped_7_30 = clamp(velocity_7_30, -0.05, 0.12)
+    ensemble = clamp(0.70 * capped_30_180 + 0.30 * capped_7_30, 0.0, 0.12)
+
+    return {
+        "ensemble_monthly": ensemble,
+        "velocity_30_180": velocity_30_180,
+        "velocity_7_30": velocity_7_30,
+        "capped_30_180": capped_30_180,
+        "capped_7_30": capped_7_30,
+        "raw_30d_mom": raw_30d_mom,
+        "raw_180d_mom": raw_180d_mom,
+        "gdv_7": gdv_7,
+        "gdv_30": gdv_30,
+        "gdv_180": gdv_180,
+    }
 
 
 def protocol_tvl(slug):
@@ -91,6 +135,76 @@ def get_avg_staking_apy():
     return avg, selected
 
 
+def get_dune_key():
+    env_key = os.environ.get("DUNE_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    for p in [os.path.expanduser("~/.hermes/secrets/dune_api_key")]:
+        if os.path.exists(p):
+            return open(p).read().strip()
+    return None
+
+
+def fetch_dune_query_results(query_id, limit=1000):
+    key = get_dune_key()
+    if not key:
+        return None
+    url = f"https://api.dune.com/api/v1/query/{query_id}/results?limit={limit}"
+    req = urllib.request.Request(url, headers={"X-Dune-API-Key": key, "User-Agent": "Mozilla/5.0"})
+    return json.loads(urllib.request.urlopen(req, timeout=45).read().decode())
+
+
+def parse_dune_day(s):
+    return datetime.strptime(s[:10], "%Y-%m-%d").date()
+
+
+def dune_card_growth_anchor(query_id=4455397):
+    d = fetch_dune_query_results(query_id)
+    if not d:
+        return None
+    rows = sorted(d.get("result", {}).get("rows", []), key=lambda r: parse_dune_day(r["day"]))
+    if len(rows) < 40:
+        return None
+    latest = parse_dune_day(rows[-1]["day"])
+    full = [r for r in rows if parse_dune_day(r["day"]) < latest]
+    if not full:
+        return None
+    last_full = parse_dune_day(full[-1]["day"])
+
+    def spend_between(start, end):
+        return sum(float(r.get("spend_usd") or 0.0) for r in full if start <= parse_dune_day(r["day"]) <= end)
+
+    records = []
+    for intervals in range(4, 49, 4):
+        weeks = []
+        for i in range(intervals + 1):
+            end = last_full - timedelta(days=7 * i)
+            start = end - timedelta(days=6)
+            weeks.append((start, end, spend_between(start, end)))
+        weeks = list(reversed(weeks))
+        first, last = weeks[0][2], weeks[-1][2]
+        if first > 0 and last > 0:
+            weekly_cgr = (last / first) ** (1 / intervals) - 1
+            records.append({"weeks": intervals, "weekly_cgr": weekly_cgr, "first_spend": first, "last_spend": last})
+    if not records:
+        return None
+    mature = [r["weekly_cgr"] for r in records if 8 <= r["weeks"] <= 20]
+    sample = mature if len(mature) >= 3 else [r["weekly_cgr"] for r in records]
+    mn = min(sample)
+    med = statistics.median(sample)
+    anchor_weekly = (mn + med) / 2
+    monthly_start = min((1 + anchor_weekly) ** 4.345 - 1, 0.12)
+    return {
+        "latest_full_day": str(last_full),
+        "records": records,
+        "sample_windows": "8w-20w" if len(mature) >= 3 else "available",
+        "min_weekly_cgr": mn,
+        "median_weekly_cgr": med,
+        "anchor_weekly_cgr": anchor_weekly,
+        "monthly_start_growth": monthly_start,
+    }
+
+
 def get_eth_daily_logs():
     d = fetch("https://query1.finance.yahoo.com/v8/finance/chart/ETH-USD?range=4y&interval=1d")
     r = d["chart"]["result"][0]
@@ -100,7 +214,11 @@ def get_eth_daily_logs():
 
 
 def growth_path(start_m, m12, m24, m36):
-    pts = [(0, start_m), (11, m12), (23, m24), (35, m36)]
+    return growth_path_points([(0, start_m), (11, m12), (23, m24), (35, m36)])
+
+
+def growth_path_points(points):
+    pts = sorted(points)
     out = []
     for i in range(36):
         for (a, ga), (b, gb) in zip(pts[:-1], pts[1:]):
@@ -108,6 +226,8 @@ def growth_path(start_m, m12, m24, m36):
                 t = (i - a) / max(1, b - a)
                 out.append(ga + (gb - ga) * t)
                 break
+        else:
+            out.append(pts[-1][1])
     return out
 
 
@@ -364,6 +484,7 @@ def run() -> dict:
     take_bps_30 = rev_30 / gdv_30 * 10000 if gdv_30 else 0
     card_mom = gdv_30 / gdv_prev30 - 1 if gdv_prev30 else 0
     card_wow = gdv_7 / gdv_prev7 - 1 if gdv_prev7 else 0
+    card_velocity = card_velocity_ensemble(vol)
 
     stake_tvl = protocol_tvl("ether.fi-stake")
     vault_tvl = protocol_tvl("ether.fi-liquid")
@@ -387,22 +508,36 @@ def run() -> dict:
     price = market["current_price"]
     mcap = market["market_cap"]
     fdv = market.get("fully_diluted_valuation") or price * SUPPLY_Y3
+    effective_supply_y3 = max(SUPPLY_Y3, float(market.get("circulating_supply") or 0.0))
 
     current_card_gp = gdv_ann_30 * CARD_TAKE * CARD_MARGIN_BASE
     current_stake_gp = stake_tvl * staking_apy * STAKE_TAKE
     current_vault_gp = vault_tvl * VAULT_FEE
     current_gp = current_card_gp + current_stake_gp + current_vault_gp
 
-    # No Dune key in this env — use fixed fallback
-    base_start_m = 0.09
-    bear_start_m = max(0.015, base_start_m * 0.50)
-    bull_start_m = min(0.12, base_start_m * 1.35)
-    card_anchor = None
+    card_anchor = dune_card_growth_anchor()
+    observed_start_m = card_velocity["ensemble_monthly"]
+    if observed_start_m <= 0 and card_anchor:
+        observed_start_m = max(0.0, min(0.12, card_anchor["monthly_start_growth"]))
+    if observed_start_m <= 0:
+        observed_start_m = 0.075
+    bear_start_m = observed_start_m
+    base_start_m = observed_start_m
+    bull_start_m = observed_start_m
 
     scenarios = {
-        "bear": {"margin": CARD_MARGIN_BEAR, "growth": growth_path(bear_start_m, 0.005, 0.000, 0.000)},
-        "base": {"margin": CARD_MARGIN_BASE, "growth": growth_path(base_start_m, 0.030, 0.010, 0.003)},
-        "bull": {"margin": CARD_MARGIN_BULL, "growth": growth_path(bull_start_m, 0.050, 0.020, 0.010)},
+        "bear": {
+            "margin": CARD_MARGIN_BEAR,
+            "growth": growth_path_points([(0, bear_start_m), (5, 0.0), (35, 0.0)]),
+        },
+        "base": {
+            "margin": CARD_MARGIN_BASE,
+            "growth": growth_path_points([(0, base_start_m), (11, 0.012), (35, 0.002)]),
+        },
+        "bull": {
+            "margin": CARD_MARGIN_BULL,
+            "growth": growth_path_points([(0, bull_start_m), (23, 0.010), (35, 0.005)]),
+        },
     }
 
     rng_stake = random.Random(SEED + 202)
@@ -425,6 +560,9 @@ def run() -> dict:
         "pv_15x_gp": [],
         "pv_15x_gp_plus_cash": [],
         "y3_gp": [],
+        "y3_card_gp": [],
+        "y3_stake_gp": [],
+        "y3_vault_gp": [],
         "y3_card_gdv_ann": [],
         "y3_stake_tvl": [],
         "treasury_cash": [],
@@ -435,9 +573,13 @@ def run() -> dict:
         pv_gp = []
         pv_gp_cash = []
         y3_gp = []
+        y3_card_gp = []
+        y3_stake_gp = []
+        y3_vault_gp = []
         y3_card_gdv_ann = []
         y3_stake_tvl = []
         treasury_cash = []
+        y2_price_cash_optionality = []
         for path_i in range(N_PATHS):
             card_gdv_ann = gdv_ann_30
             card_monthly_gp = []
@@ -456,14 +598,21 @@ def run() -> dict:
                 vault_monthly_gp.append(vault * VAULT_FEE / 12)
             monthly_gp = [card_monthly_gp[i] + stake_monthly_gp[i] + vault_monthly_gp[i] for i in range(36)]
             y3 = sum(monthly_gp[-12:])
+            y2 = sum(monthly_gp[12:24])
             cash = sum(max(gp - OPEX_ANNUAL / 12, 0.0) for gp in monthly_gp)
+            cash_24 = sum(max(gp - OPEX_ANNUAL / 12, 0.0) for gp in monthly_gp[:24])
             y3_gp.append(y3)
+            y3_card_gp.append(sum(card_monthly_gp[-12:]))
+            y3_stake_gp.append(sum(stake_monthly_gp[-12:]))
+            y3_vault_gp.append(sum(vault_monthly_gp[-12:]))
             treasury_cash.append(cash)
             y3_card_gdv_ann.append(card_gdv_ann)
             y3_stake_tvl.append(final_stake_tvl)
             ev = y3 * Y3_GP_MULTIPLE
-            pv_gp.append(ev / SUPPLY_Y3 / ((1 + DISCOUNT_RATE) ** 3))
-            pv_gp_cash.append((ev + cash) / SUPPLY_Y3 / ((1 + DISCOUNT_RATE) ** 3))
+            y2_ev = y2 * Y3_GP_MULTIPLE
+            y2_price_cash_optionality.append(((y2_ev + cash_24) / effective_supply_y3) * (1 + OPTIONALITY_BONUS))
+            pv_gp.append(ev / effective_supply_y3 / ((1 + DISCOUNT_RATE) ** 3))
+            pv_gp_cash.append((ev + cash) / effective_supply_y3 / ((1 + DISCOUNT_RATE) ** 3))
 
         y3_gp_summary = summarize(y3_gp)
         cash_summary = summarize(treasury_cash)
@@ -476,29 +625,40 @@ def run() -> dict:
         ]
         sensitivity = {
             f"{rate:.1%}": {
-                "pv_15x_gp_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE) / SUPPLY_Y3 / ((1 + rate) ** 3),
-                "pv_15x_gp_plus_cash_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE + cash_summary["p50"]) / SUPPLY_Y3 / ((1 + rate) ** 3),
+                "pv_15x_gp_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE) / effective_supply_y3 / ((1 + rate) ** 3),
+                "pv_15x_gp_plus_cash_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE + cash_summary["p50"]) / effective_supply_y3 / ((1 + rate) ** 3),
             }
             for rate in sensitivity_rates
         }
         results[name] = {
             "pv_15x_gp": summarize(pv_gp, price),
             "pv_15x_gp_plus_cash": summarize(pv_gp_cash, price),
+            "pv_15x_gp_plus_cash_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in pv_gp_cash], price),
             "y3_gp": summarize(y3_gp),
+            "y3_card_gp": summarize(y3_card_gp),
+            "y3_stake_gp": summarize(y3_stake_gp),
+            "y3_vault_gp": summarize(y3_vault_gp),
             "y3_card_gdv_ann": summarize(y3_card_gdv_ann),
             "y3_stake_tvl": summarize(y3_stake_tvl),
             "treasury_cash": summarize(treasury_cash),
+            "prob_y2_undiscounted_up_30": float(np.mean(np.array(y2_price_cash_optionality) >= 1.30 * price)),
+            "prob_y2_undiscounted_down_30": float(np.mean(np.array(y2_price_cash_optionality) <= 0.70 * price)),
             "hurdle_sensitivity": sensitivity,
             "margin": sc["margin"],
             "start_growth": sc["growth"][0],
+            "growth_path": sc["growth"],
         }
         sample_n = int(round(N_PATHS * SCENARIO_WEIGHTS.get(name, 0.0)))
         weighted_samples["pv_15x_gp"].extend(pv_gp[:sample_n])
         weighted_samples["pv_15x_gp_plus_cash"].extend(pv_gp_cash[:sample_n])
         weighted_samples["y3_gp"].extend(y3_gp[:sample_n])
+        weighted_samples["y3_card_gp"].extend(y3_card_gp[:sample_n])
+        weighted_samples["y3_stake_gp"].extend(y3_stake_gp[:sample_n])
+        weighted_samples["y3_vault_gp"].extend(y3_vault_gp[:sample_n])
         weighted_samples["y3_card_gdv_ann"].extend(y3_card_gdv_ann[:sample_n])
         weighted_samples["y3_stake_tvl"].extend(y3_stake_tvl[:sample_n])
         weighted_samples["treasury_cash"].extend(treasury_cash[:sample_n])
+        weighted_samples.setdefault("y2_price_cash_optionality", []).extend(y2_price_cash_optionality[:sample_n])
 
     weighted_pv = weighted_samples["pv_15x_gp"]
     weighted_pv_cash = weighted_samples["pv_15x_gp_plus_cash"]
@@ -508,9 +668,14 @@ def run() -> dict:
         "pv_15x_gp_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in weighted_pv], price),
         "pv_15x_gp_plus_cash_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in weighted_pv_cash], price),
         "y3_gp": summarize(weighted_samples["y3_gp"]),
+        "y3_card_gp": summarize(weighted_samples["y3_card_gp"]),
+        "y3_stake_gp": summarize(weighted_samples["y3_stake_gp"]),
+        "y3_vault_gp": summarize(weighted_samples["y3_vault_gp"]),
         "y3_card_gdv_ann": summarize(weighted_samples["y3_card_gdv_ann"]),
         "y3_stake_tvl": summarize(weighted_samples["y3_stake_tvl"]),
         "treasury_cash": summarize(weighted_samples["treasury_cash"]),
+        "prob_y2_undiscounted_up_30": float(np.mean(np.array(weighted_samples["y2_price_cash_optionality"]) >= 1.30 * price)),
+        "prob_y2_undiscounted_down_30": float(np.mean(np.array(weighted_samples["y2_price_cash_optionality"]) <= 0.70 * price)),
         "scenario_weights": SCENARIO_WEIGHTS,
         "optionality_bonus": OPTIONALITY_BONUS,
     }
@@ -518,7 +683,7 @@ def run() -> dict:
     # Build standardized frontend scenarios
     frontend_scenarios = []
     for name in ["bear", "base", "bull"]:
-        r = results[name]["pv_15x_gp"]
+        r = results[name]["pv_15x_gp_plus_cash_plus_optionality"]
         frontend_scenarios.append({
             "key": name,
             "label": name.title(),
@@ -527,7 +692,9 @@ def run() -> dict:
             "pv": {"p25": r["p25"], "p50": r["p50"], "p75": r["p75"], "p90": r["p90"]},
             "ev": r["ev"],
             "prob_above_spot": r.get("p_spot_justified", 0),
-            "is_primary": name == "base",
+            "prob_y2_undiscounted_up_30": results[name].get("prob_y2_undiscounted_up_30"),
+            "prob_y2_undiscounted_down_30": results[name].get("prob_y2_undiscounted_down_30"),
+            "is_primary": False,
         })
     w = results["weighted_20_40_40"]
     frontend_scenarios.append({
@@ -535,13 +702,15 @@ def run() -> dict:
         "label": "Weighted 20/40/40",
         "weight": 1.0,
         "pv": {
-            "p25": w["pv_15x_gp"]["p25"],
-            "p50": w["pv_15x_gp"]["p50"],
-            "p75": w["pv_15x_gp"]["p75"],
-            "p90": w["pv_15x_gp"]["p90"],
+            "p25": w["pv_15x_gp_plus_cash_plus_optionality"]["p25"],
+            "p50": w["pv_15x_gp_plus_cash_plus_optionality"]["p50"],
+            "p75": w["pv_15x_gp_plus_cash_plus_optionality"]["p75"],
+            "p90": w["pv_15x_gp_plus_cash_plus_optionality"]["p90"],
         },
-        "ev": w["pv_15x_gp"]["ev"],
-        "prob_above_spot": w["pv_15x_gp"].get("p_spot_justified", 0),
+        "ev": w["pv_15x_gp_plus_cash_plus_optionality"]["ev"],
+        "prob_above_spot": w["pv_15x_gp_plus_cash_plus_optionality"].get("p_spot_justified", 0),
+        "prob_y2_undiscounted_up_30": w.get("prob_y2_undiscounted_up_30"),
+        "prob_y2_undiscounted_down_30": w.get("prob_y2_undiscounted_down_30"),
         "is_primary": True,
     })
 
@@ -560,8 +729,10 @@ def run() -> dict:
             "discount_rate": DISCOUNT_RATE,
             "multiple": Y3_GP_MULTIPLE,
             "paths": N_PATHS,
-            "supply_y3": SUPPLY_Y3,
-            "note": "Card GP = GDV × 135bps take × margin; staking GP = ETH bootstrap; vault flat",
+            "opex_optional": OPEX_ANNUAL,
+            "supply_y3": effective_supply_y3,
+            "scheduled_supply_y3": SUPPLY_Y3,
+            "note": "Card GP = GDV × 135bps take × margin; staking GP = ETH bootstrap; vault flat; net profit accumulates to treasury cash",
         },
         "current_gp": {
             "card_annualized": float(current_card_gp),
@@ -574,8 +745,13 @@ def run() -> dict:
             "vault_tvl": float(vault_tvl),
             "card_take_bps_30d": float(take_bps_30),
             "card_mom": float(card_mom),
+            "card_wow": float(card_wow),
+            "card_velocity_ensemble": card_velocity,
             # Y3 model outputs (weighted 20/40/40)
             "y3_gp_p50":          results["weighted_20_40_40"]["y3_gp"]["p50"],
+            "y3_card_gp_p50":     results["weighted_20_40_40"]["y3_card_gp"]["p50"],
+            "y3_stake_gp_p50":    results["weighted_20_40_40"]["y3_stake_gp"]["p50"],
+            "y3_vault_gp_p50":    results["weighted_20_40_40"]["y3_vault_gp"]["p50"],
             "y3_card_gdv_ann_p50": results["weighted_20_40_40"]["y3_card_gdv_ann"]["p50"],
             "y3_stake_tvl_p50":   results["weighted_20_40_40"]["y3_stake_tvl"]["p50"],
             "treasury_cash_p50":  results["weighted_20_40_40"]["treasury_cash"]["p50"],

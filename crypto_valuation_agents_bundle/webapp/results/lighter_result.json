@@ -21,7 +21,7 @@
     "defillama_30d_ann": 33722148,
     "trailing_30d_holders_revenue": 2742027,
     "holders_revenue_30d_ann": 32904324,
-    "net_revenue_take_rate": 0.000063295871589247,
+    "net_revenue_take_rate": 6.3295871589247e-05,
     "holder_capture_30d": 0.9757481640849213,
     "perp_volume_30d": 44397508549,
     "lighter_90d_volume": 131194958374,
@@ -48,7 +48,20 @@
     "y3_holder_revenue_p50": 49212322.54500541,
     "y3_monthly_volume_p50": 46819885307.1053,
     "y3_annual_volume_p50": 561838623685.2637,
-    "base_y3_revenue_p50": 35562065.37866172
+    "base_y3_revenue_p50": 35562065.37866172,
+    "market_share_velocity": {
+      "velocity_30_180": -0.06521075360837103,
+      "velocity_7_30": null,
+      "capped_30_180": -0.05,
+      "capped_7_30": null,
+      "ensemble": 0.0,
+      "weights": {
+        "thirty_over_180": 0.7,
+        "seven_over_30": 0.3
+      },
+      "note": "7D/30D unavailable in imported Lighter artifact; score uses capped 30D/180D until live daily history is added."
+    },
+    "y3_daily_mean_volume_p50": 1539283900.5075717
   },
   "scenarios": [
     {
@@ -90,7 +103,11 @@
         "p80": 1.6458034777457027,
         "p90": 3.1260289944761563,
         "p95": 5.309799220810146
-      }
+      },
+      "prob_y2_undiscounted_up_30": 0.2835852681836529,
+      "prob_y2_undiscounted_down_30": 0.555551582739956,
+      "y3_perp_gp_p50": 35562065.37866172,
+      "y3_stable_yield_gp_p50": 0.0
     },
     {
       "key": "with_hype_style_yield",
@@ -131,7 +148,11 @@
         "p80": 1.6649068014281538,
         "p90": 2.6722716446976333,
         "p95": 3.9498295123522826
-      }
+      },
+      "prob_y2_undiscounted_up_30": 0.32185792823165005,
+      "prob_y2_undiscounted_down_30": 0.4556182227378971,
+      "y3_perp_gp_p50": 35562065.37866172,
+      "y3_stable_yield_gp_p50": 14512702.540708296
     },
     {
       "key": "yield_plus_10pct_optionality",
@@ -172,14 +193,19 @@
         "p80": 1.8313974815709695,
         "p90": 2.9394988091673966,
         "p95": 4.344812463587511
-      }
+      },
+      "prob_y2_undiscounted_up_30": 0.35582060399561033,
+      "prob_y2_undiscounted_down_30": 0.4215381211527382,
+      "y3_perp_gp_p50": 35562065.37866172,
+      "y3_stable_yield_gp_p50": 14512702.540708296
     }
   ],
   "caveats": [
     "Lighter paid derivatives history is short; historical diagnostics use daily price and trailing 30D revenue where available.",
     "Market-share trend uses rolling-window snapshots (30D/90D/180D) against Binance Futures, not a full daily share history.",
     "Stablecoin yield is a sensitivity copied from the HYPE framework and should be treated as optional future business, not current Lighter protocol revenue.",
-    "P90 and chart distribution are approximated from MC P25/P50/P75 because the imported Lighter run exported quartiles rather than the full terminal distribution."
+    "P90 and chart distribution are approximated from MC P25/P50/P75 because the imported Lighter run exported quartiles rather than the full terminal distribution.",
+    "Two-year +/-30% probabilities are approximated from exported PV quantiles because the imported Lighter artifact did not include path-level M24 samples."
   ],
   "data_freshness": "2026-06-16",
   "ms_history": [
