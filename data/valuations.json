@@ -42352,6 +42352,164 @@
           "Primary P50 PV uses holder revenue plus HYPE-style TVL yield sensitivity and fixed token unlock schedule through month 36."
         ]
       }
+    },
+    "vvv": {
+      "name": "Venice Token",
+      "symbol": "VVV",
+      "chain": "Ethereum",
+      "status": "ok",
+      "data": {
+        "token": "VVV",
+        "name": "Venice Token",
+        "as_of_utc": "2026-06-17T00:00:00.000000+00:00",
+        "market": {
+          "spot": 16.21,
+          "market_cap": 763488622,
+          "fdv": 1304571535,
+          "circulating_supply": 47020418,
+          "max_supply": 80343698
+        },
+        "model": {
+          "type": "3Y GP-Capture (Est. Platform Revenue)",
+          "discount_rate": 0.25,
+          "multiple": 15,
+          "paths": 0,
+          "note": "Year-3 platform revenue (subscription + API) \u00d7 15\u00d7 / (1.25)\u00b3 / Y3 supply. Revenue is estimated from observed VVV subscription burn ratios (~9% capture); on-chain DefiLlama burns ($3M ann.) are the only directly measured component. Three manual scenarios replace Monte Carlo; distributions approximate log-normal \u03c3=1.0."
+        },
+        "current_gp": {
+          "trailing_30d_revenue_onchain": 250546,
+          "defillama_30d_ann": 3006552,
+          "est_subscription_revenue_ann": 22000000,
+          "est_total_platform_revenue_ann": 32000000,
+          "holder_capture_30d": 0.094,
+          "annual_emissions": 3000000,
+          "gross_3y_unlock_tokens": 9000000,
+          "buyback_tokens_p50": 900000,
+          "y3_supply_p50": 55100000,
+          "y3_revenue_p50": 45000000,
+          "buyback_years_est_revenue": 27.9,
+          "buyback_years_onchain": 297.1,
+          "users": 3000000,
+          "dau": 50000
+        },
+        "scenarios": [
+          {
+            "key": "bear_flat_revenue",
+            "label": "Bear: flat / revenue decline",
+            "is_primary": false,
+            "pv": {
+              "p25": 0.92761,
+              "p50": 1.820036,
+              "p75": 3.571038,
+              "p90": 6.559119
+            },
+            "ev": 3.000732,
+            "prob_above_spot": 0.01438,
+            "prob_3x": 0.00051,
+            "y3_price_p50": 3.554758,
+            "y3_mcap_p50": 198000000.0,
+            "y3_supply_p50": 55700000,
+            "y3_gp_p50": 12000000,
+            "ev_mcap": 141095669.0,
+            "distribution": {
+              "p5": 0.35129,
+              "p10": 0.505027,
+              "p20": 0.784159,
+              "p25": 0.92761,
+              "p30": 1.077729,
+              "p40": 1.413199,
+              "p50": 1.820036,
+              "p60": 2.343994,
+              "p70": 3.073621,
+              "p75": 3.571038,
+              "p80": 4.224311,
+              "p90": 6.559119,
+              "p95": 9.429624
+            }
+          },
+          {
+            "key": "base_moderate_growth",
+            "label": "Base: moderate revenue growth",
+            "is_primary": true,
+            "pv": {
+              "p25": 3.516417,
+              "p50": 6.899456,
+              "p75": 13.537214,
+              "p90": 24.864535
+            },
+            "ev": 11.375279,
+            "prob_above_spot": 0.1965,
+            "prob_3x": 0.02542,
+            "y3_price_p50": 13.475499,
+            "y3_mcap_p50": 742500000.0,
+            "y3_supply_p50": 55100000,
+            "y3_gp_p50": 45000000,
+            "ev_mcap": 534870378.0,
+            "distribution": {
+              "p5": 1.331682,
+              "p10": 1.914473,
+              "p20": 2.972616,
+              "p25": 3.516417,
+              "p30": 4.085493,
+              "p40": 5.357206,
+              "p50": 6.899456,
+              "p60": 8.885693,
+              "p70": 11.651588,
+              "p75": 13.537214,
+              "p80": 16.013666,
+              "p90": 24.864535,
+              "p95": 35.746147
+            }
+          },
+          {
+            "key": "bull_strong_adoption",
+            "label": "Bull: strong AI adoption",
+            "is_primary": false,
+            "pv": {
+              "p25": 7.495341,
+              "p50": 14.706383,
+              "p75": 28.854952,
+              "p90": 52.999454
+            },
+            "ev": 24.246726,
+            "prob_above_spot": 0.46123,
+            "prob_3x": 0.11586,
+            "y3_price_p50": 28.723404,
+            "y3_mcap_p50": 1485000000.0,
+            "y3_supply_p50": 51700000,
+            "y3_gp_p50": 90000000,
+            "ev_mcap": 1140091212.0,
+            "distribution": {
+              "p5": 2.838517,
+              "p10": 4.080753,
+              "p20": 6.336215,
+              "p25": 7.495341,
+              "p30": 8.708344,
+              "p40": 11.419034,
+              "p50": 14.706383,
+              "p60": 18.940105,
+              "p70": 24.835687,
+              "p75": 28.854952,
+              "p80": 34.133579,
+              "p90": 52.999454,
+              "p95": 76.193916
+            }
+          }
+        ],
+        "caveats": [
+          "Venice does not publicly disclose platform revenue. The ~$32M/yr estimate is derived from observed subscription VVV burns (~$150K/month in April 2026) \u00f7 implied tier burn rate (~9%) and is not confirmed by Venice.",
+          "On-chain DefiLlama fees ($250K/30D, $3M ann.) capture only VVV buyback-and-burn spend \u2014 not total subscription or API revenue.",
+          "VVV has no max supply cap. Long-run supply depends on the emission schedule (currently 3M VVV/yr, stepped down from 14M) and organic burn rate.",
+          "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal \u03c3=1.0 for comparability with other dashboard tokens.",
+          "The 15\u00d7 revenue multiple is applied for cross-token comparability; it is aggressive for a SaaS/AI platform and implies strong long-run growth is required to justify current prices."
+        ],
+        "data_freshness": "2026-06-17",
+        "mcp_bullets": [
+          "Trailing 30D on-chain VVV burns (DefiLlama): $250K, annualizing to $3.0M \u2014 the only directly measured holder revenue metric (supply reduction via buyback-and-burn).",
+          "Estimated total platform revenue ~$32M/yr, derived from April 2026 subscription burn rates ($150K/mo) \u00d7 implied ~9% capture ratio; actual revenue is off-chain and undisclosed.",
+          "Annual VVV emissions cut to 3M/yr from July 2026 (down from 14M at launch); 3Y gross issuance ~9M tokens. Net supply change depends on burn rate growth vs. emissions."
+        ]
+      }
     }
   }
 }

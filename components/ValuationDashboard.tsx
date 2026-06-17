@@ -125,6 +125,30 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  vvv: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = estimated total platform revenue (subscription + API). Venice allocates ~9% of subscription revenue to on-chain VVV buybacks-and-burns; the remainder funds the company treasury. On-chain burns ($250K/30D, $3M ann.) are the only measured component. Total platform revenue (~$32M ann.) is estimated from April 2026 subscription burn rates × implied capture ratio. Year-3 GP uses direct revenue growth assumptions — no market-share simulation.",
+      },
+      {
+        heading: "Supply / emission path",
+        text: "VVV has no max supply cap. Annual emissions are 3M VVV/yr from July 2026 (stepped down from 14M at launch). 3Y gross issuance ≈ 9M tokens. Burn offset per scenario: burn spend ÷ average price. Bear assumes minimal offset; bull assumes further emission cuts and higher burn spend from growing revenue.",
+      },
+      {
+        heading: "Revenue uncertainty",
+        text: "Venice does not publicly disclose platform revenue. The ~$32M/yr estimate derives from subscription tier burn ratios and is not confirmed by Venice. On-chain DefiLlama figures capture only the VVV buyback-and-burn spend — not subscription or API revenue flowing off-chain. Treat all revenue figures as indicative, not measured.",
+      },
+      {
+        heading: "Multiple & discount rate",
+        text: "15× revenue multiple (standard across dashboard) applied to Year-3 estimated platform revenue, discounted at 25%. Total revenue is used (not just holder-captured burns) because burns are a discretionary allocation from revenue, not revenue itself. The 15× multiple implies strong sustained growth and may be aggressive for current pricing.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Price distributions approximate log-normal σ = 1.0 for comparability with other dashboard tokens. Short price history; no historical backtest is presented. Data freshness: June 17, 2026.",
+      },
+    ],
+  },
   uni: {
     sections: [
       {
@@ -757,7 +781,7 @@ function TokenModelAssumptions({ tokenKey, model }: {
           <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Valuation logic</div>
           <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{`Multiple: ${model.multiple}× GP
 Discount rate: ${drPct}%
-Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo
+${model.paths > 0 ? `Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo` : `Manual scenarios (log-normal σ=1.0)`}
 Horizon: 3 years`}</pre>
         </div>
       </div>
@@ -1615,6 +1639,11 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "GP after savings rate & stUSDS cost" },
     { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
   ],
+  vvv: [
+    { label: "Y3 Revenue P50",           value: (gp) => fmtLarge(gp["y3_revenue_p50"]),      sub: "Est. total platform revenue (base scenario)" },
+    { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(2)}M`, sub: "Cumulative VVV buyback-and-burn over 3 years" },
+    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,     sub: "Supply after emissions and buyback burns at Year 3" },
+  ],
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
@@ -1811,8 +1840,25 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               : <MetricCard label="USDS + DAI supply" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky stablecoin total" />
             }
           </>}
+          {tokenKey === "vvv" && <>
+            <MetricCard
+              label="Est. platform rev. ann."
+              value={fmtLarge(gp["est_total_platform_revenue_ann"] as number)}
+              sub={`On-chain burns only: ${fmtLarge(gp["defillama_30d_ann"] as number)}/yr`}
+            />
+            <MetricCard
+              label="Buyback years (est. rev.)"
+              value={`${(gp["buyback_years_est_revenue"] as number).toFixed(1)}y`}
+              sub={`On-chain burns only: ${(gp["buyback_years_onchain"] as number).toFixed(0)}y`}
+            />
+            <MetricCard
+              label="Annual emissions"
+              value={`${((gp["annual_emissions"] as number) / 1e6).toFixed(0)}M VVV/yr`}
+              sub={`3Y gross unlock ${((gp["gross_3y_unlock_tokens"] as number) / 1e6).toFixed(0)}M tokens · no max supply`}
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
