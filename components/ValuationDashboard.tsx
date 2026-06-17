@@ -1739,6 +1739,17 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   return (
     <div className="space-y-5">
 
+      {/* ── WIP banner ───────────────────────────────────────────────── */}
+      {tokenKey === "vvv" && (
+        <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
+          <span className="mt-0.5 text-yellow-400 text-base leading-none">⚠</span>
+          <div>
+            <span className="text-sm font-semibold text-yellow-400">Work in progress</span>
+            <span className="text-sm text-yellow-300/70 ml-2">Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative.</span>
+          </div>
+        </div>
+      )}
+
       {/* ── Metric cards ─────────────────────────────────────────────── */}
       {isHypeWithMs ? (
         /* HYPE-specific cards matching the dashboard design */
