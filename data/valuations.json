@@ -42674,6 +42674,167 @@
           "IPO timeline is unconfirmed. Phase 2 (375M BP) milestone-based unlocks and Phase 3 (375M post-IPO treasury) represent significant future dilution risk."
         ]
       }
+    },
+    "cards": {
+      "name": "Collector Crypt",
+      "symbol": "CARDS",
+      "chain": "Solana",
+      "status": "ok",
+      "data": {
+        "token": "CARDS",
+        "name": "Collector Crypt",
+        "as_of_utc": "2026-06-17T00:00:00.000000+00:00",
+        "market": {
+          "spot": 0.2385,
+          "market_cap": 61426207,
+          "fdv": 477000000,
+          "circulating_supply": 257552230,
+          "max_supply": 2000000000
+        },
+        "model": {
+          "type": "3Y GP-Capture (Gacha + Marketplace)",
+          "discount_rate": 0.25,
+          "multiple": 15,
+          "paths": 0,
+          "note": "Y3_price = Y3_GP \u00d7 15 \u00d7 1.10 / Y3_supply. GP = platform gross profit from gacha pack sales + marketplace fees. Gacha is 98% of revenue at a thin 5.9% margin on GMV. Supply inflation is the dominant risk: only 12.9% of the 2B max supply is circulating; team (19.5%), investors (11.87%), advisors (4.37%), community (20%), and foundation (36.76%) tokens unlock on vesting schedules, creating heavy per-token dilution pressure by Y3."
+        },
+        "current_gp": {
+          "gmv_q1_2026": 146900000,
+          "gross_profit_q1_2026": 8600000,
+          "gross_margin": 0.0585,
+          "gross_profit_ann": 34400000,
+          "gacha_revenue_q1_2026": 144700000,
+          "weekly_gacha_peak": 21500000,
+          "cumulative_volume": 1000000000,
+          "treasury_assets": 18600000,
+          "treasury_card_pct": 0.81,
+          "packs_opened_total": 4500000,
+          "active_users": 22000,
+          "locked_supply": 1742447770,
+          "y3_gp_p50": 32000000,
+          "y3_supply_p50": 1100000000
+        },
+        "scenarios": [
+          {
+            "key": "bear_slowdown",
+            "label": "Bear: slowdown / heavy dilution",
+            "is_primary": false,
+            "pv": {
+              "p25": 0.057409,
+              "p50": 0.11264,
+              "p75": 0.221008,
+              "p90": 0.405937
+            },
+            "ev": 0.185712,
+            "prob_above_spot": 0.22658,
+            "prob_3x": 0.03224,
+            "y3_price_p50": 0.22,
+            "y3_mcap_p50": 330000000.0,
+            "y3_supply_p50": 1500000000,
+            "y3_gp_p50": 20000000,
+            "ev_mcap": 47830530.0,
+            "distribution": {
+              "p5": 0.021741,
+              "p10": 0.031256,
+              "p20": 0.048531,
+              "p25": 0.057409,
+              "p30": 0.066699,
+              "p40": 0.087461,
+              "p50": 0.11264,
+              "p60": 0.145067,
+              "p70": 0.190223,
+              "p75": 0.221008,
+              "p80": 0.261438,
+              "p90": 0.405937,
+              "p95": 0.583589
+            }
+          },
+          {
+            "key": "base_sustained",
+            "label": "Base: sustained GP / moderate dilution",
+            "is_primary": true,
+            "pv": {
+              "p25": 0.125255,
+              "p50": 0.24576,
+              "p75": 0.482198,
+              "p90": 0.88568
+            },
+            "ev": 0.40519,
+            "prob_above_spot": 0.51196,
+            "prob_3x": 0.14262,
+            "y3_price_p50": 0.48,
+            "y3_mcap_p50": 528000000.0,
+            "y3_supply_p50": 1100000000,
+            "y3_gp_p50": 32000000,
+            "ev_mcap": 104357521.0,
+            "distribution": {
+              "p5": 0.047435,
+              "p10": 0.068194,
+              "p20": 0.105885,
+              "p25": 0.125255,
+              "p30": 0.145526,
+              "p40": 0.190825,
+              "p50": 0.24576,
+              "p60": 0.31651,
+              "p70": 0.415032,
+              "p75": 0.482198,
+              "p80": 0.57041,
+              "p90": 0.88568,
+              "p95": 1.273285
+            }
+          },
+          {
+            "key": "bull_tcg_boom",
+            "label": "Bull: TCG boom / margin recovery",
+            "is_primary": false,
+            "pv": {
+              "p25": 0.349835,
+              "p50": 0.6864,
+              "p75": 1.346765,
+              "p90": 2.473676
+            },
+            "ev": 1.131682,
+            "prob_above_spot": 0.85477,
+            "prob_3x": 0.48344,
+            "y3_price_p50": 1.340625,
+            "y3_mcap_p50": 1072500000.0,
+            "y3_supply_p50": 800000000,
+            "y3_gp_p50": 65000000,
+            "ev_mcap": 291467295.0,
+            "distribution": {
+              "p5": 0.132484,
+              "p10": 0.190463,
+              "p20": 0.295734,
+              "p25": 0.349835,
+              "p30": 0.40645,
+              "p40": 0.532968,
+              "p50": 0.6864,
+              "p60": 0.884003,
+              "p70": 1.159171,
+              "p75": 1.346765,
+              "p80": 1.593137,
+              "p90": 2.473676,
+              "p95": 3.556245
+            }
+          }
+        ],
+        "caveats": [
+          "Gacha revenue (98% of income) is highly seasonal and driven by TCG hype cycles (Pok\u00e9mon, One Piece). Sustainability of Q1 2026 volumes is not guaranteed.",
+          "GP margin has compressed from 10-12% (Q3 2025) to 5.9% (Q1 2026); further compression is possible as competition or card cost inflation intensifies.",
+          "Supply overhang is severe: 1.74B of 2B CARDS (87.1%) are not yet in circulation. Team, investor, and foundation unlocks will create heavy sell pressure over the model horizon.",
+          "No formal public commitment on the % of GP allocated to CARDS buybacks. Model assumes buybacks occur but magnitude and timing are unverified.",
+          "Treasury holds $18.6M in physical Pok\u00e9mon and TCG cards \u2014 a concentrated real-world asset risk tied to collectibles market valuations.",
+          "Platform launched August 2025; limited track record makes multi-year GP forecasting highly uncertain.",
+          "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal \u03c3=1.0."
+        ],
+        "data_freshness": "2026-06-17",
+        "mcp_bullets": [
+          "Collector Crypt is a Solana-based platform tokenizing physical trading cards (Pok\u00e9mon, One Piece) as 1:1 NFTs with a gacha pack system. Q1 2026: $146.9M GMV, $8.6M gross profit (5.9% margin).",
+          "Platform reached $1B cumulative volume by May 2026 (18 months from Gacha launch in Dec 2024); peak weekly Gacha spend was $21.5M in March 2026.",
+          "CARDS has a 2B max supply with only 257M (12.9%) circulating at TGE. Foundation (36.76%), community (20%), and team (19.5%) tokens represent a large future supply overhang.",
+          "Token value is intended to accrue via platform revenue buybacks, but no specific allocation percentage has been publicly disclosed."
+        ]
+      }
     }
   }
 }

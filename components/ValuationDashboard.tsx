@@ -125,6 +125,30 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  cards: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = platform gross profit from Gacha pack sales + marketplace trading fees. Gacha packs ($50 Elite / $250 Legendary / $1,000 Pokémon) are 98% of revenue. The 2% marketplace fee (1% platform + 1% royalty) covers secondary trades of tokenized cards. Model: Y3_price = Y3_GP × 15 × 1.10 / Y3_supply. GP is assumed to flow into CARDS buybacks — no explicit buyback % is publicly committed.",
+      },
+      {
+        heading: "Margin structure",
+        text: "Gross margin is thin by design: COGS is physical card inventory cost. Q1 2026 margin was 5.9% ($8.6M GP on $146.9M GMV), compressed from 10-12% in Q3 2025. Bull scenario assumes margin partially recovers to ~8% with operating leverage or better card sourcing.",
+      },
+      {
+        heading: "Supply inflation risk",
+        text: "Only 12.9% of the 2B max supply (257M CARDS) is circulating. Foundation (36.76%), community (20%), team (19.5%), investors (11.87%), and advisors (4.37%) tokens unlock on vesting schedules. By Y3, an estimated 800M–1.5B tokens could be circulating. Even with strong GP growth, per-token value is compressed by supply expansion — this is the dominant model headwind.",
+      },
+      {
+        heading: "Revenue concentration risk",
+        text: "Gacha drives 98% of revenue and is cyclical — tied to Pokémon/TCG hype cycles. Q1 2026 peak weekly Gacha spend was $21.5M; typical weekly spend is $1.5–2.3M. Scenarios model $20M–$65M sustained annual GP to capture this volatility.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal σ=1.0. No formal buyback % is publicly disclosed; full GP→buyback assumption may overstate token demand. Y3 supply estimates are based on tokenomics allocation; specific vesting schedules are not publicly documented.",
+      },
+    ],
+  },
   bp: {
     sections: [
       {
@@ -1673,6 +1697,11 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Y3 Equity pool P50",       value: (gp) => fmtLarge((gp["y3_revenue_p50"] as number) * 7 * 0.20), sub: "Y3 revenue × 7× P/S × 20% equity stake" },
     { label: "Y3 Staking supply P50",    value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M BP`, sub: "Phase 1 + partial Phase 2 eligible stakers (base)" },
   ],
+  cards: [
+    { label: "Y3 Gross profit P50",      value: (gp) => fmtLarge(gp["y3_gp_p50"]),               sub: "Annual platform GP (base scenario, sustained from Q1 2026)" },
+    { label: "Y3 Supply P50",            value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B CARDS`, sub: "Est. circulating after team + investor + community unlock" },
+    { label: "GP margin (Q1 2026)",      value: (gp) => `${((gp["gross_margin"] as number) * 100).toFixed(1)}%`,    sub: "Compressed from 10–12% at launch; key downside risk" },
+  ],
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
@@ -1769,7 +1798,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
     <div className="space-y-5">
 
       {/* ── WIP banner ───────────────────────────────────────────────── */}
-      {(tokenKey === "vvv" || tokenKey === "bp") && (
+      {(tokenKey === "vvv" || tokenKey === "bp" || tokenKey === "cards") && (
         <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
           <span className="mt-0.5 text-yellow-400 text-base leading-none">⚠</span>
           <div>
@@ -1777,6 +1806,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             <span className="text-sm text-yellow-300/70 ml-2">
               {tokenKey === "vvv" && "Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
               {tokenKey === "bp" && "Preliminary model. Equity conversion is contingent on a Backpack IPO that has not yet occurred. Revenue estimates use 2025 data; 2026 figures are undisclosed. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
+              {tokenKey === "cards" && "Preliminary model. Gacha revenue is highly seasonal and hard to extrapolate. No formal buyback % has been publicly committed. Supply schedule (team, foundation, community unlocks) is estimated — actual vesting is not fully public. Treat all figures as indicative."}
             </span>
           </div>
         </div>
@@ -1917,8 +1947,25 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               sub="Current FDV ÷ 20% equity stake"
             />
           </>}
+          {tokenKey === "cards" && <>
+            <MetricCard
+              label="Annual GP run rate"
+              value={fmtLarge(gp["gross_profit_ann"] as number)}
+              sub={`Q1 2026 ×4 · ${((gp["gross_margin"] as number) * 100).toFixed(1)}% margin on $${((gp["gmv_q1_2026"] as number)/1e6).toFixed(0)}M GMV`}
+            />
+            <MetricCard
+              label="Supply still locked"
+              value={`${((gp["locked_supply"] as number) / 1e9).toFixed(2)}B CARDS`}
+              sub={`${(((gp["locked_supply"] as number) / 2e9) * 100).toFixed(0)}% of max supply — team, foundation, community`}
+            />
+            <MetricCard
+              label="Physical card treasury"
+              value={fmtLarge(gp["treasury_assets"] as number)}
+              sub={`${((gp["treasury_card_pct"] as number) * 100).toFixed(0)}% in physical Pokémon & TCG cards`}
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
