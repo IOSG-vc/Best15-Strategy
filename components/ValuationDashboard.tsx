@@ -2104,7 +2104,7 @@ export default function ValuationDashboard({ data }: Props) {
         ) : (
           <>
             {/* Token picker */}
-            <div className="flex gap-3 mb-8 flex-wrap">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
               {tokens.map(([key, token]) => {
                 const active   = key === selected;
                 const spot     = token.data?.market.spot;
@@ -2116,7 +2116,7 @@ export default function ValuationDashboard({ data }: Props) {
                   <button
                     key={key}
                     onClick={() => setSelected(key)}
-                    className="flex items-center gap-4 px-5 py-3 rounded-xl border transition-all text-left"
+                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl border transition-all text-left"
                     style={{
                       background:   active ? `${ring}12` : "#1a1d29",
                       borderColor:  active ? ring : "#2d3144",
