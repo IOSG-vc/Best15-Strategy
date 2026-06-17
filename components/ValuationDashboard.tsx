@@ -125,6 +125,30 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  bp: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = Backpack exchange revenue (spot + perpetuals trading fees). Model values BP via its equity conversion right: stakers who lock BP for 1+ year receive 20% of Backpack company equity at IPO, shared pro-rata. PV = Y3_revenue × P/S_multiple × 20% / Y3_staking_supply / (1.25)³. P/S benchmarked against regulated crypto exchanges (Coinbase ~9×, Kraken ~7×).",
+      },
+      {
+        heading: "Supply / dilution path",
+        text: "Phase 1 (250M, TGE): immediately eligible to stake. Phase 2 (375M): unlocks on business milestones (new regulatory licenses, product launches, geographic expansion) — each unlock dilutes per-BP equity value. Phase 3 (375M): post-IPO treasury, excluded from staking. Scenarios use Phase-2-unlock assumptions proportional to business success.",
+      },
+      {
+        heading: "Revenue uncertainty",
+        text: "Backpack reported $100M+ in 2025 revenue but has not disclosed 2026 figures. June 2026 futures 24h volume is ~$247M; 30-day rolling from January 2026 was $22.4B. Fee rates are not publicly listed for perps; spot taker fee is ~0.095%. Year-3 revenue scenarios ($150M–$500M) assume continued growth from the $1B+ annual volume run rate.",
+      },
+      {
+        heading: "Key risks",
+        text: "IPO contingency: if Backpack does not IPO, equity conversion does not occur and BP loses its primary value driver. Phase 2 dilution: all milestone unlocks flow directly into staking eligibility, compressing per-BP equity. Legal/regulatory risk: equity-for-token swaps may face regulatory challenges in certain jurisdictions. No buyback or revenue-share mechanism currently exists.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal σ=1.0. IPO probability is treated as given (not modeled separately). Company valuation at IPO is highly uncertain; P/S range 4–10× captures most plausible outcomes for a regulated mid-tier crypto exchange.",
+      },
+    ],
+  },
   vvv: {
     sections: [
       {
@@ -1644,6 +1668,11 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(2)}M`, sub: "Cumulative VVV buyback-and-burn over 3 years" },
     { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,     sub: "Supply after emissions and buyback burns at Year 3" },
   ],
+  bp: [
+    { label: "Y3 Revenue P50",           value: (gp) => fmtLarge(gp["y3_revenue_p50"]),          sub: "Estimated Backpack exchange revenue (base scenario)" },
+    { label: "Y3 Equity pool P50",       value: (gp) => fmtLarge((gp["y3_revenue_p50"] as number) * 7 * 0.20), sub: "Y3 revenue × 7× P/S × 20% equity stake" },
+    { label: "Y3 Staking supply P50",    value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M BP`, sub: "Phase 1 + partial Phase 2 eligible stakers (base)" },
+  ],
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
@@ -1740,12 +1769,15 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
     <div className="space-y-5">
 
       {/* ── WIP banner ───────────────────────────────────────────────── */}
-      {tokenKey === "vvv" && (
+      {(tokenKey === "vvv" || tokenKey === "bp") && (
         <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
           <span className="mt-0.5 text-yellow-400 text-base leading-none">⚠</span>
           <div>
             <span className="text-sm font-semibold text-yellow-400">Work in progress</span>
-            <span className="text-sm text-yellow-300/70 ml-2">Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative.</span>
+            <span className="text-sm text-yellow-300/70 ml-2">
+              {tokenKey === "vvv" && "Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
+              {tokenKey === "bp" && "Preliminary model. Equity conversion is contingent on a Backpack IPO that has not yet occurred. Revenue estimates use 2025 data; 2026 figures are undisclosed. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
+            </span>
           </div>
         </div>
       )}
@@ -1868,8 +1900,25 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               sub={`3Y gross unlock ${((gp["gross_3y_unlock_tokens"] as number) / 1e6).toFixed(0)}M tokens · no max supply`}
             />
           </>}
+          {tokenKey === "bp" && <>
+            <MetricCard
+              label="2025 revenue (reported)"
+              value={fmtLarge(gp["revenue_2025_ann"] as number)}
+              sub="Backpack has not disclosed 2026 figures"
+            />
+            <MetricCard
+              label="Equity pool at $1B co. val."
+              value={fmtLarge(gp["equity_pool_at_1b_val"] as number)}
+              sub={`$${(gp["equity_per_bp_phase1_only"] as number).toFixed(2)}/BP if only Phase 1 (250M) stakes`}
+            />
+            <MetricCard
+              label="FDV-implied company val."
+              value={fmtLarge(gp["implied_company_val_at_fdv"] as number)}
+              sub="Current FDV ÷ 20% equity stake"
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />

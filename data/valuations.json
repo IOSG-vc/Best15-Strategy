@@ -42510,6 +42510,170 @@
           "Annual VVV emissions cut to 3M/yr from July 2026 (down from 14M at launch); 3Y gross issuance ~9M tokens. Net supply change depends on burn rate growth vs. emissions."
         ]
       }
+    },
+    "bp": {
+      "name": "Backpack",
+      "symbol": "BP",
+      "chain": "Solana",
+      "status": "ok",
+      "data": {
+        "token": "BP",
+        "name": "Backpack",
+        "as_of_utc": "2026-06-17T00:00:00.000000+00:00",
+        "market": {
+          "spot": 0.5207,
+          "market_cap": 130175000,
+          "fdv": 520700000,
+          "circulating_supply": 250000000,
+          "max_supply": 1000000000
+        },
+        "model": {
+          "type": "3Y Equity Conversion (P/S \u00d7 20% Stake)",
+          "discount_rate": 0.25,
+          "multiple": 7,
+          "paths": 0,
+          "note": "PV = Y3_revenue \u00d7 P/S \u00d7 20% equity stake / Y3_staking_supply / (1.25)\u00b3. BP stakers (min 1-year lock) receive 20% of Backpack company equity at IPO. Staking supply varies by scenario: Phase 2 tokens (375M) unlock on business milestones, diluting Phase 1 holders (250M). Phase 3 (375M post-IPO treasury) excluded from staking. Revenue from Backpack exchange fees (spot + perps). No burn or revenue-share mechanism currently exists."
+        },
+        "current_gp": {
+          "revenue_2025_ann": 100000000,
+          "futures_24h_vol": 247141537,
+          "spot_24h_vol": 12857624,
+          "trading_vol_30d_est": 22400000000,
+          "trading_vol_ann_est": 268800000000,
+          "company_valuation_stated": 1000000000,
+          "equity_stake_pct": 0.2,
+          "equity_pool_at_1b_val": 200000000,
+          "equity_per_bp_phase1_only": 0.8,
+          "implied_company_val_at_fdv": 2603500000.0,
+          "phase1_supply": 250000000,
+          "phase2_supply": 375000000,
+          "phase3_supply": 375000000,
+          "y3_supply_p50": 450000000,
+          "y3_revenue_p50": 280000000
+        },
+        "scenarios": [
+          {
+            "key": "bear_slow_growth",
+            "label": "Bear: slow growth / low multiple",
+            "is_primary": false,
+            "pv": {
+              "p25": 0.10438,
+              "p50": 0.2048,
+              "p75": 0.401832,
+              "p90": 0.738066
+            },
+            "ev": 0.337658,
+            "prob_above_spot": 0.17537,
+            "prob_3x": 0.02109,
+            "y3_price_p50": 0.4,
+            "y3_mcap_p50": 120000000.0,
+            "y3_supply_p50": 300000000,
+            "y3_gp_p50": 150000000,
+            "y3_company_val": 600000000,
+            "ev_mcap": 84414529.0,
+            "distribution": {
+              "p5": 0.039529,
+              "p10": 0.056828,
+              "p20": 0.088238,
+              "p25": 0.10438,
+              "p30": 0.121272,
+              "p40": 0.159021,
+              "p50": 0.2048,
+              "p60": 0.263758,
+              "p70": 0.34586,
+              "p75": 0.401832,
+              "p80": 0.475342,
+              "p90": 0.738066,
+              "p95": 1.061071
+            }
+          },
+          {
+            "key": "base_growth",
+            "label": "Base: moderate growth",
+            "is_primary": true,
+            "pv": {
+              "p25": 0.227315,
+              "p50": 0.446009,
+              "p75": 0.875101,
+              "p90": 1.607345
+            },
+            "ev": 0.735344,
+            "prob_above_spot": 0.43848,
+            "prob_3x": 0.10502,
+            "y3_price_p50": 0.871111,
+            "y3_mcap_p50": 392000000.0,
+            "y3_supply_p50": 450000000,
+            "y3_gp_p50": 280000000,
+            "y3_company_val": 1960000000,
+            "ev_mcap": 183836086.0,
+            "distribution": {
+              "p5": 0.086085,
+              "p10": 0.123759,
+              "p20": 0.192162,
+              "p25": 0.227315,
+              "p30": 0.264103,
+              "p40": 0.346312,
+              "p50": 0.446009,
+              "p60": 0.574407,
+              "p70": 0.753206,
+              "p75": 0.875101,
+              "p80": 1.035189,
+              "p90": 1.607345,
+              "p95": 2.310776
+            }
+          },
+          {
+            "key": "bull_strong",
+            "label": "Bull: strong adoption / high multiple",
+            "is_primary": false,
+            "pv": {
+              "p25": 0.474453,
+              "p50": 0.930909,
+              "p75": 1.826509,
+              "p90": 3.354848
+            },
+            "ev": 1.53481,
+            "prob_above_spot": 0.71938,
+            "prob_3x": 0.30236,
+            "y3_price_p50": 1.818182,
+            "y3_mcap_p50": 1000000000.0,
+            "y3_supply_p50": 550000000,
+            "y3_gp_p50": 500000000,
+            "y3_company_val": 5000000000,
+            "ev_mcap": 383702405.0,
+            "distribution": {
+              "p5": 0.179677,
+              "p10": 0.25831,
+              "p20": 0.40108,
+              "p25": 0.474453,
+              "p30": 0.551235,
+              "p40": 0.722821,
+              "p50": 0.930909,
+              "p60": 1.198902,
+              "p70": 1.572091,
+              "p75": 1.826509,
+              "p80": 2.160644,
+              "p90": 3.354848,
+              "p95": 4.823049
+            }
+          }
+        ],
+        "caveats": [
+          "Backpack has not publicly disclosed 2026 revenue; $100M figure is from reported 2025 performance.",
+          "The 20% equity stake is contingent on a successful IPO and regulatory approval of equity-for-token conversions \u2014 both are uncertain and have not occurred yet.",
+          "Phase 2 tokens (375M) unlock on unspecified business milestones; if all unlock and stake, per-BP equity value is diluted by up to 2.5\u00d7 vs Phase 1 only.",
+          "Phase 3 tokens (375M post-IPO treasury) are excluded from staking supply; their role in equity conversion is not clearly defined.",
+          "P/S multiples (4\u201310\u00d7) are benchmarked against regulated crypto exchanges (Coinbase ~9\u00d7, Kraken ~7\u00d7) but involve high estimation error.",
+          "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal \u03c3=1.0."
+        ],
+        "data_freshness": "2026-06-17",
+        "mcp_bullets": [
+          "Backpack reported $100M+ in exchange revenue for 2025; June 2026 futures 24h volume is $247M with $76M open interest.",
+          "Company valued at $1B pre-money. 20% equity reserved for BP stakers who lock for 1+ year \u2014 at $1B valuation and 250M stakers only, that's $0.80 per BP.",
+          "Current FDV of $520M implies the market is pricing Backpack at a $2.6B company valuation (FDV \u00f7 20% equity stake).",
+          "IPO timeline is unconfirmed. Phase 2 (375M BP) milestone-based unlocks and Phase 3 (375M post-IPO treasury) represent significant future dilution risk."
+        ]
+      }
     }
   }
 }
