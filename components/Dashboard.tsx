@@ -17,10 +17,7 @@ export default function Dashboard({ data }: { data: PerformanceData }) {
       <header className="border-b border-[#2d3144] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Best15 Strategy</h1>
-            <p className="text-gray-400 text-sm mt-0.5">
-              Crypto Top 15 · BTC 50% Cap
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">Best15 IOSG Ventures</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right text-sm">

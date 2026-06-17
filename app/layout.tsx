@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Best15 Strategy Dashboard",
-  description: "Crypto Top 15 · BTC 50% Cap — Strategy Performance Tracker",
+  title: "Best15 IOSG Ventures",
+  description: "Best15 IOSG Ventures — Strategy Performance Tracker",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
