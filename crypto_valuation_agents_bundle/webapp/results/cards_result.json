@@ -1,0 +1,94 @@
+{
+  "token": "CARDS",
+  "name": "Collector Crypt",
+  "as_of_utc": "2026-06-17T20:03:51.602201+00:00",
+  "market": {
+    "spot": 0.237671,
+    "market_cap": 61123666.0,
+    "fdv": 474580820.0,
+    "circulating_supply": 257552230.609334,
+    "max_supply": 2000000000.0
+  },
+  "model": {
+    "type": "3Y GP \u00d7 15 \u00d7 1.10 Manual Scenarios",
+    "discount_rate": 0.25,
+    "multiple": 15.0,
+    "paths": 1,
+    "note": "Y3_price = Y3_GP \u00d7 15 \u00d7 1.10 / Y3_supply. GP = Gacha pack sales GP + marketplace fees. Q1 2026: $146.9M GMV at 5.9% margin = $8.6M GP ($34.4M annualized). Y3 supply risk is the dominant headwind (team + foundation + community unlocks). Distributions approximate log-normal \u03c3=1.0."
+  },
+  "current_gp": {
+    "gmv_q1_2026": 146900000.0,
+    "gross_margin": 0.059,
+    "gross_profit_q1": 8667100.0,
+    "gross_profit_ann": 34668400.0,
+    "locked_supply": 1743000000.0,
+    "treasury_assets": 10000000.0,
+    "treasury_card_pct": 0.8,
+    "y3_gp_p50": 45000000.0,
+    "y3_supply_p50": 1000000000.0
+  },
+  "scenarios": [
+    {
+      "key": "bear",
+      "label": "Bear: $20M GP, 1.5B supply",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.05738006207696033,
+        "p50": 0.11264,
+        "p75": 0.2211180877250129,
+        "p90": 0.4057742183233396
+      },
+      "ev": 0.18571196393166245,
+      "prob_above_spot": 0.227625211226553,
+      "prob_3x": 0.03249675456549469,
+      "y3_price_p50": 0.22,
+      "y3_mcap_p50": 330000000.0,
+      "y3_supply_p50": 1500000000.0,
+      "y3_gp_p50": 20000000.0
+    },
+    {
+      "key": "base",
+      "label": "Base: $45M GP, 1.0B supply",
+      "is_primary": true,
+      "pv": {
+        "p25": 0.19365770950974115,
+        "p50": 0.3801600000000001,
+        "p75": 0.7462735460719188,
+        "p90": 1.3694879868412715
+      },
+      "ev": 0.6267778782693609,
+      "prob_above_spot": 0.6807170496851963,
+      "prob_3x": 0.26470482868434264,
+      "y3_price_p50": 0.7425000000000002,
+      "y3_mcap_p50": 742500000.0000001,
+      "y3_supply_p50": 1000000000.0,
+      "y3_gp_p50": 45000000.0
+    },
+    {
+      "key": "bull",
+      "label": "Bull: $85M GP, 0.8B supply",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.4572473696757776,
+        "p50": 0.8976000000000001,
+        "p75": 1.7620347615586966,
+        "p90": 3.2335133022641123
+      },
+      "ev": 1.4798922125804352,
+      "prob_above_spot": 0.9080491519610624,
+      "prob_3x": 0.5910414858509823,
+      "y3_price_p50": 1.753125,
+      "y3_mcap_p50": 1402500000.0,
+      "y3_supply_p50": 800000000.0,
+      "y3_gp_p50": 85000000.0
+    }
+  ],
+  "caveats": [
+    "Gacha revenue is highly seasonal and tied to Pok\u00e9mon/TCG hype cycles; Q1 2026 peak may not be representative.",
+    "Supply expansion (team, foundation, community unlocks) is the dominant model headwind; vesting schedules not fully public.",
+    "No formal buyback % is publicly committed; full GP\u2192buyback assumption may overstate token demand.",
+    "Gross margin (5.9% Q1 2026) is highly compressed; recovery to 8%+ is assumed in base/bull but not guaranteed.",
+    "Distributions approximate log-normal \u03c3=1.0; no Monte Carlo simulation."
+  ],
+  "data_freshness": "2026-06-17"
+}

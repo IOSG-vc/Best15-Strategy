@@ -1,0 +1,93 @@
+{
+  "token": "BP",
+  "name": "Backpack",
+  "as_of_utc": "2026-06-17T20:03:46.989371+00:00",
+  "market": {
+    "spot": 0.469096,
+    "market_cap": 117274072.0,
+    "fdv": 469096286.0,
+    "circulating_supply": 250000000.0,
+    "max_supply": 1000000000.0
+  },
+  "model": {
+    "type": "3Y Equity-Conversion Manual Scenarios",
+    "discount_rate": 0.25,
+    "multiple": 7.0,
+    "paths": 1,
+    "note": "PV = Y3_revenue \u00d7 P/S_multiple \u00d7 20% equity / Y3_staking_supply / (1.25)\u00b3. Stakers lock BP for 1+ year and receive 20% of Backpack company equity at IPO. P/S benchmarked vs Coinbase (~9\u00d7) and Kraken (~7\u00d7). Distributions approximate log-normal \u03c3=1.0."
+  },
+  "current_gp": {
+    "revenue_2025_ann": 100000000.0,
+    "perp_volume_30d_ann": 90033333333.33333,
+    "equity_pool_at_1b_val": 200000000.0,
+    "equity_per_bp_phase1_only": 0.8,
+    "implied_company_val_at_fdv": 2345481430.0,
+    "y3_revenue_p50": 250000000.0,
+    "y3_supply_p50": 450000000.0,
+    "equity_stake": 0.2
+  },
+  "scenarios": [
+    {
+      "key": "bear",
+      "label": "Bear: $150M rev, 4\u00d7 P/S, Phase-1 only",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.12519286271336796,
+        "p50": 0.24575999999999998,
+        "p75": 0.4824394641273008,
+        "p90": 0.8853255672509226
+      },
+      "ev": 0.40518973948726345,
+      "prob_above_spot": 0.2589933404542168,
+      "prob_3x": 0.04048684047736004,
+      "y3_price_p50": 0.48,
+      "y3_mcap_p50": 120000000.0,
+      "y3_supply_p50": 250000000.0,
+      "y3_gp_p50": 150000000
+    },
+    {
+      "key": "base",
+      "label": "Base: $250M rev, 7\u00d7 P/S, Phase-1 + partial Phase-2",
+      "is_primary": true,
+      "pv": {
+        "p25": 0.20285880532258704,
+        "p50": 0.39822222222222226,
+        "p75": 0.7817306131692376,
+        "p90": 1.4345553173047358
+      },
+      "ev": 0.6565574482432511,
+      "prob_above_spot": 0.4349453816287404,
+      "prob_3x": 0.1034007308407269,
+      "y3_price_p50": 0.7777777777777778,
+      "y3_mcap_p50": 350000000.0,
+      "y3_supply_p50": 450000000.0,
+      "y3_gp_p50": 250000000
+    },
+    {
+      "key": "bull",
+      "label": "Bull: $500M rev, 10\u00d7 P/S, Phase-1 + majority Phase-2",
+      "is_primary": false,
+      "pv": {
+        "p25": 0.4742153890657878,
+        "p50": 0.9309090909090909,
+        "p75": 1.8274222126034123,
+        "p90": 3.3535059365565254
+      },
+      "ev": 1.5348096192699374,
+      "prob_above_spot": 0.7534397771924255,
+      "prob_3x": 0.3397087619141698,
+      "y3_price_p50": 1.8181818181818181,
+      "y3_mcap_p50": 1000000000.0,
+      "y3_supply_p50": 550000000.0,
+      "y3_gp_p50": 500000000
+    }
+  ],
+  "caveats": [
+    "IPO is not guaranteed; equity conversion does not occur and BP loses its primary value driver if Backpack does not IPO.",
+    "Phase 2 (375M tokens) unlock on business milestones; each unlock dilutes per-BP equity value.",
+    "2026 revenue figures not disclosed; scenarios are manually constructed from $100M+ 2025 base.",
+    "No buyback or revenue-share mechanism exists; value is entirely via equity conversion at IPO.",
+    "Distributions approximate log-normal \u03c3=1.0; no Monte Carlo simulation."
+  ],
+  "data_freshness": "2026-06-17"
+}
