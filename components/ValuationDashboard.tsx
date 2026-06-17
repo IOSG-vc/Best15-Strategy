@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell, LabelList,
@@ -1071,6 +1071,173 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
   );
 }
 
+// ── Tech score helpers ───────────────────────────────────────────────────────
+
+const TECH_DASH_BASE = "https://crypto-tech-dashboard-2nd-try-v2-0.vercel.app";
+
+const TOKEN_CG_ID: Record<string, string> = {
+  hype:    "hyperliquid",
+  uni:     "uniswap",
+  ethfi:   "ether-fi",
+  jup:     "jupiter-exchange-solana",
+  lighter: "lighter",
+  sky:     "sky",
+  vvv:     "venice-token",
+};
+
+function techGrade(score: number): { letter: string; color: string; bg: string } {
+  if (score >= 80) return { letter: "A",  color: "#4ade80", bg: "rgba(74,222,128,0.12)" };
+  if (score >= 65) return { letter: "B+", color: "#86efac", bg: "rgba(134,239,172,0.10)" };
+  if (score >= 55) return { letter: "B",  color: "#fbbf24", bg: "rgba(251,191,36,0.10)" };
+  if (score >= 45) return { letter: "C+", color: "#fb923c", bg: "rgba(251,146,60,0.10)" };
+  if (score >= 35) return { letter: "C",  color: "#f87171", bg: "rgba(248,113,113,0.10)" };
+  return               { letter: "D",  color: "#ef4444", bg: "rgba(239,68,68,0.10)" };
+}
+
+// ── TechScoreCard ────────────────────────────────────────────────────────────
+
+function TechScoreCard({ tokenKey }: { tokenKey: string }) {
+  const cgId = TOKEN_CG_ID[tokenKey];
+  const [score, setScore] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cgId) { setLoading(false); return; }
+    let cancelled = false;
+    fetch(`${TECH_DASH_BASE}/api/scores/${cgId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) {
+          setScore(data?.score?.overall_score ?? null);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [cgId]);
+
+  if (!cgId) return null;
+
+  const grade = score !== null ? techGrade(score) : null;
+
+  return (
+    <div
+      className="rounded-xl border px-5 py-4 flex items-center gap-5"
+      style={{ background: grade ? grade.bg : "#1a1d29", borderColor: grade ? grade.color + "55" : "#2d3144" }}
+    >
+      <div>
+        <div className="text-xs text-gray-500 mb-1">Technical Score</div>
+        {loading ? (
+          <div className="text-lg font-bold text-gray-600">—</div>
+        ) : score !== null ? (
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black font-mono" style={{ color: grade!.color }}>
+              {grade!.letter}
+            </span>
+            <span className="text-lg font-bold font-mono text-white">{score.toFixed(0)}</span>
+            <span className="text-xs text-gray-500">/ 100</span>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-600">not tracked</div>
+        )}
+      </div>
+      <div className="text-xs text-gray-600 leading-relaxed max-w-xs">
+        Composite of Trend (40%), Reversal (25%), Breadth (15%), Risk (10%) + TS percentiles.{" "}
+        <a
+          href={`${TECH_DASH_BASE}/#token=${cgId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline"
+        >
+          Full breakdown →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── TechScoreHistoryChart ────────────────────────────────────────────────────
+
+function TechScoreHistoryChart({ tokenKey }: { tokenKey: string }) {
+  const cgId = TOKEN_CG_ID[tokenKey];
+  const [months, setMonths] = useState<{ month: string; score: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cgId) { setLoading(false); return; }
+    let cancelled = false;
+    fetch(`${TECH_DASH_BASE}/api/scores/${cgId}/monthly`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) {
+          setMonths(data?.months ?? []);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [cgId]);
+
+  if (!cgId) return null;
+  if (!loading && months.length === 0) return null;
+
+  const chartData = months.map(m => ({ ...m, grade: techGrade(m.score) }));
+
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-semibold text-gray-200">Technical Score — monthly history</div>
+        <div className="flex items-center gap-3 text-xs text-gray-600">
+          {(["A","B+","B","C+","C","D"] as const).map(l => {
+            const g = techGrade(l === "A" ? 82 : l === "B+" ? 68 : l === "B" ? 58 : l === "C+" ? 47 : l === "C" ? 37 : 20);
+            return (
+              <span key={l} className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-sm" style={{ background: g.color }} />
+                {l}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      {loading ? (
+        <div className="h-36 flex items-center justify-center text-gray-600 text-sm">Loading…</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+            <XAxis
+              dataKey="month"
+              tickFormatter={(m: string) => { const [, mo] = m.split("-"); return mo; }}
+              tick={{ fill: "#6b7280", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+            <Tooltip
+              contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+              labelFormatter={(m: string) => m}
+              formatter={(v: number, _: string, entry: { payload?: { grade?: ReturnType<typeof techGrade> } }) => [
+                `${v.toFixed(1)} — ${entry.payload?.grade?.letter ?? ""}`,
+                "Overall Score",
+              ]}
+            />
+            <Bar dataKey="score" radius={[3, 3, 0, 0]} maxBarSize={40}>
+              {chartData.map((d, i) => (
+                <Cell key={i} fill={d.grade.color} fillOpacity={0.75} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-xs text-gray-600 mt-3">
+        Monthly overall_score from the IOSG Tech Dashboard. Last value of each calendar month.
+        Grades: A ≥80 · B+ ≥65 · B ≥55 · C+ ≥45 · C ≥35 · D &lt;35.
+      </p>
+    </div>
+  );
+}
+
 // ── Token color palette ──────────────────────────────────────────────────────
 
 const TOKEN_COLORS: Record<string, string> = {
@@ -1797,6 +1964,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   return (
     <div className="space-y-5">
 
+      {/* ── Tech score card ──────────────────────────────────────────── */}
+      <TechScoreCard tokenKey={tokenKey} />
+
       {/* ── WIP banner ───────────────────────────────────────────────── */}
       {(tokenKey === "vvv" || tokenKey === "bp" || tokenKey === "cards") && (
         <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
@@ -2028,6 +2198,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
       {/* ── Non-HYPE: Historical charts (backtest, secondary, EOY3 MS) ─ */}
       {tokenKey !== "hype" && d.hist_charts && <TokenHistoricalCharts hc={d.hist_charts} tokenKey={tokenKey} />}
+
+      {/* ── Tech score monthly history ────────────────────────────────── */}
+      <TechScoreHistoryChart tokenKey={tokenKey} />
 
       {/* ── HYPE: DefiLlama MCP weekly answer ────────────────────────── */}
       {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
