@@ -289,6 +289,7 @@ function fmtPrice(n: number): string {
 }
 
 function fmtLarge(n: number): string {
+  if (n == null || isNaN(n)) return "$0";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
   return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
