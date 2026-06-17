@@ -1144,9 +1144,7 @@ function TechScoreCard({ tokenKey }: { tokenKey: string }) {
       <div className="text-xs text-gray-600 leading-relaxed max-w-xs">
         Composite of Trend (40%), Reversal (25%), Breadth (15%), Risk (10%) + TS percentiles.{" "}
         <a
-          href={`${TECH_DASH_BASE}/#token=${cgId}`}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={`/crypto-tech#token=${cgId}`}
           className="text-blue-400 hover:text-blue-300 underline"
         >
           Full breakdown →
