@@ -2377,6 +2377,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const isHypeWithMs = tokenKey === "hype" && typeof gp["ms90_vs_binance"] === "number";
   const isLighterLayout = tokenKey === "lighter" && typeof gp["ms90_vs_binance"] === "number";
   const isEthfiLayout = tokenKey === "ethfi";
+  const isUniLayout = tokenKey === "uni";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -2515,6 +2516,69 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </div>
         </div>
+      ) : isUniLayout ? (
+        /* UNI 5+4 card layout */
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard
+              label="Spot / mcap / circ"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · FDV ${fmtLarge(d.market.fdv)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}.`}
+            />
+            <MetricCard
+              label="MS90 valuation seed"
+              value={pct(gp["ms90_vs_binance_spot"] as number)}
+              sub="Starting UNI/Binance spot share used in primary model."
+              termKey="ms90"
+            />
+            <MetricCard
+              label="Sampled Binance spot seed"
+              value={fmtLarge(gp["start_binance_spot_monthly_p50"] as number)}
+              sub="P50 2022-present monthly Binance spot starting denominator."
+            />
+            <MetricCard
+              label="Velocity ensemble"
+              value={`${((gp["binance_spot_momentum_initial"] as number) ?? 0).toFixed(2)}×`}
+              sub="70% MS30/MS180 + 30% MS7/MS30, monthly-equivalent, 12M decay."
+              accent={(gp["binance_spot_momentum_initial"] as number) >= 1.0 ? "green" : "red"}
+            />
+            <MetricCard
+              label="Effective Y3 supply"
+              value={`${((gp["y3_effective_supply"] as number ?? 0) / 1e6).toFixed(0)}M`}
+              sub={`Current circ plus ${((gp["y3_reserved_supply_release"] as number ?? 0) / 1e6).toFixed(0)}M observed reserved release over 3Y.`}
+            />
+          </div>
+          {/* Row 2: 4 cards, first highlighted */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MetricCard
+              label="P50 PV primary"
+              value={fmtPrice(primary.pv.p50)}
+              sub={`EOY3 price ${fmtPrice(primary.pv.p50 * Math.pow(1 + d.model.discount_rate, 3))} discounted at ${(d.model.discount_rate * 100).toFixed(1)}%.`}
+              highlighted
+              highlightBg="#1a0a26"
+              highlightBorder="#4a1a6a"
+              termKey="p50"
+            />
+            <MetricCard
+              label="P(above spot)"
+              value={pct(primary.prob_above_spot)}
+              sub={`2Y +30% ${primary.prob_spot_up_30_2y != null ? pct(primary.prob_spot_up_30_2y) : "—"} · 2Y -30% ${primary.prob_spot_down_30_2y != null ? pct(primary.prob_spot_down_30_2y) : "—"}.`}
+              accent={primary.prob_above_spot >= 0.5 ? "green" : primary.prob_above_spot >= 0.35 ? "yellow" : "red"}
+            />
+            <MetricCard
+              label="Discount / multiple"
+              value={`${(d.model.discount_rate * 100).toFixed(1)}% · ${d.model.multiple}×`}
+              sub="Liquid-token CAPM and Year-3 GP multiple."
+              termKey="dr"
+            />
+            <MetricCard
+              label="EOY3 share model"
+              value={pct(gp["binance_spot_eoy3_share_model"] as number)}
+              sub="MS90 compounded by decaying blended velocity."
+            />
+          </div>
+        </div>
       ) : isEthfiLayout ? (
         /* ETHFI 5+3 card layout */
         <div className="space-y-3">
@@ -2581,14 +2645,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               : `Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
           />
           {/* Card 2–4: token-specific GP metrics */}
-          {tokenKey === "uni" && <>
-            <MetricCard label="GP current state (ann.)" value={fmtLarge(gp["annualized_current_state"] as number)} sub="Protocol fees at current take rate" />
-            <MetricCard label="GP full activation (ann.)" value={fmtLarge(gp["annualized_full_activation"] as number)} sub="25% of LP fees → protocol" />
-            {gp["ms30_vs_binance_spot"] != null
-              ? <MetricCard label="MS30 vs Binance spot" value={pct(gp["ms30_vs_binance_spot"] as number)} sub={`Velocity ${(gp["binance_spot_momentum_initial"] as number)?.toFixed(2)}×`} accent={(gp["binance_spot_momentum_initial"] as number) >= 1.0 ? "green" : "default"} />
-              : <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
-            }
-          </>}
           {tokenKey === "jup" && <>
             <MetricCard label="Total 30D GP" value={fmtLarge(gp["total_30d"] as number)} sub="Perps + aggregator + Jupiterz" />
             <MetricCard label="Perps take / spot rake" value={`${((gp["perps_clean_take_rate_bps"] as number) ?? 0).toFixed(2)} / ${((gp["spot_take_rate_bps"] as number) ?? 0).toFixed(2)} bps`} sub="Clean GP economics" />
