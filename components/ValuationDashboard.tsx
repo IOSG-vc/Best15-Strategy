@@ -2490,6 +2490,86 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── UNI: custom wide table + 4 cards ────────────────────────────────────
+  if (tokenKey === "uni") {
+    const primary  = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+    const dexNative = data.scenarios.find((s) => s.key === "full_activation");
+    const cols: { label: string; fmt: (s: ValuationScenario) => string }[] = [
+      { label: "P50 EOY3\nPrice",            fmt: (s) => fmtPrice(s.y3_price_p50 ?? 0) },
+      { label: "P50 EOY3\nMcap",             fmt: (s) => fmtLarge(s.y3_mcap_p50 ?? 0) },
+      { label: "P50 EOY Daily\nMean Volume",  fmt: (s) => fmtLarge(s.y3_daily_mean_volume_p50 ?? 0) },
+      { label: "P50\nAnnualized GP",         fmt: (s) => fmtLarge(s.y3_gp_p50 ?? 0) },
+      { label: "P50 PV",                     fmt: (s) => fmtPrice(s.pv.p50) },
+      { label: "EV\nPV/Token",               fmt: (s) => fmtPrice(s.ev) },
+      { label: "PV Mcap\nEV",                fmt: (s) => fmtLarge(s.ev_mcap ?? 0) },
+      { label: "P(Spot)",                    fmt: (s) => pct(s.prob_above_spot) },
+      { label: "2Y\n+30%",                   fmt: (s) => s.prob_spot_up_30_2y   != null ? pct(s.prob_spot_up_30_2y)   : "—" },
+      { label: "2Y\n-30%",                   fmt: (s) => s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—" },
+      { label: "P(3×)",                      fmt: (s) => s.prob_3x              != null ? pct(s.prob_3x)              : "—" },
+    ];
+    const pAnn = (primary.y3_daily_mean_volume_p50 ?? 0) * 365;
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Model outputs</h2>
+        {/* Wide table */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left px-5 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap">Case</th>
+                  {cols.map((c) => (
+                    <th key={c.label} className="text-right px-3 py-4 text-xs font-medium text-gray-400 uppercase tracking-wider leading-tight" style={{ whiteSpace: "pre-line" }}>{c.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.scenarios.map((s) => {
+                  const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary ? "bg-white" : ""}`}>
+                      <td className={`px-5 py-4 text-sm max-w-[160px] ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                      {cols.map((c, i) => (
+                        <td key={i} className={`px-3 py-4 text-right font-mono text-sm whitespace-nowrap ${
+                          c.label === "P(Spot)" ? "font-semibold" : "text-gray-700"
+                        }`} style={c.label === "P(Spot)" ? { color: probColor } : undefined}>
+                          {c.fmt(s)}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* 4 bottom cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1">Y3 GP / supply</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{fmtLarge(primary.y3_gp_p50 ?? 0)} / {((primary.y3_supply_p50 ?? 0) / 1e6).toFixed(0)}M</div>
+            <div className="text-xs text-gray-500 mt-1">Primary P50 end-Year-3.</div>
+          </div>
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1">P50 EOY daily volume</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{fmtLarge(primary.y3_daily_mean_volume_p50 ?? 0)}</div>
+            <div className="text-xs text-gray-500 mt-1">Equivalent annualized volume {fmtLarge(pAnn)}.</div>
+          </div>
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1">DEX-native P50 PV</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{fmtPrice(dexNative?.pv.p50 ?? 0)}</div>
+            <div className="text-xs text-gray-500 mt-1">Sensitivity using total DEX denominator.</div>
+          </div>
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1">3× probability</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{primary.prob_3x != null ? pct(primary.prob_3x) : "—"}</div>
+            <div className="text-xs text-gray-500 mt-1">Right-tail metric, not central case.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const cards = TOKEN_Y3_CARDS[tokenKey];
   if (!cards) return null;
 
