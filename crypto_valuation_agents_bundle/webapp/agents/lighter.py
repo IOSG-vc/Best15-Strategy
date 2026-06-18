@@ -346,8 +346,14 @@ def run() -> dict:
     yield_run_rate = tvl_proxy * yield_net * TVL_YIELD_CAPTURE
 
     # Buyback horizon diagnostics
-    buyback_years_fee_only  = (mcap / max(holder_rev_ann, 1)) if holder_rev_ann > 0 else 999
+    # supply_to_buy_back = current circ + all future scheduled unlocks over 3Y
+    # annual_buyback_tokens = annual_revenue / spot  (how many tokens bought per year)
     gross_3y_unlock         = GROSS_3Y_UNLOCK
+    supply_to_buy_back      = circ + gross_3y_unlock
+    annual_bb_fee_tokens    = holder_rev_ann / max(spot, 1e-9)
+    annual_bb_base_tokens   = (holder_rev_ann + yield_run_rate) / max(spot, 1e-9)
+    buyback_years_fee_only  = supply_to_buy_back / max(annual_bb_fee_tokens, 1e-9)
+    buyback_years_base      = supply_to_buy_back / max(annual_bb_base_tokens, 1e-9)
 
     # ── Monte Carlo ───────────────────────────────────────────────────────────
     rng = np.random.default_rng(SEED)
@@ -540,6 +546,7 @@ def run() -> dict:
             "yield_capture": TVL_YIELD_CAPTURE,
             "yield_run_rate": float(yield_run_rate),
             "buyback_years_fee_only": float(buyback_years_fee_only),
+            "buyback_years_base": float(buyback_years_base),
             "gross_3y_unlock_tokens": int(gross_3y_unlock),
             "buyback_tokens_p50": float(bb_p50),
             "y3_supply_p50": float(y3s_p50),

@@ -1066,6 +1066,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
         ["Holder capture",                   pct(gp["holder_capture_30d"] as number)],
         ["30D perps volume",                 fmtLarge(gp["perp_volume_30d"] as number)],
         ["Fee-only buyback years",           `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+        ["Base buyback years incl. yield",   gp["buyback_years_base"] != null ? `${(gp["buyback_years_base"] as number).toFixed(1)}y` : "—"],
       ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "—" && v !== "NaNy");
     },
   },
