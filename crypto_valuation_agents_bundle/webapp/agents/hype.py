@@ -62,8 +62,10 @@ def run() -> dict:
                 "p90": dp["p90"],
             },
             "ev":              sc["discounted_ev"],
-            "prob_above_spot": sc["prob_current_spot_justified"],
-            "prob_3x":         sc["prob_3x_vs_spot"],
+            "prob_above_spot":      sc["prob_current_spot_justified"],
+            "prob_3x":             sc["prob_3x_vs_spot"],
+            "prob_spot_up_30_2y":  sc.get("prob_spot_up_30_2y"),
+            "prob_spot_down_30_2y": sc.get("prob_spot_down_30_2y"),
             # ── Model outputs table / cards ───────────────────────────────
             "y3_price_p50":    y3_price_p50,
             "y3_mcap_p50":     y3_price_p50 * y3_supply_p50,

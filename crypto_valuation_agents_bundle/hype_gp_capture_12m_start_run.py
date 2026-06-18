@@ -581,6 +581,7 @@ def run_once():
         gross_monthly_release = gross_release_3y / MONTHS
         remaining_gross_release = gross_release_3y
         supply = np.full(N_PATHS, circ, dtype=float)
+        y2_price = None
         for t in range(MONTHS):
             start = max(0, t - 11)
             gp_window = monthly_gp[:, start:t+1].sum(axis=1) * (12.0 / (t - start + 1))
@@ -594,6 +595,8 @@ def run_once():
             supply = supply + emissions - buy_tokens
             max_modeled_supply = circ + gross_release_3y
             supply = np.minimum(np.maximum(supply, 1.0), max_modeled_supply)
+            if t == 23:
+                y2_price = interim_price.copy()
         y3_supply = supply
         y3_price_core = (y3_ttm_gp * multiple * TOKEN_CAPTURE) / np.maximum(y3_supply, 1)
         y3_price = y3_price_core * (1.0 + sc["optionality"])
@@ -627,6 +630,8 @@ def run_once():
             "prob_current_spot_justified": float(np.mean(pv >= spot)),
             "prob_impairment_vs_spot": float(np.mean(pv < spot)),
             "prob_3x_vs_spot": float(np.mean(pv >= 3 * spot)),
+            "prob_spot_up_30_2y": float(np.mean(y2_price >= 1.30 * spot)) if y2_price is not None else None,
+            "prob_spot_down_30_2y": float(np.mean(y2_price <= 0.70 * spot)) if y2_price is not None else None,
             "current_monthly_gp": float(current_monthly_gp),
             "current_perp_monthly_gp": float(current_perp_monthly_gp),
             "current_usdc_yield_monthly_gp": float(current_usdc_monthly_gp),
