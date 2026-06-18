@@ -411,31 +411,48 @@ function MetricCard({
   sub,
   accent,
   termKey,
+  highlighted,
 }: {
   label: string;
   value: string;
   sub?: string;
   accent?: "green" | "red" | "yellow" | "blue" | "default";
   termKey?: string;
+  highlighted?: boolean;
 }) {
-  const color = {
-    green: "#4ade80",
-    red: "#f87171",
-    yellow: "#fbbf24",
-    blue: "#60a5fa",
-    default: "#ffffff",
+  if (highlighted) {
+    return (
+      <div className="bg-[#0d1117] rounded-xl border border-[#1e2d40] px-5 py-4 flex flex-col gap-1">
+        <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
+          {label}
+          {termKey && <InfoTooltip termKey={termKey} />}
+        </div>
+        <div className="text-3xl font-bold text-white font-mono leading-tight">
+          {value}
+        </div>
+        {sub && <div className="text-xs text-gray-400 leading-relaxed mt-0.5">{sub}</div>}
+      </div>
+    );
+  }
+
+  const accentColor = {
+    green: "#15803d",
+    red: "#b91c1c",
+    yellow: "#a16207",
+    blue: "#1d4ed8",
+    default: "#111827",
   }[accent ?? "default"];
 
   return (
-    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-4 py-3 flex flex-col gap-0.5">
-      <div className="flex items-center gap-1 text-xs text-gray-500">
+    <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4 flex flex-col gap-1">
+      <div className="flex items-center gap-1 text-xs text-gray-500 font-mono">
         {label}
         {termKey && <InfoTooltip termKey={termKey} />}
       </div>
-      <div className="text-lg font-bold font-mono leading-tight" style={{ color }}>
+      <div className="text-3xl font-bold font-mono leading-tight" style={{ color: accentColor }}>
         {value}
       </div>
-      {sub && <div className="text-xs text-gray-600">{sub}</div>}
+      {sub && <div className="text-xs text-gray-500 leading-relaxed mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -551,18 +568,16 @@ const DIST_LABELS_CORE: { key: string; label: string; isMedian?: boolean }[] = [
 function DistributionChart({
   scenario,
   spot,
-  ev,
 }: {
   scenario: ValuationScenario;
   spot: number;
-  ev: number;
+  ev?: number;
 }) {
   const dist = scenario.distribution;
   const hasFull = dist && Object.keys(dist).length > 4;
   const rowDefs = hasFull ? DIST_LABELS : DIST_LABELS_CORE;
   const source: Record<string, number> = dist ?? (scenario.pv as unknown as Record<string, number>);
 
-  // Build ascending order (P5 → P95) for vertical bar chart
   const rows = [...rowDefs]
     .reverse()
     .map((d) => ({ ...d, value: source[d.key] as number | undefined }))
@@ -570,91 +585,90 @@ function DistributionChart({
 
   if (!rows.length) return null;
 
-  const yMax = Math.max(...rows.map(r => r.value), ev) * 1.12;
+  const yMax = Math.max(...rows.map(r => r.value)) * 1.15;
+  const labelKeys = new Set(["p25", "p50", "p75", "p90"]);
+
+  const getBarColor = (row: (typeof rows)[0]) => {
+    if (row.isMedian) return "#111827";
+    if (row.value >= spot) return "#3b82f6";
+    return "#d1d5db";
+  };
 
   return (
-    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <div className="text-sm font-semibold text-gray-300">
-            PV Distribution — {scenario.label}
-          </div>
-          <div className="text-xs text-gray-500 mt-0.5">Percentile ladder + probability-weighted EV</div>
-        </div>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-5 border-t border-orange-400" />
-            Spot {fmtPrice(spot)}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-5 border-t border-dashed border-blue-400" />
-            EV {fmtPrice(ev)}
-          </span>
-        </div>
-      </div>
+    <div className="space-y-5">
+      <h2 className="text-3xl font-bold text-white">Selected-model PV price distribution</h2>
 
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={rows} margin={{ top: 24, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: "#6b7280", fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tickFormatter={(v: number) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(0)}`}
-            tick={{ fill: "#6b7280", fontSize: 10 }}
-            axisLine={false}
-            tickLine={false}
-            width={40}
-            domain={[0, yMax]}
-          />
-          <Tooltip
-            contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
-            formatter={(v: number) => [fmtPrice(v), "PV"]}
-          />
-          {/* Labels only in header legend; no inline chart labels to avoid clipping */}
-          <ReferenceLine y={spot} stroke="#fb923c" strokeWidth={1.5} />
-          <ReferenceLine y={ev}   stroke="#60a5fa" strokeWidth={1.5} strokeDasharray="4 3" />
-          <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={48}>
-            <LabelList
-              dataKey="value"
-              position="top"
-              content={(props) => {
-                const { x, y, width, value, index } = props as { x?: unknown; y?: unknown; width?: unknown; value?: unknown; index?: number };
-                const nx = Number(x), ny = Number(y), nw = Number(width), nv = Number(value);
-                if (!isFinite(nx) || !isFinite(ny) || !isFinite(nw) || !isFinite(nv)) return null;
-                const isP50 = rows[index ?? 0]?.isMedian;
-                return (
-                  <text
-                    x={nx + nw / 2}
-                    y={ny - 4}
-                    textAnchor="middle"
-                    fontSize={9}
-                    fill={isP50 ? "#e2e8f0" : "#6b7280"}
-                    fontWeight={isP50 ? 600 : 400}
-                  >
-                    {fmtPrice(nv)}
-                  </text>
-                );
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+        <div className="text-base font-bold text-gray-900 mb-4">Percentile ladder + current spot</div>
+
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={rows} margin={{ top: 24, right: 120, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fill: "#9ca3af", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tickFormatter={(v: number) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(2)}`}
+              tick={{ fill: "#9ca3af", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              width={54}
+              domain={[0, yMax]}
+            />
+            <Tooltip
+              contentStyle={{ background: "#ffffff", border: "1px solid #e2e6f0", borderRadius: 8, fontSize: 11 }}
+              formatter={(v: number) => [fmtPrice(v), "PV"]}
+            />
+            <ReferenceLine
+              y={spot}
+              stroke="#dc2626"
+              strokeWidth={1.5}
+              strokeDasharray="5 3"
+              label={{
+                value: `current spot ${fmtPrice(spot)}`,
+                position: "right",
+                fontSize: 10,
+                fill: "#6b7280",
               }}
             />
-            {rows.map((row) => (
-              <Cell
-                key={row.key}
-                fill={row.isMedian ? "#1e3a4a" : "#1e2a3a"}
-                stroke={row.isMedian ? "#38bdf8" : "#2d3144"}
-                strokeWidth={row.isMedian ? 1.5 : 0.5}
+            <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={52}>
+              <LabelList
+                dataKey="value"
+                position="top"
+                content={(props) => {
+                  const { x, y, width, value, index } = props as { x?: unknown; y?: unknown; width?: unknown; value?: unknown; index?: number };
+                  const nx = Number(x), ny = Number(y), nw = Number(width), nv = Number(value);
+                  if (!isFinite(nx) || !isFinite(ny) || !isFinite(nw) || !isFinite(nv)) return null;
+                  const row = rows[index ?? 0];
+                  if (!row || !labelKeys.has(row.key)) return null;
+                  return (
+                    <text
+                      x={nx + nw / 2}
+                      y={ny - 5}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fill={row.isMedian ? "#111827" : "#374151"}
+                      fontWeight={row.isMedian ? 700 : 500}
+                    >
+                      {fmtPrice(nv)}
+                    </text>
+                  );
+                }}
               />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+              {rows.map((row) => (
+                <Cell key={row.key} fill={getBarColor(row)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
 
-      <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-        Bars show selected-model PV/token percentiles. Bold bar is P50 {fmtPrice(scenario.pv.p50)}. Blue dashed line is probability-weighted EV {fmtPrice(ev)}, which captures all paths including the right tail.
-      </p>
+        <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+          Black bar is P50. Dashed red line marks current spot.
+        </p>
+      </div>
     </div>
   );
 }
@@ -1128,9 +1142,9 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
   const tableRows = cfg.tableRows(gp);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-      {/* ── Left: chart ─────────────────────────────────────────────── */}
-      <div className="lg:col-span-3 bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
+    <div className="space-y-5">
+      {/* ── Chart ───────────────────────────────────────────────────── */}
+      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
         <h3 className="text-xl font-bold text-white mb-5">Market share trend</h3>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={history} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -1158,36 +1172,36 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
         <p className="text-xs text-gray-600 mt-4 leading-relaxed">{cfg.chartNote}</p>
       </div>
 
-      {/* ── Right: table + drivers card ─────────────────────────────── */}
-      <div className="lg:col-span-2 flex flex-col gap-4">
-        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5 flex-1">
-          <div className="text-xs font-mono text-gray-500 mb-4 tracking-wide">Current snapshot</div>
+      {/* ── Current Data + Core revenue drivers ─────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Current Data table (light card) */}
+        <div className="lg:col-span-2 bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Current Data</h3>
           <table className="w-full">
             <tbody>
               {tableRows.map(([label, value]) => (
-                <tr key={label} className="border-b border-[#252836] last:border-0">
-                  <td className="py-2.5 text-sm text-gray-400 pr-3">{label}</td>
-                  <td className="py-2.5 text-sm font-mono font-semibold text-gray-200 text-right whitespace-nowrap">{value}</td>
+                <tr key={label} className="border-b border-gray-100 last:border-0">
+                  <td className="py-3 text-sm text-gray-600 pr-3">{label}</td>
+                  <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-gray-600 mt-4 leading-relaxed">{cfg.tableNote}</p>
         </div>
 
-        <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5">
+        {/* Core revenue drivers (dark card) */}
+        <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col">
           <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Core revenue drivers</div>
-          <div className="text-lg font-bold text-white mb-3">{cfg.driversTitle}</div>
+          <div className="text-xl font-bold text-white mb-3">{cfg.driversTitle}</div>
           {tokenKey === "hype" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              DefiLlama rows show total fee activity, but builder-code fees do not accrue to the Hyperliquid treasury. MC models future perps treasury revenue from Binance volume × HL share × 0.026% clean revenue take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
-              <span className="text-gray-200 font-medium">{fmtLarge(gp["usdc_gp_annual"] as number)}</span>.
+              HL vol × Binance market share × 0.026% clean treasury take-rate + USDC yield; MS30/MS90 momentum decays over 12 months; 4 supply/emission scenarios
             </p>
           )}
           {tokenKey === "lighter" && (
             <p className="text-sm text-gray-400 leading-relaxed">
               Lighter MC mirrors the HYPE framework: Binance Futures proxy × Lighter market share × observed net take-rate. Holder revenue funds 100% buybacks while fixed unlocks increase supply. A separate HYPE-style TVL yield line adds{" "}
-              <span className="text-gray-200 font-medium">{fmtLarge(gp["yield_run_rate"] as number)}</span> annual run-rate sensitivity.
+              <span className="text-white font-medium">{fmtLarge(gp["yield_run_rate"] as number)}</span> annual run-rate sensitivity.
             </p>
           )}
           {tokenKey === "uni" && (
@@ -1197,17 +1211,17 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           )}
           {tokenKey === "ethfi" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              ether.fi GP = Card GDV × 135bps take × margin + staking TVL × ETH APY × 5% + vault TVL × 1%. Market share trend shows ether.fi's rolling TVL share of the liquid restaking market (vs Kelp, Renzo, Puffer, Swell). Table also shows share of all liquid staking (LRT + LST including Lido).
+              ether.fi GP = Card GDV × 135bps take × margin + staking TVL × ETH APY × 5% + vault TVL × 1%. Market share trend shows ether.fi's rolling TVL share of the liquid restaking market (vs Kelp, Renzo, Puffer, Swell).
             </p>
           )}
           {tokenKey === "jup" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              JUP perps GP = Binance Futures volume × JUP/Binance perps share × clean take-rate. Spot GP = Binance spot volume × JUP/Binance spot share × observed aggregator/Jupiterz rake. Product-line history calibrates take-rate and current share; smaller products remain in the optionality premium.
+              JUP perps GP = Binance Futures volume × JUP/Binance perps share × clean take-rate. Spot GP = Binance spot volume × JUP/Binance spot share × observed aggregator/Jupiterz rake.
             </p>
           )}
           {tokenKey === "sky" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              Sky GP = modeled Sky supply × net GP take-rate. The MC path samples a starting broad money-market / yield-vault TVL from historical monthly denominators, applies Sky&apos;s MS90 share seed, then decays a 70% MS30/MS180 + 30% MS7/MS30 velocity ensemble over 12 months. DAI stays flat; USDS fills the residual modeled supply.
+              Sky GP = modeled Sky supply × net GP take-rate. The MC path samples a starting broad money-market / yield-vault TVL, applies Sky&apos;s MS90 share seed, then decays a 70% MS30/MS180 + 30% MS7/MS30 velocity ensemble over 12 months.
             </p>
           )}
         </div>
@@ -1911,81 +1925,114 @@ function HypeHistoricalCharts({ hc }: { hc: HistCharts }) {
 
 // ── HypeModelOutputs ─────────────────────────────────────────────────────────
 
-function HypeModelOutputs({ scenario, spot }: { scenario: ValuationScenario; spot: number }) {
-  const {
-    y3_price_p50, y3_mcap_p50, y3_supply_p50, y3_gp_p50,
-    ev_mcap, burn_3y_est, y3_volume,
-  } = scenario;
+function HypeModelOutputs({ data }: { data: ValuationData }) {
+  const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+  const { y3_price_p50, y3_supply_p50, y3_gp_p50, burn_3y_est, y3_volume } = primary;
 
   if (!y3_price_p50) return null;
 
-  const vol = y3_volume as Y3Volume;
+  const vol    = y3_volume as Y3Volume;
+  const gp     = data.current_gp;
+  const circ   = data.market.circulating_supply;
+  const gross3y = gp["gross_3y"] as number | undefined;
+  const net3y   = (gross3y ?? 0) - (burn_3y_est ?? 0);
+
+  const currentRevenue = ((gp["clean_treasury_revenue_ann"] as number) ?? 0) + ((gp["usdc_gp_annual"] as number) ?? 0);
+  const gpVsCurrent      = currentRevenue > 0 && y3_gp_p50   ? ((y3_gp_p50   / currentRevenue - 1) * 100) : null;
+  const supplyVsCurrent  = circ > 0         && y3_supply_p50 ? ((y3_supply_p50 / circ          - 1) * 100) : null;
+
+  const show2Y = data.scenarios.some((s) => s.prob_spot_up_30_2y !== undefined);
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-xl font-bold text-white">Model outputs</h3>
+    <div className="space-y-5">
+      <h2 className="text-3xl font-bold text-white">Model Outputs</h2>
 
-      {/* ── Summary table ───────────────────────────────────────────── */}
-      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
+      {/* ── All-scenario table ──────────────────────────────────────── */}
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#2d3144]">
-                {["CASE", "P50 PRICE", "P50 MCAP", "P50 PV", "EV PV/TOKEN", "PV MCAP EV", "P(SPOT)"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {h}
-                  </th>
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Case</th>
+                {["P25 PV", "P50 PV", "P75 PV", "P90 PV", "EV"].map((h) => (
+                  <th key={h} className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">P(Spot)</th>
+                {show2Y && <>
+                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
+                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
+                </>}
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="px-5 py-4 text-gray-200 font-medium whitespace-nowrap">Selected model</td>
-                <td className="px-5 py-4 font-mono text-white whitespace-nowrap">{fmtPrice(y3_price_p50!)}</td>
-                <td className="px-5 py-4 font-mono text-white whitespace-nowrap">{fmtLarge(y3_mcap_p50 ?? 0)}</td>
-                <td className="px-5 py-4 font-mono text-white whitespace-nowrap">{fmtPrice(scenario.pv.p50)}</td>
-                <td className="px-5 py-4 font-mono text-white whitespace-nowrap">{fmtPrice(scenario.ev)}</td>
-                <td className="px-5 py-4 font-mono text-white whitespace-nowrap">{fmtLarge(ev_mcap ?? 0)}</td>
-                <td className="px-5 py-4 font-mono whitespace-nowrap" style={{ color: scenario.prob_above_spot >= 0.5 ? "#4ade80" : "#f87171" }}>
-                  {pct(scenario.prob_above_spot)}
-                </td>
-              </tr>
+              {data.scenarios.map((s) => {
+                const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                return (
+                  <tr key={s.key} className="border-b border-gray-100 last:border-0">
+                    <td className={`px-6 py-4 text-sm whitespace-nowrap ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                    {(["p25", "p50", "p75", "p90"] as const).map((p) => (
+                      <td key={p} className={`px-4 py-4 text-right font-mono text-sm whitespace-nowrap ${p === "p50" ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                        {fmtPrice(s.pv[p])}
+                      </td>
+                    ))}
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>
+                      {pct(s.prob_above_spot)}
+                    </td>
+                    {show2Y && <>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                        {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                        {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
+                      </td>
+                    </>}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ── Bottom metric cards ──────────────────────────────────────── */}
+      {/* ── Metric cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
-          <div className="text-xs text-gray-500 font-mono mb-1">Y3 GP / supply</div>
-          <div className="text-2xl font-bold text-white font-mono">
-            {fmtLarge(y3_gp_p50 ?? 0)} / {((y3_supply_p50 ?? 0) / 1e6).toFixed(0)}M
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+          <div className="text-xs text-gray-500 font-mono mb-1">Y3 aggregate GP / supply</div>
+          <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">
+            {fmtLarge(y3_gp_p50 ?? 0)} /{" "}{((y3_supply_p50 ?? 0) / 1e6).toFixed(1)}M
           </div>
-          <div className="text-xs text-gray-600 mt-1">Selected-model P50 end-Year-3.</div>
+          <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+            {gpVsCurrent != null ? `${gpVsCurrent >= 0 ? "+" : ""}${gpVsCurrent.toFixed(1)}% vs current clean revenue + yield` : "P50 end-Year-3."}
+            {supplyVsCurrent != null ? `; supply ${supplyVsCurrent >= 0 ? "+" : ""}${supplyVsCurrent.toFixed(1)}% vs current circ.` : ""}
+          </div>
         </div>
-        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
-          <div className="text-xs text-gray-500 font-mono mb-1">P50 path daily volume</div>
-          <div className="text-2xl font-bold text-white font-mono">
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+          <div className="text-xs text-gray-500 font-mono mb-1">Y3 GP split</div>
+          <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">
+            {fmtLarge(y3_gp_p50 ?? 0)}
+          </div>
+          <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+            Perps + USDC stablecoin yield. Primary scenario P50.
+          </div>
+        </div>
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+          <div className="text-xs text-gray-500 font-mono mb-1">Y3 daily volume P50</div>
+          <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">
             {fmtLarge(vol?.avg ?? 0)}
           </div>
-          <div className="text-xs text-gray-600 mt-1">
-            Min {fmtLarge(vol?.min ?? 0)} / Avg {fmtLarge(vol?.avg ?? 0)} / Max {fmtLarge(vol?.max ?? 0)}.
+          <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+            EOY3 share {pct(vol?.eoy_market_share ?? 0)}. Min {fmtLarge(vol?.min ?? 0)} / max {fmtLarge(vol?.max ?? 0)}.
           </div>
         </div>
-        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
-          <div className="text-xs text-gray-500 font-mono mb-1">EOY3 market share</div>
-          <div className="text-2xl font-bold text-white font-mono">
-            {pct(vol?.eoy_market_share ?? 0)}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+          <div className="text-xs text-gray-500 font-mono mb-1">3Y gross / burn / net</div>
+          <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">
+            {((gross3y ?? 0) / 1e6).toFixed(1)}M / {((burn_3y_est ?? 0) / 1e6).toFixed(1)}M
           </div>
-          <div className="text-xs text-gray-600 mt-1">After 12M velocity decay; gained share held.</div>
-        </div>
-        <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
-          <div className="text-xs text-gray-500 font-mono mb-1">Total burn EOY3</div>
-          <div className="text-2xl font-bold text-white font-mono">
-            {((burn_3y_est ?? 0) / 1e6).toFixed(0)}M
+          <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+            Net {net3y >= 0 ? "+" : ""}{(net3y / 1e6).toFixed(1)}M before scenario supply effects.
           </div>
-          <div className="text-xs text-gray-600 mt-1">Modeled cumulative token buyback/burn.</div>
         </div>
       </div>
     </div>
@@ -2146,52 +2193,52 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
     return take > 0 ? scenarioP50AnnualGp(s) / (take / 10000) / 365 : 0;
   };
 
+  const show2Y = data.scenarios.some((s) => s.prob_spot_up_30_2y !== undefined);
+
   return (
-    <div className="space-y-3">
-      <h3 className="text-xl font-bold text-white">Model outputs</h3>
+    <div className="space-y-5">
+      <h2 className="text-3xl font-bold text-white">Model Outputs</h2>
 
       {/* ── Scenario table ──────────────────────────────────────────────── */}
-      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#2d3144]">
-                {["SCENARIO", "P50 EOY3 PRICE", "P50 EOY3 MCAP", "P50 EOY DAILY MEAN VOL", "P50 ANNUALIZED GP", "P50 PV", "EV PV", "EV MCAP", "P(SPOT)", "P(3×)", "P(+30% 2Y)", "P(-30% 2Y)"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Case</th>
+                {["P25 PV", "P50 PV", "P75 PV", "P90 PV", "EV"].map((h) => (
+                  <th key={h} className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">P(Spot)</th>
+                {show2Y && <>
+                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
+                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
+                </>}
               </tr>
             </thead>
             <tbody>
-	              {data.scenarios.map((s, i) => {
-                    const supply = scenarioSupply(s);
-                    const p50Price = s.y3_price_p50 ?? (s.pv.p50 * disc);
-	                const p50mcap = s.y3_mcap_p50 ?? (supply > 0 ? p50Price * supply : 0);
-	                const evMcap  = s.ev_mcap ?? (supply > 0 ? s.ev * supply : 0);
-                    const p50DailyVolume = s.y3_daily_mean_volume_p50 ?? scenarioP50DailyMeanVolume(s);
-                    const p50AnnualGp = s.y3_gp_p50 ?? scenarioP50AnnualGp(s);
-	                const isPrimary = s.is_primary;
-	                return (
-	                  <tr key={s.key} className={i < data.scenarios.length - 1 ? "border-b border-[#2d3144]" : ""}>
-	                    <td className={`px-5 py-4 whitespace-nowrap ${isPrimary ? "text-white font-semibold" : "text-gray-400"}`}>{s.label}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(p50Price)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50mcap)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50DailyVolume)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50AnnualGp)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.pv.p50)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.ev)}</td>
-	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(evMcap)}</td>
-                    <td className="px-5 py-4 font-mono whitespace-nowrap" style={{ color: s.prob_above_spot >= 0.5 ? "#4ade80" : "#f87171" }}>
+              {data.scenarios.map((s) => {
+                const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                return (
+                  <tr key={s.key} className="border-b border-gray-100 last:border-0">
+                    <td className={`px-6 py-4 text-sm whitespace-nowrap ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                    {(["p25", "p50", "p75", "p90"] as const).map((p) => (
+                      <td key={p} className={`px-4 py-4 text-right font-mono text-sm whitespace-nowrap ${p === "p50" ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                        {fmtPrice(s.pv[p])}
+                      </td>
+                    ))}
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>
                       {pct(s.prob_above_spot)}
                     </td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
-                      {s.prob_3x != null ? pct(s.prob_3x) : "—"}
-                    </td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
-                      {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
-                    </td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
-                      {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
-                    </td>
+                    {show2Y && <>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                        {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                        {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
+                      </td>
+                    </>}
                   </tr>
                 );
               })}
@@ -2203,10 +2250,10 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
       {/* ── Y3 metric cards ─────────────────────────────────────────────── */}
       <div className={`grid grid-cols-2 ${cards.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3`}>
         {cards.map((c) => (
-          <div key={c.label} className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
+          <div key={c.label} className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
             <div className="text-xs text-gray-500 font-mono mb-1">{c.label}</div>
-            <div className="text-2xl font-bold text-white font-mono">{c.value(gp)}</div>
-            <div className="text-xs text-gray-600 mt-1">{typeof c.sub === "function" ? c.sub(gp) : c.sub}</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{c.value(gp)}</div>
+            <div className="text-xs text-gray-500 mt-1 leading-relaxed">{typeof c.sub === "function" ? c.sub(gp) : c.sub}</div>
           </div>
         ))}
       </div>
@@ -2244,72 +2291,68 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   return (
     <div className="space-y-5">
 
-      {/* ── Tech score card ──────────────────────────────────────────── */}
-      <TechScoreCard tokenKey={tokenKey} />
-
-      {/* ── WIP banner ───────────────────────────────────────────────── */}
-      {(tokenKey === "vvv" || tokenKey === "bp" || tokenKey === "cards") && (
-        <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
-          <span className="mt-0.5 text-yellow-400 text-base leading-none">⚠</span>
-          <div>
-            <span className="text-sm font-semibold text-yellow-400">Work in progress</span>
-            <span className="text-sm text-yellow-300/70 ml-2">
-              {tokenKey === "vvv" && "Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
-              {tokenKey === "bp" && "Preliminary model. Equity conversion is contingent on a Backpack IPO that has not yet occurred. Revenue estimates use 2025 data; 2026 figures are undisclosed. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
-              {tokenKey === "cards" && "Preliminary model. Gacha revenue is highly seasonal and hard to extrapolate. No formal buyback % has been publicly committed. Supply schedule (team, foundation, community unlocks) is estimated — actual vesting is not fully public. Treat all figures as indicative."}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* ── Metric cards ─────────────────────────────────────────────── */}
       {isHypeWithMs ? (
         /* HYPE-specific cards matching the dashboard design */
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {/* Card 1: Spot / mcap / circ */}
-          <MetricCard
-            label="Spot / mcap / circ"
-            value={fmtPrice(spot)}
-            sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M HYPE`}
-          />
-          {/* Card 2: MS90 valuation seed */}
-          <MetricCard
-            label="MS90 valuation seed"
-            value={pct(gp["ms90_vs_binance"] as number)}
-            sub="Starting HL/Binance share used in the model"
-            termKey="ms90"
-          />
-          {/* Card 3: MCP MS30 vs Binance */}
-          <MetricCard
-            label="MCP MS30 vs Binance"
-            value={pct(gp["ms30_vs_binance"] as number)}
-            sub="DefiLlama 30D derivatives volume / Binance Futures proxy"
-            termKey="ms30"
-          />
-          {/* Card 4: MS30 / MS180 */}
-          <MetricCard
-            label="MS30 / MS180"
-            value={`${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`}
-            sub="Market-share trend growth. Recent record/near-record share signal."
-            accent={(gp["ms30_ms180_trend"] as number) >= 1.1 ? "green" : "default"}
-          />
-          {/* Card 5: Growth velocity */}
-          {velocity !== undefined && (
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <MetricCard
-              label="Growth velocity"
-              value={`${velocity >= 0 ? "+" : ""}${velocity.toFixed(1)}pp`}
-              sub="30D share change vs 90D valuation seed"
-              accent={velocity >= 0 ? "green" : "red"}
+              label="Spot / mcap / circ"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(1)}M HYPE.`}
             />
-          )}
-          {/* Card 6: Selected P50 PV / token */}
-          <MetricCard
-            label="Selected P50 PV / token"
-            value={fmtPrice(primary.pv.p50)}
-            sub={`Probability-weighted EV ${fmtPrice(primary.ev)}`}
-            accent={p50Upside >= 0 ? "green" : "red"}
-            termKey="p50"
-          />
+            <MetricCard
+              label="MS90 valuation seed"
+              value={pct(gp["ms90_vs_binance"] as number)}
+              sub="Starting HL/Binance share used in the model."
+              termKey="ms90"
+            />
+            <MetricCard
+              label="MS30 vs Binance"
+              value={pct(gp["ms30_vs_binance"] as number)}
+              sub="DefiLlama derivatives volume / Binance Futures proxy."
+              termKey="ms30"
+            />
+            <MetricCard
+              label="Velocity ensemble"
+              value={`${velocity !== undefined ? velocity.toFixed(1) : ((gp["ms30_ms180_trend"] as number - 1) * 100).toFixed(1)}%`}
+              sub="70% 30D/180D + 30% 7D/30D, capped."
+              accent={velocity !== undefined ? (velocity >= 0 ? "green" : "red") : ((gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "red")}
+            />
+            <MetricCard
+              label="P50 PV + stablecoin yield"
+              value={fmtPrice(primary.pv.p50)}
+              sub="Primary P50 PV with clean treasury take-rate."
+              highlighted
+              termKey="p50"
+            />
+          </div>
+          {/* Row 2: 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {(() => {
+              const optScenario = d.scenarios.find((s) => s.key.includes("optionality") || s.key.includes("opt"));
+              const optPv = optScenario ? optScenario.pv.p50 : primary.pv.p50 * 1.10;
+              return (
+                <MetricCard
+                  label="PV + 10% optionality"
+                  value={fmtPrice(optPv)}
+                  sub="Primary P50 PV × 1.10 new-business optionality."
+                />
+              );
+            })()}
+            <MetricCard
+              label="Discount rate"
+              value={`${(d.model.discount_rate * 100).toFixed(1)}%`}
+              sub="Applied over the 3-year horizon."
+              termKey="dr"
+            />
+            <MetricCard
+              label="Clean revenue take-rate"
+              value="0.026%"
+              sub="Treasury revenue. Total user fee rate remains about 0.034% including builder-code fees."
+            />
+          </div>
         </div>
       ) : (
         /* Per-token cards matching HYPE style */
@@ -2433,7 +2476,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             label="P50 Fair Value"
             value={fmtPrice(primary.pv.p50)}
             sub={`P25 ${fmtPrice(primary.pv.p25)} · P75 ${fmtPrice(primary.pv.p75)}`}
-            accent={p50Upside >= 0 ? "green" : "red"}
+            highlighted
             termKey="p50"
           />
           <MetricCard
@@ -2446,63 +2489,17 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
         </div>
       )}
 
-      {/* ── Model info strip ─────────────────────────────────────────── */}
-      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-6 py-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
-        <span className="text-gray-400 font-medium">{d.model.type}</span>
-        <span className="flex items-center gap-1">DR <InfoTooltip termKey="dr" /><span className="text-gray-300 ml-1">{dr}%</span></span>
-        <span className="flex items-center gap-1">{d.model.multiple}× multiple <InfoTooltip termKey="multiple" /></span>
-        <span className="flex items-center gap-1">{(d.model.paths / 1000).toFixed(0)}k paths <InfoTooltip termKey="paths" /></span>
-        {d.data_freshness && <span>data as of <span className="text-gray-300">{d.data_freshness}</span></span>}
-      </div>
-
       {/* ── Market share trend ───────────────────────────────────────── */}
       {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
-      {tokenKey === "uni" && <UniBinanceSpotShareSection data={d} />}
-
-      {/* ── Model assumptions ────────────────────────────────────────── */}
-      {tokenKey === "hype" && <HypeModelAssumptions data={d} />}
 
       {/* ── Model outputs ────────────────────────────────────────────── */}
       {tokenKey === "hype" && primary.y3_price_p50 && (
-        <HypeModelOutputs scenario={primary} spot={spot} />
+        <HypeModelOutputs data={d} />
       )}
-
-      {/* ── Non-HYPE: key metrics (HYPE only) ────────────────────────── */}
-
-      {/* ── Non-HYPE: model assumptions ───────────────────────────────── */}
-      {tokenKey !== "hype" && <TokenModelAssumptions tokenKey={tokenKey} model={d.model} />}
-
-      {/* ── Non-HYPE: model outputs ────────────────────────────────────── */}
       {tokenKey !== "hype" && <TokenModelOutputs data={d} tokenKey={tokenKey} />}
 
-      {/* ── Scenario comparison table ─────────────────────────────────── */}
-      <ScenarioTable scenarios={d.scenarios} spot={spot} />
-
       {/* ── PV price distribution ─────────────────────────────────────── */}
-      <DistributionChart scenario={primary} spot={spot} ev={primary.ev} />
-
-
-      {/* ── HYPE: Historical charts (backtest, buyback, EOY3 MS) ─────── */}
-      {tokenKey === "hype" && d.hist_charts && <HypeHistoricalCharts hc={d.hist_charts} />}
-
-      {/* ── Non-HYPE: Historical charts (backtest, secondary, EOY3 MS) ─ */}
-      {tokenKey !== "hype" && d.hist_charts && <TokenHistoricalCharts hc={d.hist_charts} tokenKey={tokenKey} />}
-
-      {d.caveats && d.caveats.length > 0 && <TokenCaveats caveats={d.caveats} />}
-
-      {/* ── Tech score monthly history ────────────────────────────────── */}
-      <TechScoreHistoryChart tokenKey={tokenKey} />
-
-      {/* ── HYPE: DefiLlama MCP weekly answer ────────────────────────── */}
-      {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
-        <HypeMcpWeekly bullets={d.mcp_bullets} asOf={d.data_freshness} />
-      )}
-
-      {d.as_of_utc && (
-        <div className="text-xs text-gray-600 text-right">
-          Valuation computed {new Date(d.as_of_utc).toLocaleString()}
-        </div>
-      )}
+      <DistributionChart scenario={primary} spot={spot} />
     </div>
   );
 }
