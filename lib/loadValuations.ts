@@ -88,6 +88,7 @@ export interface HistCharts {
   buyback_horizon?: { date: string; years: number }[];
   secondary_chart?: SecondaryChart;
   eoy3_ms: { date: string; eoy3: number; ms90: number; ms30: number }[];
+  binance_spot_eoy3_ms?: { date: string; eoy3: number; ms90: number; ms30: number }[];
 }
 
 export interface ValuationData {

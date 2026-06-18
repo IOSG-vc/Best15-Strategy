@@ -1155,6 +1155,76 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
   const tableRows = cfg.tableRows(gp, data);
   if (!tableRows.length) return null;
 
+  // ── UNI: share history + snapshot layout ─────────────────────────────────
+  if (tokenKey === "uni") {
+    const bsHistory = data.hist_charts?.binance_spot_eoy3_ms ?? [];
+    const startPt   = bsHistory[0];
+    const spot      = data.market.spot;
+    const mcap      = data.market.market_cap;
+    const freshness = data.data_freshness ?? "";
+    const tr = (label: string, col1: string, col2: string, col3: string) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-3 w-48">{label}</td>
+        <td className="py-3 text-sm font-mono text-gray-700 text-right pr-6 whitespace-nowrap">{col1}</td>
+        <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right pr-6 whitespace-nowrap">{col2}</td>
+        <td className="py-3 text-sm font-mono text-gray-700 text-right whitespace-nowrap">{col3}</td>
+      </tr>
+    );
+    const snapshotRow = (label: string, value: string) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-3">{label}</td>
+        <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
+      </tr>
+    );
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left: share history table (takes 2/3) */}
+        <div className="lg:col-span-2 bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">UNI / Binance spot share history</h3>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider w-48">Point</th>
+                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">Date</th>
+                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">MS30</th>
+                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">MS90</th>
+              </tr>
+            </thead>
+            <tbody>
+              {startPt && tr("Start of long series", startPt.date, pct(startPt.ms30), startPt.ms90 ? pct(startPt.ms90) : "—")}
+              {tr("Current", freshness, pct(gp["ms30_vs_binance_spot"] as number), pct(gp["ms90_vs_binance_spot"] as number))}
+              {tr("Current spot reference", fmtPrice(spot), `P/S ${((gp["mcap_current_state_gp"] as number) ?? 0).toFixed(1)}x`, `P/GP ${((gp["mcap_full_activation_gp"] as number) ?? 0).toFixed(1)}x`)}
+              {tr("Model terminal", "EOY3", pct(gp["binance_spot_eoy3_share_model"] as number), `seed ${pct(gp["ms90_vs_binance_spot"] as number)}`)}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+            Long-run rolling Uniswap volume divided by BTCUSDT-scaled Binance spot volume, shown from 2022-present. Binance spot is calibrated to Blockworks annual Binance spot totals; current-year daily values use the latest calibrated BTCUSDT share.
+          </p>
+        </div>
+        {/* Right: snapshot + model pivot stacked */}
+        <div className="flex flex-col gap-5">
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+            <div className="text-xs font-mono text-gray-500 mb-3 tracking-wide">Primary Binance spot snapshot</div>
+            <table className="w-full"><tbody>
+              {snapshotRow("MS30 vs Binance spot",  pct(gp["ms30_vs_binance_spot"]  as number))}
+              {snapshotRow("MS90 vs Binance spot",  pct(gp["ms90_vs_binance_spot"]  as number))}
+              {snapshotRow("MS180 vs Binance spot", pct(gp["ms180_vs_binance_spot"] as number))}
+              {snapshotRow("Raw blended velocity",  `${((gp["binance_spot_momentum_initial"] as number) ?? 0).toFixed(2)}×`)}
+              {snapshotRow("Latest 30D Binance spot", fmtLarge(gp["latest30_binance_spot_volume"] as number))}
+            </tbody></table>
+          </div>
+          <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col flex-1">
+            <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Model pivot</div>
+            <div className="text-lg font-bold text-white mb-3 leading-snug">Binance spot is primary; total DEX is sensitivity</div>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              The total-DEX version remains in the scenario table so we can compare protocol-native share versus the HYPE-like CEX denominator.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── ETHFI: two-column layout ─────────────────────────────────────────────
   if (tokenKey === "ethfi") {
     const vel = gp["card_velocity_ensemble"] as unknown as {
