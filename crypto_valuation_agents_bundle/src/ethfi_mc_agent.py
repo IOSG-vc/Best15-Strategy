@@ -33,8 +33,8 @@ SUPPLY_Y3 = 854.7e6
 
 # $6M/year appears to cover on-chain protocol overhead only, not a global card
 # business + validator infrastructure. Keep GP as the primary denominator; use a
-# conservative normalized total-company OPEX assumption only for optional cash.
-OPEX_ANNUAL = 30e6
+# Fully loaded payroll-oriented operating cost assumption for treasury cash.
+OPEX_ANNUAL = 9e6
 DISCOUNT_RATE = 0.275
 N_PATHS = 50_000
 SEED = 42
@@ -56,6 +56,50 @@ def chart(url):
 
 def sum_last(arr, n):
     return sum(v for _, v in arr[-n:]) if arr else 0.0
+
+
+def clamp(x, lo, hi):
+    return max(lo, min(hi, x))
+
+
+def monthly_equivalent_growth(new_avg, old_avg, days_between_midpoints):
+    if new_avg <= 0 or old_avg <= 0 or days_between_midpoints <= 0:
+        return 0.0
+    return (new_avg / old_avg) ** (30 / days_between_midpoints) - 1
+
+
+def card_velocity_ensemble(vol):
+    gdv_7 = sum_last(vol, 7)
+    gdv_30 = sum_last(vol, 30)
+    gdv_180 = sum_last(vol, 180)
+    gdv_prev30 = sum(v for _, v in vol[-60:-30])
+    gdv_prev180 = sum(v for _, v in vol[-360:-180])
+
+    avg_7 = gdv_7 / 7 if gdv_7 else 0.0
+    avg_30 = gdv_30 / 30 if gdv_30 else 0.0
+    avg_180 = gdv_180 / 180 if gdv_180 else 0.0
+
+    raw_30d_mom = gdv_30 / gdv_prev30 - 1 if gdv_prev30 else 0.0
+    raw_180d_mom = gdv_180 / gdv_prev180 - 1 if gdv_prev180 else 0.0
+    velocity_30_180 = monthly_equivalent_growth(avg_30, avg_180, 75)
+    velocity_7_30 = monthly_equivalent_growth(avg_7, avg_30, 11.5)
+
+    capped_30_180 = clamp(velocity_30_180, -0.05, 0.12)
+    capped_7_30 = clamp(velocity_7_30, -0.05, 0.12)
+    ensemble = clamp(0.70 * capped_30_180 + 0.30 * capped_7_30, 0.0, 0.12)
+
+    return {
+        "ensemble_monthly": ensemble,
+        "velocity_30_180": velocity_30_180,
+        "velocity_7_30": velocity_7_30,
+        "capped_30_180": capped_30_180,
+        "capped_7_30": capped_7_30,
+        "raw_30d_mom": raw_30d_mom,
+        "raw_180d_mom": raw_180d_mom,
+        "gdv_7": gdv_7,
+        "gdv_30": gdv_30,
+        "gdv_180": gdv_180,
+    }
 
 
 def protocol_tvl(slug):
@@ -94,6 +138,9 @@ def get_avg_staking_apy():
 
 
 def get_dune_key():
+    env_key = os.environ.get("DUNE_API_KEY", "").strip()
+    if env_key:
+        return env_key
     for p in [os.path.expanduser("~/.hermes/secrets/dune_api_key")]:
         if os.path.exists(p):
             return open(p).read().strip()
@@ -178,7 +225,11 @@ def get_eth_daily_logs():
 
 def growth_path(start_m, m12, m24, m36):
     # Monthly growth path linearly decaying across milestones.
-    pts = [(0, start_m), (11, m12), (23, m24), (35, m36)]
+    return growth_path_points([(0, start_m), (11, m12), (23, m24), (35, m36)])
+
+
+def growth_path_points(points):
+    pts = sorted(points)
     out = []
     for i in range(36):
         for (a, ga), (b, gb) in zip(pts[:-1], pts[1:]):
@@ -186,6 +237,8 @@ def growth_path(start_m, m12, m24, m36):
                 t = (i - a) / max(1, b - a)
                 out.append(ga + (gb - ga) * t)
                 break
+        else:
+            out.append(pts[-1][1])
     return out
 
 
@@ -221,6 +274,7 @@ def run():
     take_bps_30 = rev_30 / gdv_30 * 10000 if gdv_30 else 0
     card_mom = gdv_30 / gdv_prev30 - 1 if gdv_prev30 else 0
     card_wow = gdv_7 / gdv_prev7 - 1 if gdv_prev7 else 0
+    card_velocity = card_velocity_ensemble(vol)
 
     stake_tvl = protocol_tvl("ether.fi-stake")
     vault_tvl = protocol_tvl("ether.fi-liquid")
@@ -231,6 +285,7 @@ def run():
     price = market["current_price"]
     mcap = market["market_cap"]
     fdv = market.get("fully_diluted_valuation") or price * SUPPLY_Y3
+    effective_supply_y3 = max(SUPPLY_Y3, float(market.get("circulating_supply") or 0.0))
 
     # Current GP anchor
     current_card_gp = gdv_ann_30 * CARD_TAKE * CARD_MARGIN_BASE
@@ -239,20 +294,31 @@ def run():
     current_gp = current_card_gp + current_stake_gp + current_vault_gp
 
     card_anchor = dune_card_growth_anchor()
-    base_start_m = card_anchor["monthly_start_growth"] if card_anchor else 0.09
-    bear_start_m = max(0.015, base_start_m * 0.50)
-    bull_start_m = min(0.12, base_start_m * 1.35)
+    observed_start_m = card_velocity["ensemble_monthly"]
+    if observed_start_m <= 0 and card_anchor:
+        observed_start_m = max(0.0, min(0.12, card_anchor["monthly_start_growth"]))
+    if observed_start_m <= 0:
+        observed_start_m = 0.075
+    bear_start_m = observed_start_m
+    base_start_m = observed_start_m
+    bull_start_m = observed_start_m
 
-    # Current card growth is a KPI, not a 3Y compounding assumption. Use an adaptive
-    # Dune-based formula for starting growth, then force decay. This keeps the model
-    # future-proof: if card GMV slows, the starting growth automatically falls.
+    # Card growth velocity starts from the observed current MoM rate. Scenarios
+    # differ by durability: bear fades in 6 months, base mostly within 12 months,
+    # bull more gradually over 24 months.
     scenarios = {
-        # Product growth slows quickly.
-        "bear": {"margin": CARD_MARGIN_BEAR, "growth": growth_path(bear_start_m, 0.005, 0.000, 0.000)},
-        # Conservative anchor: weekly CGR = (min + median) / 2 over mature Dune windows, converted to MoM.
-        "base": {"margin": CARD_MARGIN_BASE, "growth": growth_path(base_start_m, 0.030, 0.010, 0.003)},
-        # Strong adoption, capped starting growth.
-        "bull": {"margin": CARD_MARGIN_BULL, "growth": growth_path(bull_start_m, 0.050, 0.020, 0.010)},
+        "bear": {
+            "margin": CARD_MARGIN_BEAR,
+            "growth": growth_path_points([(0, bear_start_m), (5, 0.0), (35, 0.0)]),
+        },
+        "base": {
+            "margin": CARD_MARGIN_BASE,
+            "growth": growth_path_points([(0, base_start_m), (11, 0.012), (35, 0.002)]),
+        },
+        "bull": {
+            "margin": CARD_MARGIN_BULL,
+            "growth": growth_path_points([(0, bull_start_m), (23, 0.010), (35, 0.005)]),
+        },
     }
 
     # Small monthly execution noise only; do not bootstrap huge weekly growth into
@@ -281,9 +347,11 @@ def run():
         "pv_15x_gp": [],
         "pv_15x_gp_plus_cash": [],
         "y3_gp": [],
+        "y3_card_gp": [],
+        "y3_stake_gp": [],
+        "y3_vault_gp": [],
         "y3_card_gdv_ann": [],
         "y3_stake_tvl": [],
-        "y3_stake_gp_ann": [],
         "treasury_cash": [],
     }
     scenario_seed_offsets = {"bear": 0, "base": 1_000_000, "bull": 2_000_000}
@@ -293,9 +361,11 @@ def run():
         pv_gp = []
         pv_gp_cash = []
         y3_gp = []
+        y3_card_gp = []
+        y3_stake_gp = []
+        y3_vault_gp = []
         y3_card_gdv_ann = []
         y3_stake_tvl = []
-        y3_stake_gp_ann = []
         treasury_cash = []
         for path_i in range(N_PATHS):
             # Card path: deterministic decay + dampened stochastic monthly noise.
@@ -324,42 +394,50 @@ def run():
             y3 = sum(monthly_gp[-12:])
             cash = sum(max(gp - OPEX_ANNUAL/12, 0.0) for gp in monthly_gp)
             y3_gp.append(y3)
+            y3_card_gp.append(sum(card_monthly_gp[-12:]))
+            y3_stake_gp.append(sum(stake_monthly_gp[-12:]))
+            y3_vault_gp.append(sum(vault_monthly_gp[-12:]))
             treasury_cash.append(cash)
             y3_card_gdv_ann.append(card_gdv_ann)
             y3_stake_tvl.append(final_stake_tvl)
-            y3_stake_gp_ann.append(final_stake_tvl * staking_apy * STAKE_TAKE)
             ev = y3 * Y3_GP_MULTIPLE
-            pv_gp.append(ev / SUPPLY_Y3 / ((1 + DISCOUNT_RATE) ** 3))
-            pv_gp_cash.append((ev + cash) / SUPPLY_Y3 / ((1 + DISCOUNT_RATE) ** 3))
+            pv_gp.append(ev / effective_supply_y3 / ((1 + DISCOUNT_RATE) ** 3))
+            pv_gp_cash.append((ev + cash) / effective_supply_y3 / ((1 + DISCOUNT_RATE) ** 3))
         y3_gp_summary = summarize(y3_gp)
         cash_summary = summarize(treasury_cash)
         sensitivity_rates = [max(0.01, DISCOUNT_RATE - 0.10), DISCOUNT_RATE - 0.05, DISCOUNT_RATE, DISCOUNT_RATE + 0.05, DISCOUNT_RATE + 0.10]
         sensitivity = {
             f"{rate:.1%}": {
-                "pv_15x_gp_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE) / SUPPLY_Y3 / ((1 + rate) ** 3),
-                "pv_15x_gp_plus_cash_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE + cash_summary["p50"]) / SUPPLY_Y3 / ((1 + rate) ** 3),
+                "pv_15x_gp_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE) / effective_supply_y3 / ((1 + rate) ** 3),
+                "pv_15x_gp_plus_cash_p50": (y3_gp_summary["p50"] * Y3_GP_MULTIPLE + cash_summary["p50"]) / effective_supply_y3 / ((1 + rate) ** 3),
             }
             for rate in sensitivity_rates
         }
         results[name] = {
             "pv_15x_gp": summarize(pv_gp, price),
             "pv_15x_gp_plus_cash": summarize(pv_gp_cash, price),
+            "pv_15x_gp_plus_cash_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in pv_gp_cash], price),
             "y3_gp": summarize(y3_gp),
+            "y3_card_gp": summarize(y3_card_gp),
+            "y3_stake_gp": summarize(y3_stake_gp),
+            "y3_vault_gp": summarize(y3_vault_gp),
             "y3_card_gdv_ann": summarize(y3_card_gdv_ann),
             "y3_stake_tvl": summarize(y3_stake_tvl),
-            "y3_stake_gp_ann": summarize(y3_stake_gp_ann),
             "treasury_cash": summarize(treasury_cash),
             "hurdle_sensitivity": sensitivity,
             "margin": sc["margin"],
             "start_growth": sc["growth"][0],
+            "growth_path": sc["growth"],
         }
         sample_n = int(round(N_PATHS * SCENARIO_WEIGHTS.get(name, 0.0)))
         weighted_samples["pv_15x_gp"].extend(pv_gp[:sample_n])
         weighted_samples["pv_15x_gp_plus_cash"].extend(pv_gp_cash[:sample_n])
         weighted_samples["y3_gp"].extend(y3_gp[:sample_n])
+        weighted_samples["y3_card_gp"].extend(y3_card_gp[:sample_n])
+        weighted_samples["y3_stake_gp"].extend(y3_stake_gp[:sample_n])
+        weighted_samples["y3_vault_gp"].extend(y3_vault_gp[:sample_n])
         weighted_samples["y3_card_gdv_ann"].extend(y3_card_gdv_ann[:sample_n])
         weighted_samples["y3_stake_tvl"].extend(y3_stake_tvl[:sample_n])
-        weighted_samples["y3_stake_gp_ann"].extend(y3_stake_gp_ann[:sample_n])
         weighted_samples["treasury_cash"].extend(treasury_cash[:sample_n])
 
     weighted_pv = weighted_samples["pv_15x_gp"]
@@ -370,9 +448,11 @@ def run():
         "pv_15x_gp_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in weighted_pv], price),
         "pv_15x_gp_plus_cash_plus_optionality": summarize([x * (1 + OPTIONALITY_BONUS) for x in weighted_pv_cash], price),
         "y3_gp": summarize(weighted_samples["y3_gp"]),
+        "y3_card_gp": summarize(weighted_samples["y3_card_gp"]),
+        "y3_stake_gp": summarize(weighted_samples["y3_stake_gp"]),
+        "y3_vault_gp": summarize(weighted_samples["y3_vault_gp"]),
         "y3_card_gdv_ann": summarize(weighted_samples["y3_card_gdv_ann"]),
         "y3_stake_tvl": summarize(weighted_samples["y3_stake_tvl"]),
-        "y3_stake_gp_ann": summarize(weighted_samples["y3_stake_gp_ann"]),
         "treasury_cash": summarize(weighted_samples["treasury_cash"]),
         "scenario_weights": SCENARIO_WEIGHTS,
         "optionality_bonus": OPTIONALITY_BONUS,
@@ -390,7 +470,7 @@ def run():
     if current_gp and mcap / current_gp > 20:
         insights.append("Current MCap/GP is above 20x; current valuation already prices meaningful forward GP growth.")
     if results["base"]["treasury_cash"]["p50"] < 5e6:
-        insights.append("At normalized $30M OPEX, base-case cash accumulation is negligible; treat '+ cash' as sensitivity, not core value.")
+        insights.append("At normalized $9M OPEX, treasury cash accumulation becomes more meaningful; still treat '+ cash' as additive rather than supply reduction.")
     insights.append("Revisit supply denominator if the unaccounted 145.3M ETHFI receives a clear unlock schedule.")
 
     output = {
@@ -404,12 +484,14 @@ def run():
             "vault_fee": VAULT_FEE,
             "opex_optional": OPEX_ANNUAL,
             "discount_rate": DISCOUNT_RATE,
-            "supply_y3": SUPPLY_Y3,
+            "supply_y3": effective_supply_y3,
+            "scheduled_supply_y3": SUPPLY_Y3,
             "y3_gp_multiple": Y3_GP_MULTIPLE,
             "scenario_weights": SCENARIO_WEIGHTS,
             "optionality_bonus": OPTIONALITY_BONUS,
             "lending": "excluded",
             "card_growth_anchor": card_anchor,
+            "card_velocity_ensemble": card_velocity,
         },
         "market": market,
         "apy_sources": apy_sources,
@@ -435,8 +517,8 @@ def run():
     lines.append(f"Spot                              {fmt_px(price)}")
     lines.append(f"Market cap                        {fmt_usd(mcap)}")
     lines.append(f"FDV                               {fmt_usd(fdv)}")
-    lines.append(f"Y3 supply                         {SUPPLY_Y3/1e6:.1f}M")
-    lines.append(f"Supply note                       excludes unscheduled 145.3M ETHFI")
+    lines.append(f"Y3 supply                         {effective_supply_y3/1e6:.1f}M")
+    lines.append(f"Scheduled supply reference        {SUPPLY_Y3/1e6:.1f}M")
     lines.append(f"Discount rate                     {DISCOUNT_RATE:.1%}")
     lines.append(f"Y3 GP multiple                    {Y3_GP_MULTIPLE:.0f}x")
     lines.append(f"Scenario weights                  bear/base/bull {SCENARIO_WEIGHTS['bear']:.0%}/{SCENARIO_WEIGHTS['base']:.0%}/{SCENARIO_WEIGHTS['bull']:.0%}")
@@ -471,7 +553,7 @@ def run():
         for label, key in [("15x GP", "pv_15x_gp"), ("15x GP + cash", "pv_15x_gp_plus_cash")]:
             s = results[name][key]
             lines.append(f"{name.title():<10} {label:<18} {fmt_px(s['p25']):>7} {fmt_px(s['p50']):>7} {fmt_px(s['ev']):>7} {fmt_px(s['p75']):>7} {fmt_px(s['p90']):>7} {s['p_spot_justified']*100:>7.1f}%")
-    for label, key in [("20/40/40", "pv_15x_gp"), ("+5% opt", "pv_15x_gp_plus_optionality")]:
+    for label, key in [("20/40/40", "pv_15x_gp"), ("+10% opt", "pv_15x_gp_plus_optionality"), ("cash +10% opt", "pv_15x_gp_plus_cash_plus_optionality")]:
         s = results["weighted_20_40_40"][key]
         lines.append(f"{'Weighted':<10} {label:<18} {fmt_px(s['p25']):>7} {fmt_px(s['p50']):>7} {fmt_px(s['ev']):>7} {fmt_px(s['p75']):>7} {fmt_px(s['p90']):>7} {s['p_spot_justified']*100:>7.1f}%")
     lines.append("```")
@@ -498,12 +580,12 @@ def run():
     lines.append("")
     lines.append("Independent-driver sanity check:")
     lines.append("```text")
-    lines.append(f"{'Scenario':<10} {'Card GDV P25/P50/P75':>29} {'Stake TVL P25/P50/P75':>29} {'Stake GP ann P50':>17}")
+    lines.append(f"{'Scenario':<10} {'Card GDV P25/P50/P75':>29} {'Stake TVL P25/P50/P75':>29} {'Card GP P50':>12} {'Stake GP P50':>13}")
     lines.append("-" * 92)
     for name in ["bear", "base", "bull"]:
         r = results[name]
-        card = r['y3_card_gdv_ann']; stake = r['y3_stake_tvl']; stake_gp = r['y3_stake_gp_ann']
-        lines.append(f"{name.title():<10} {fmt_usd(card['p25'])}/{fmt_usd(card['p50'])}/{fmt_usd(card['p75']):>9} {fmt_usd(stake['p25'])}/{fmt_usd(stake['p50'])}/{fmt_usd(stake['p75']):>9} {fmt_usd(stake_gp['p50']):>17}")
+        card = r['y3_card_gdv_ann']; stake = r['y3_stake_tvl']; card_gp = r['y3_card_gp']; stake_gp = r['y3_stake_gp']
+        lines.append(f"{name.title():<10} {fmt_usd(card['p25'])}/{fmt_usd(card['p50'])}/{fmt_usd(card['p75']):>9} {fmt_usd(stake['p25'])}/{fmt_usd(stake['p50'])}/{fmt_usd(stake['p75']):>9} {fmt_usd(card_gp['p50']):>12} {fmt_usd(stake_gp['p50']):>13}")
     lines.append("```")
     lines.append("")
     lines.append("## 3) Sanity checks / current multiples")
@@ -514,9 +596,9 @@ def run():
     lines.append(f"Current bottom-up GP              {fmt_usd(current_gp)}")
     lines.append(f"MCap / current GP                 {mcap/current_gp:.1f}x")
     lines.append(f"FDV / current GP                  {fdv/current_gp:.1f}x")
-    lines.append(f"Current 20x GP / Y3 supply        {fmt_px(current_gp*Y1_MOMENTUM_MULTIPLE/SUPPLY_Y3)}")
-    lines.append(f"Current 15x GP / Y3 supply        {fmt_px(current_gp*Y3_GP_MULTIPLE/SUPPLY_Y3)}")
-    lines.append(f"Discounted flat current 15x GP    {fmt_px(current_gp*Y3_GP_MULTIPLE/SUPPLY_Y3/((1+DISCOUNT_RATE)**3))}")
+    lines.append(f"Current 20x GP / Y3 supply        {fmt_px(current_gp*Y1_MOMENTUM_MULTIPLE/effective_supply_y3)}")
+    lines.append(f"Current 15x GP / Y3 supply        {fmt_px(current_gp*Y3_GP_MULTIPLE/effective_supply_y3)}")
+    lines.append(f"Discounted flat current 15x GP    {fmt_px(current_gp*Y3_GP_MULTIPLE/effective_supply_y3/((1+DISCOUNT_RATE)**3))}")
     lines.append("```")
     report = "\n".join(lines)
     open(MD_OUT, "w").write(report)
