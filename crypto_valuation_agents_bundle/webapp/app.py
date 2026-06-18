@@ -57,6 +57,13 @@ AGENTS = {
         "available": False,
         "unavailable_reason": "Requires sky_research_extra.json data file with money-market TVL returns (not included in bundle)",
     },
+    "cards": {
+        "name": "Collector Crypt",
+        "symbol": "CARDS",
+        "chain": "Solana",
+        "module": "agents.cards",
+        "available": True,
+    },
 }
 
 _state_lock = threading.Lock()

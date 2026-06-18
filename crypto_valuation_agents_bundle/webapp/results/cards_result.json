@@ -1,0 +1,138 @@
+{
+  "token": "CARDS",
+  "name": "Collector Crypt",
+  "as_of_utc": "2026-06-18T07:04:25.679953+00:00",
+  "market": {
+    "spot": 0.2338976713,
+    "market_cap": 295879688.0,
+    "fdv": 467795342.6,
+    "circulating_supply": 1264934993.0,
+    "max_supply": 2000000000.0
+  },
+  "model": {
+    "type": "3Y GMV-to-GP velocity decay model",
+    "discount_rate": 0.3,
+    "multiple": 15.0,
+    "paths": 3,
+    "supply_y3": 1264934993.0,
+    "note": "CARDS uses 30D annualized Gacha GMV, fixed 12.35% net spread, 60% GP conversion, 15x GP, and capped 7D/30D GMV velocity decaying linearly to zero over 6/12/24 months with 40/40/20 weights."
+  },
+  "current_gp": {
+    "gacha_gmv_30d": 109016833.0,
+    "gacha_gmv_30d_ann": 1326371468.1666665,
+    "net_revenue_30d": 13463563.0,
+    "net_revenue_30d_ann": 163806683.16666666,
+    "net_spread": 0.1235,
+    "gp_conversion": 0.6,
+    "current_gp_proxy": 98284009.89999999,
+    "latest_7d_avg_gmv": 6403403.285714285,
+    "prior_30d_avg_gmv": 2503460.3333333335,
+    "gmv_velocity_monthly": 0.2,
+    "velocity_source": "Capped 7D/30D GMV velocity; 30D/180D unavailable until enough history exists.",
+    "y3_gp_p50": 332268679.8337095,
+    "y3_gmv_p50": 4484057757.539939,
+    "weighted_pv": 2.232912796561262,
+    "weighted_y3_gmv": 5582909134.786472,
+    "weighted_y3_gp": 413693566.88767755,
+    "base_full_fdv_pv": 1.1342808824546293,
+    "fdv_to_net_revenue_30d_ann": 2.8557769045603423,
+    "float_value_to_gp_proxy": 3.010456007045761
+  },
+  "scenarios": [
+    {
+      "key": "decay_6m",
+      "label": "A: 6M velocity decay",
+      "weight": 0.4,
+      "velocity_decay_months": 6,
+      "y3_gmv": 2551600725.6526294,
+      "net_spread": 0.1235,
+      "gp_conversion": 0.6,
+      "y3_gp": 189073613.77085984,
+      "multiple": 15.0,
+      "terminal_value": 2836104206.5628977,
+      "pv": {
+        "p25": 1.020525638958419,
+        "p50": 1.020525638958419,
+        "p75": 1.020525638958419,
+        "p90": 1.020525638958419
+      },
+      "ev": 1.020525638958419,
+      "prob_above_spot": 1.0,
+      "prob_y2_undiscounted_up_30": null,
+      "prob_y2_undiscounted_down_30": null,
+      "is_primary": false
+    },
+    {
+      "key": "decay_12m",
+      "label": "B: 12M velocity decay",
+      "weight": 0.4,
+      "velocity_decay_months": 12,
+      "y3_gmv": 4484057757.539939,
+      "net_spread": 0.1235,
+      "gp_conversion": 0.6,
+      "y3_gp": 332268679.8337095,
+      "multiple": 15.0,
+      "terminal_value": 4984030197.505642,
+      "pv": {
+        "p25": 1.7934216204494382,
+        "p50": 1.7934216204494382,
+        "p75": 1.7934216204494382,
+        "p90": 1.7934216204494382
+      },
+      "ev": 1.7934216204494382,
+      "prob_above_spot": 1.0,
+      "prob_y2_undiscounted_up_30": null,
+      "prob_y2_undiscounted_down_30": null,
+      "is_primary": true
+    },
+    {
+      "key": "decay_24m",
+      "label": "C: 24M velocity decay",
+      "weight": 0.2,
+      "velocity_decay_months": 24,
+      "y3_gmv": 13843228707.547222,
+      "net_spread": 0.1235,
+      "gp_conversion": 0.6,
+      "y3_gp": 1025783247.2292491,
+      "multiple": 15.0,
+      "terminal_value": 15386748708.438736,
+      "pv": {
+        "p25": 5.536669463990595,
+        "p50": 5.536669463990595,
+        "p75": 5.536669463990595,
+        "p90": 5.536669463990595
+      },
+      "ev": 5.536669463990595,
+      "prob_above_spot": 1.0,
+      "prob_y2_undiscounted_up_30": null,
+      "prob_y2_undiscounted_down_30": null,
+      "is_primary": false
+    },
+    {
+      "key": "weighted",
+      "label": "Weighted 40/40/20",
+      "weight": 1.0,
+      "y3_gmv": 5582909134.786472,
+      "net_spread": 0.1235,
+      "gp_conversion": 0.6,
+      "y3_gp": 413693566.88767755,
+      "multiple": 15.0,
+      "pv": {
+        "p25": 2.232912796561262,
+        "p50": 2.232912796561262,
+        "p75": 2.232912796561262,
+        "p90": 2.232912796561262
+      },
+      "ev": 2.232912796561262,
+      "prob_above_spot": 1.0,
+      "prob_y2_undiscounted_up_30": null,
+      "prob_y2_undiscounted_down_30": null,
+      "is_primary": false
+    }
+  ],
+  "caveats": [
+    "DefiLlama revenue is net of pack buyback spends, but not audited company GP.",
+    "True inventory turnover velocity is unavailable without card-base or cohort reporting.",
+    "Foundation unlock bucket remains excluded from the float-friendly primary denominator."
+  ]
+}
