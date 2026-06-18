@@ -1013,6 +1013,7 @@ Horizon: 3 years`}</pre>
 interface MsConfig {
   chartNote: string;
   tableNote: string;
+  driversLabel?: string;
   driversTitle: string;
   driversBody: React.ReactNode;
   tableRows: (gp: Record<string, number>, data: ValuationData) => [string, string][];
@@ -1048,21 +1049,25 @@ const MS_CONFIG: Record<string, MsConfig> = {
   },
   lighter: {
     yCapPct: 0.08,
-    chartNote: "Rolling-window snapshots only: 30D / 90D / 180D Lighter paid perps volume divided by Binance Futures proxy. Lighter history is still short, so this is a compact momentum read rather than a full daily market-share history.",
-    tableNote: "Revenue and holder revenue from DefiLlama; stablecoin yield is a HYPE-style sensitivity, not confirmed current Lighter protocol revenue.",
-    driversTitle: "Perps holder revenue + optional TVL yield",
+    chartNote: "",
+    tableNote: "",
+    driversLabel: "Caveat",
+    driversTitle: "Short history",
     driversBody: null,
-    tableRows: (gp, _data) => ([
-      ["MS30 vs Binance Futures",             pct(gp["ms30_vs_binance"] as number)],
-      ["MS90 vs Binance Futures",             pct(gp["ms90_vs_binance"] as number)],
-      ["MS180 vs Binance Futures",            pct(gp["ms180_vs_binance"] as number)],
-      ["MS30/MS180 trend",                    `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
-      ["DefiLlama 30D revenue ann.",          fmtLarge(gp["defillama_30d_ann"] as number)],
-      ["Holder revenue 30D ann.",             fmtLarge(gp["holders_revenue_30d_ann"] as number)],
-      ["Revenue take-rate",                   `${((gp["net_revenue_take_rate"] as number) * 10000).toFixed(2)} bps`],
-      ["Supply-adj. buyback yrs (+yield)",    `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
-      ["Supply-adj. fee-only buyback yrs",    `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
-    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×" && v !== "NaNy"),
+    tableRows: (gp, data) => {
+      const protocolRev = gp["defillama_30d_ann"] as number;
+      const holderRev   = gp["holders_revenue_30d_ann"] as number;
+      const mcap        = data.market.market_cap;
+      return ([
+        ["30D protocol revenue ann.",        fmtLarge(protocolRev)],
+        ["30D holder revenue ann.",          fmtLarge(holderRev)],
+        ["P/S: mcap / protocol revenue",     protocolRev > 0 ? `${(mcap / protocolRev).toFixed(1)}x` : "—"],
+        ["P/GP: mcap / holder revenue",      holderRev   > 0 ? `${(mcap / holderRev).toFixed(1)}x`   : "—"],
+        ["Holder capture",                   pct(gp["holder_capture_30d"] as number)],
+        ["30D perps volume",                 fmtLarge(gp["perp_volume_30d"] as number)],
+        ["Fee-only buyback years",           `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+      ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "—" && v !== "NaNy");
+    },
   },
   uni: {
     yCapPct: 0.50,
@@ -1142,23 +1147,12 @@ const MS_CONFIG: Record<string, MsConfig> = {
 };
 
 function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
-  const history = data.ms_history;
-  if (!history?.length) return null;
   const cfg = MS_CONFIG[tokenKey];
   if (!cfg) return null;
 
   const gp = data.current_gp;
-  const step  = Math.max(1, Math.floor(history.length / 6));
-  const ticks = history
-    .filter((_, i) => i % step === 0 || i === history.length - 1)
-    .map((d) => d.date);
-
-  const ms30Vals = history.map((d) => d.ms30).filter(Boolean) as number[];
-  const ms90Vals = history.map((d) => d.ms90).filter((v): v is number => v != null);
-  const yMin = Math.max(0, Math.min(...ms30Vals) - 0.01);
-  const yMax = Math.min(cfg.yCapPct, Math.max(...ms90Vals.concat(ms30Vals)) + 0.01);
-
   const tableRows = cfg.tableRows(gp, data);
+  if (!tableRows.length) return null;
 
   return (
     <div className="space-y-5">
@@ -1179,9 +1173,9 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           </table>
         </div>
 
-        {/* Core revenue drivers (dark card) */}
+        {/* Core revenue drivers / Caveat (dark card) */}
         <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col">
-          <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Core revenue drivers</div>
+          <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">{cfg.driversLabel ?? "Core revenue drivers"}</div>
           <div className="text-xl font-bold text-white mb-3">{cfg.driversTitle}</div>
           {tokenKey === "hype" && (
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -1190,8 +1184,7 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           )}
           {tokenKey === "lighter" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              Lighter MC mirrors the HYPE framework: Binance Futures proxy × Lighter market share × observed net take-rate. Holder revenue funds 100% buybacks while fixed unlocks increase supply. A separate HYPE-style TVL yield line adds{" "}
-              <span className="text-white font-medium">{fmtLarge(gp["yield_run_rate"] as number)}</span> annual run-rate sensitivity.
+              Lighter paid derivatives history is short; historical diagnostics use daily price and trailing 30D revenue where available. Market-share trend uses rolling-window snapshots (30D/90D/180D) against Binance Futures, not a full daily share history.
             </p>
           )}
           {tokenKey === "uni" && (
