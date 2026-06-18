@@ -2687,6 +2687,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const isLighterLayout = tokenKey === "lighter" && typeof gp["ms90_vs_binance"] === "number";
   const isEthfiLayout = tokenKey === "ethfi";
   const isUniLayout = tokenKey === "uni";
+  const isSkyLayout = tokenKey === "sky";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -2942,6 +2943,65 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </div>
         </div>
+      ) : isSkyLayout ? (
+        /* SKY 5+4 card layout */
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard
+              label="Spot / mcap / FDV"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · FDV ${fmtLarge(d.market.fdv)} · max ${(d.market.max_supply / 1e9).toFixed(2)}B SKY.`}
+            />
+            <MetricCard
+              label="Official USDS + DAI"
+              value={fmtLarge(gp["total_sky_stable_supply"] as number)}
+              sub={`Sky supply page API, ${gp["official_supply_date"] != null ? String(gp["official_supply_date"] as unknown as string) : "—"}: USDS ${fmtLarge(gp["usds_supply"] as number)} + DAI ${fmtLarge(gp["dai_supply"] as number)}.`}
+            />
+            <MetricCard
+              label="Gross income take-rate"
+              value={`${((gp["gross_income_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`}
+              sub="Gross income yield applied to modeled Sky supply."
+            />
+            <MetricCard
+              label="Net GP take-rate"
+              value={`${((gp["net_gp_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`}
+              sub={`After ${((gp["savings_cost_rate_bps"] as number) ?? 0).toFixed(1)} bps savings cost and ${((gp["stusds_cost_rate_bps"] as number) ?? 0).toFixed(1)} bps stUSDS cost.`}
+            />
+            <MetricCard
+              label="Mcap / current GP"
+              value={`${((gp["mcap_current_gp"] as number) ?? 0).toFixed(1)}x`}
+              sub={`FDV / current GP ${((gp["fdv_current_gp"] as number) ?? 0).toFixed(1)}x; current GP ${fmtLarge(gp["current_gp"] as number)} annualized.`}
+            />
+          </div>
+          {/* Row 2: 4 cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MetricCard
+              label="Velocity ensemble"
+              value={`${(((gp["velocity_ensemble_monthly"] as number) ?? 0) * 100).toFixed(2)}%/mo`}
+              sub={`Long ${(((gp["velocity_long_component_monthly"] as number) ?? 0) * 100).toFixed(2)}%/mo · short ${(((gp["velocity_short_component_monthly"] as number) ?? 0) * 100).toFixed(2)}%/mo.`}
+              accent={(gp["velocity_ensemble_monthly"] as number) > 0 ? "green" : "default"}
+            />
+            <MetricCard
+              label={`P50 PV · ${d.model.multiple}x NP`}
+              value={fmtPrice(primary.pv.p50)}
+              sub={`Base ${fmtLarge(gp["base_opex"] as number)} OPEX, ${d.model.multiple}x net-profit valuation; GP case shown as sensitivity.`}
+              highlighted
+              termKey="p50"
+            />
+            <MetricCard
+              label="2Y +30% / -30%"
+              value={`${primary.prob_spot_up_30_2y != null ? pct(primary.prob_spot_up_30_2y) : "—"} / ${primary.prob_spot_down_30_2y != null ? pct(primary.prob_spot_down_30_2y) : "—"}`}
+              sub={`Undiscounted two-year path probabilities; P(spot) ${pct(primary.prob_above_spot)}.`}
+            />
+            <MetricCard
+              label="Discount / multiple"
+              value={`${(d.model.discount_rate * 100).toFixed(0)}% · ${d.model.multiple}×`}
+              sub={`Primary uses NP multiple; 10x GP sensitivity also shown. P(3x) ${primary.prob_3x != null ? pct(primary.prob_3x) : "—"} right-tail.`}
+              termKey="dr"
+            />
+          </div>
+        </div>
       ) : (
         /* Per-token cards matching HYPE style */
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2949,9 +3009,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           <MetricCard
             label="Spot / mcap / circ"
             value={fmtPrice(spot)}
-            sub={tokenKey === "sky"
-              ? `Mcap ${fmtLarge(d.market.market_cap)} · FDV ${fmtLarge(d.market.fdv)} · max ${(d.market.max_supply / 1e9).toFixed(2)}B`
-              : `Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
+            sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
           />
           {/* Card 2–4: token-specific GP metrics */}
           {tokenKey === "jup" && <>
@@ -2967,14 +3025,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               sub="Perps / spot · 70% MS30/MS180 + 30% MS7/MS30"
               accent={(gp["perps_share_velocity_capped"] as number) >= 1.0 ? "green" : "red"}
             />
-          </>}
-          {tokenKey === "sky" && <>
-            <MetricCard label="Gross income take-rate" value={`${((gp["gross_income_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`} sub={`Gross income ${fmtLarge(gp["gross_income"] as number)} ann.`} />
-            <MetricCard label="Net GP take-rate" value={`${((gp["net_gp_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`} sub={`After savings and stUSDS costs`} />
-            {gp["ms90_vs_money_market"] != null
-              ? <MetricCard label="Velocity ensemble" value={`${(((gp["velocity_ensemble_monthly"] as number) ?? 0) * 100).toFixed(2)}%/mo`} sub={`70% MS30/MS180 + 30% MS7/MS30`} accent={(gp["velocity_ensemble_monthly"] as number) > 0 ? "green" : "default"} />
-              : <MetricCard label="Official USDS + DAI" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky supply page API" />
-            }
           </>}
           {tokenKey === "vvv" && <>
             <MetricCard
