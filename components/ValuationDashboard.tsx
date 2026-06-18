@@ -2116,10 +2116,49 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B`, sub: (gp) => deltaText(gp["y3_supply_p50"], gp["current_circulating_supply"], "vs current circulating supply") },
   ],
   lighter: [
-    { label: "Y3 Revenue P50",            value: (gp) => fmtLarge(gp["y3_revenue_p50"]),       sub: "Perps revenue + HYPE-style yield case" },
-    { label: "Y3 Monthly Volume P50",     value: (gp) => fmtLarge(gp["y3_monthly_volume_p50"]), sub: "Month-36 paid perps volume path" },
-    { label: "Buyback tokens P50",        value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Cumulative LIT buyback over 3 years" },
-    { label: "Effective supply P50",      value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Supply after fixed unlocks and buybacks" },
+    {
+      label: "Y3 GP / supply",
+      value: (gp) => `${fmtLarge(gp["y3_revenue_p50"])} / ${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(1)}M`,
+      sub: (gp) => {
+        const base = (gp["holders_revenue_30d_ann"] as number ?? 0) + (gp["yield_run_rate"] as number ?? 0);
+        const gpGrowth = base > 0 ? (((gp["y3_revenue_p50"] as number) / base - 1) * 100).toFixed(1) : "—";
+        const circ = gp["current_circulating_supply"] as number ?? 0;
+        const supplyGrowth = circ > 0 ? (((gp["y3_supply_p50"] as number) / circ - 1) * 100).toFixed(1) : "—";
+        return `+${gpGrowth}% vs current holder revenue + yield; supply +${supplyGrowth}% vs current circ.`;
+      },
+    },
+    {
+      label: "Y3 GP split",
+      value: (gp) => fmtLarge(gp["y3_perps_gp_p50"] ?? gp["y3_revenue_p50"]),
+      sub: (gp) => {
+        const holderRev = gp["holders_revenue_30d_ann"] as number ?? 0;
+        const perpsGrowth = holderRev > 0 ? (((gp["y3_perps_gp_p50"] as number) / holderRev - 1) * 100).toFixed(1) : "—";
+        const yieldShare = (gp["y3_revenue_p50"] as number) > 0
+          ? (((gp["yield_run_rate"] as number ?? 0) / (gp["y3_revenue_p50"] as number)) * 100).toFixed(1)
+          : "—";
+        return `Perps +${perpsGrowth}% vs holder revenue · yield ${yieldShare}% of base GP.`;
+      },
+    },
+    {
+      label: "Y3 annual volume P50",
+      value: (gp) => fmtLarge((gp["y3_monthly_volume_p50"] ?? 0) * 12),
+      sub: (gp) => {
+        const currAnn = (gp["perp_volume_30d"] as number ?? 0) * (365 / 30);
+        const annVol = (gp["y3_monthly_volume_p50"] as number ?? 0) * 12;
+        const growth = currAnn > 0 ? (((annVol / currAnn) - 1) * 100).toFixed(1) : "—";
+        const dailyMean = (annVol / 365 / 1e9).toFixed(2);
+        return `+${growth}% vs current annualized volume; daily mean $${dailyMean}B.`;
+      },
+    },
+    {
+      label: "Buyback tokens P50",
+      value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(1)}M`,
+      sub: (gp) => {
+        const circ = gp["current_circulating_supply"] as number ?? 0;
+        const pct = circ > 0 ? (((gp["buyback_tokens_p50"] as number) / circ) * 100).toFixed(1) : "—";
+        return `${pct}% of current circ bought back before fixed unlocks.`;
+      },
+    },
   ],
   sky: [
     { label: "Y3 Total Stable P50",      value: (gp) => fmtLarge(gp["y3_total_stable_supply_p50"]), sub: (gp) => deltaText(gp["y3_total_stable_supply_p50"], gp["total_sky_stable_supply"], "vs current official USDS + DAI") },

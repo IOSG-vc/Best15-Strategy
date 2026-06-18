@@ -405,17 +405,28 @@ def run() -> dict:
             for p in [5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95]
         }
 
-    def _sc(key, label, is_primary, gp_paths):
+    # Year 2 intermediate values (months 13-24, indices 12-23)
+    y2_rev_paths    = rev_paths[:, 12:24].sum(axis=1)               # Y2 TTM perps revenue
+    y2_supply_paths = np.maximum(
+        circ + (24 / 36) * gross_3y_unlock - cum_bb[:, 23],
+        circ * 0.5
+    )
+    disc2 = (1.0 + DISCOUNT_RATE) ** 2
+
+    def _sc(key, label, is_primary, gp_paths, y2_gp_paths):
         pv_arr = _scenario_pv(gp_paths, MULT_NORMAL)
         pv     = _pack(pv_arr)
         y3p50  = float(np.percentile(gp_paths * MULT_NORMAL / np.maximum(y3_supply_paths, 1.0), 50))
         y3s50  = float(np.percentile(y3_supply_paths, 50))
+        y2_pv  = y2_gp_paths * MULT_NORMAL / np.maximum(y2_supply_paths, 1.0) / disc2
         return {
             "key": key, "label": label, "is_primary": is_primary,
             "pv": pv,
             "ev": float(np.mean(pv_arr)),
-            "prob_above_spot": float(np.mean(pv_arr >= spot)),
-            "prob_3x": float(np.mean(pv_arr >= 3 * spot)),
+            "prob_above_spot":      float(np.mean(pv_arr >= spot)),
+            "prob_3x":              float(np.mean(pv_arr >= 3 * spot)),
+            "prob_spot_up_30_2y":   float(np.mean(y2_pv >= 1.30 * spot)),
+            "prob_spot_down_30_2y": float(np.mean(y2_pv <= 0.70 * spot)),
             "y3_price_p50":    float(y3p50),
             "y3_mcap_p50":     float(y3p50 * y3s50),
             "y3_supply_p50":   float(y3s50),
@@ -432,20 +443,24 @@ def run() -> dict:
         }
 
     # Three scenarios (perps only / + yield / + yield + optionality)
-    gp_perps_only = y3_rev_paths
-    gp_with_yield = y3_rev_paths + monthly_yield * 12
-    gp_with_opt   = gp_with_yield * 1.10
+    gp_perps_only  = y3_rev_paths
+    gp_with_yield  = y3_rev_paths + monthly_yield * 12
+    gp_with_opt    = gp_with_yield * 1.10
+    y2_perps_only  = y2_rev_paths
+    y2_with_yield  = y2_rev_paths + monthly_yield * 12
+    y2_with_opt    = y2_with_yield * 1.10
 
     scenarios = [
-        _sc("base_no_yield",              "Perps revenue only",             False, gp_perps_only),
-        _sc("with_hype_style_yield",      "Perps + HYPE-style TVL yield",   True,  gp_with_yield),
-        _sc("yield_plus_10pct_optionality","Yield + 10% business optionality",False, gp_with_opt),
+        _sc("base_no_yield",              "Perps revenue only",              False, gp_perps_only, y2_perps_only),
+        _sc("with_hype_style_yield",      "Perps + HYPE-style TVL yield",    True,  gp_with_yield, y2_with_yield),
+        _sc("yield_plus_10pct_optionality","Yield + 10% business optionality",False, gp_with_opt,   y2_with_opt),
     ]
 
     # Summary stats for current_gp
     bb_p50 = float(np.percentile(cum_bb[:, -1], 50))
     y3s_p50 = float(np.percentile(y3_supply_paths, 50))
-    y3r_p50 = scenarios[1]["y3_gp_p50"]
+    y3r_p50 = scenarios[1]["y3_gp_p50"]   # primary (with yield)
+    y3perps_p50 = scenarios[0]["y3_gp_p50"]  # perps-only
     y3mv_p50 = float(np.mean(vol_paths[:, -12:].mean(axis=1)))
 
     # ── Historical charts (price history + backtest) ──────────────────────────
@@ -551,6 +566,7 @@ def run() -> dict:
             "buyback_tokens_p50": float(bb_p50),
             "y3_supply_p50": float(y3s_p50),
             "y3_revenue_p50": float(y3r_p50),
+            "y3_perps_gp_p50": float(y3perps_p50),
             "y3_monthly_volume_p50": float(y3mv_p50),
         },
         "scenarios": scenarios,
