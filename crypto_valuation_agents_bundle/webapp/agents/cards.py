@@ -1,170 +1,194 @@
-"""CARDS valuation agent.
+"""CARDS (Collector Crypt) webapp valuation agent — Gacha GP scenarios.
 
-Collector Crypt is modeled as a GMV-to-GP bridge rather than a generic
-revenue multiple. Until enough history exists for a 30D/180D velocity signal,
-the model uses capped 7D/30D GMV velocity and tests linear decay to zero over
-6, 12, and 24 months.
+Model: Y3_price = Y3_GP × 15 × 1.10 / Y3_supply
+Revenue: Gacha pack sales (98%) + marketplace fees (2%).
+Q1 2026 actuals: $146.9M GMV, 5.9% gross margin = $8.6M GP → $34.4M annualized.
+Supply: Max 2B CARDS; circulating ~12.9% (257M); heavy unlock risk over 3Y.
+Distributions: log-normal σ=1.0 approximation.
+Market data refreshed live from CoinGecko on every run.
 """
+from __future__ import annotations
 
 import json
+import math
 import os
+import time
+import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 
-RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+# ── Research-locked Q1 2026 actuals ──────────────────────────────────────────
+GMV_Q1_2026     = 146_900_000.0   # Q1 2026 gross merchandise volume
+GROSS_MARGIN_Q1 = 0.059           # 5.9% — compressed from 10–12% at launch
+GP_Q1_2026      = GMV_Q1_2026 * GROSS_MARGIN_Q1   # $8.67M
+GP_ANN_RUN_RATE = GP_Q1_2026 * 4                   # $34.67M annualized
+MAX_SUPPLY       = 2_000_000_000  # 2B CARDS
+LOCKED_SUPPLY_EST = 1_743_000_000 # ~87.1% locked (foundation 36.76%, community 20%, team 19.5%, …)
+TREASURY_ASSETS  = 10_000_000.0  # estimated physical Pokémon/TCG treasury (not publicly disclosed)
+TREASURY_CARD_PCT = 0.80         # ~80% in physical trading cards
 
-TOKEN = "CARDS"
-NAME = "Collector Crypt"
-SPOT = 0.2338976713
-FDV = 467_795_342.6
-FLOAT_VALUE = 295_879_688.0
-SUPPLY_Y3 = 1_264_934_993.0
-FULL_FDV_SUPPLY = 2_000_000_000.0
-DISCOUNT_RATE = 0.30
-MULTIPLE = 15.0
-GMV_30D = 109_016_833.0
-GMV_30D_ANNUALIZED = 1_326_371_468.1666665
-NET_REVENUE_30D = 13_463_563.0
-NET_REVENUE_30D_ANNUALIZED = 163_806_683.16666666
-NET_SPREAD = 0.1235
-GP_CONVERSION = 0.60
-GMV_VELOCITY_MONTHLY = 0.20
-LATEST_7D_AVG_GMV = 6_403_403.285714285
-PRIOR_30D_AVG_GMV = 2_503_460.3333333335
+# Valuation parameters
+MULTIPLE         = 15.0
+OPTIONALITY      = 1.10          # 10% optionality kicker in the Y3 price formula
+DISCOUNT_RATE    = 0.25
+LOG_NORMAL_SIGMA = 1.0
+
+# Scenarios: (key, label, y3_gp, y3_supply, is_primary)
+SCENARIOS = [
+    ("bear", "Bear: $20M GP, 1.5B supply",  20_000_000,  1_500_000_000, False),
+    ("base", "Base: $45M GP, 1.0B supply",  45_000_000,  1_000_000_000, True),
+    ("bull", "Bull: $85M GP, 0.8B supply",  85_000_000,    800_000_000, False),
+]
+
+CG_ID    = "collector-crypt"
+_CG_KEY  = os.environ.get("COINGECKO_API_KEY", "")
+_CG_BASE = "https://pro-api.coingecko.com/api/v3" if _CG_KEY else "https://api.coingecko.com/api/v3"
+RESULTS_DIR = Path(__file__).parent.parent / "results"
+UA = "Mozilla/5.0 CARDS-valuation"
+
+# Fallbacks (June 2026 approximate values)
+_FB_SPOT   = 0.05
+_FB_MCAP   = 12_000_000.0
+_FB_FDV    = 100_000_000.0
+_FB_CIRC   = 257_000_000.0
 
 
-def _discount_factor():
-    return (1.0 + DISCOUNT_RATE) ** 3
+def _get(url: str, timeout: int = 30) -> dict | list:
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
 
 
-def _velocity_factor(decay_months):
-    factor = 1.0
-    for month in range(decay_months):
-        factor *= 1.0 + GMV_VELOCITY_MONTHLY * (1.0 - month / decay_months)
-    return factor
+def _fetch_cg_market() -> tuple[float, float, float, float]:
+    hdrs = {"User-Agent": UA, "Accept": "application/json"}
+    if _CG_KEY:
+        hdrs["x-cg-pro-api-key"] = _CG_KEY
+    url = f"{_CG_BASE}/coins/markets?vs_currency=usd&ids={CG_ID}&sparkline=false"
+    req = urllib.request.Request(url, headers=hdrs)
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                d = json.load(r)
+            if not d:
+                raise ValueError("empty response")
+            m = d[0]
+            spot   = float(m["current_price"])
+            mcap   = float(m["market_cap"])
+            fdv    = float(m.get("fully_diluted_valuation") or mcap)
+            supply = float(m.get("circulating_supply") or mcap / spot)
+            return spot, mcap, fdv, supply
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(10 * (attempt + 1))
+            else:
+                raise
 
 
-def _scenario(key, label, weight, decay_months, primary=False):
-    factor = _velocity_factor(decay_months)
-    y3_gmv = GMV_30D_ANNUALIZED * factor
-    y3_net_revenue = y3_gmv * NET_SPREAD
-    y3_gp = y3_net_revenue * GP_CONVERSION
-    terminal_value = y3_gp * MULTIPLE
-    pv_per_token = terminal_value / SUPPLY_Y3 / _discount_factor()
+def _lognorm_pv(median_pv: float, sigma: float = LOG_NORMAL_SIGMA) -> dict:
+    if median_pv <= 0:
+        return {"p25": 0.0, "p50": 0.0, "p75": 0.0, "p90": 0.0}
+    e = math.exp
     return {
-        "key": key,
-        "label": label,
-        "weight": weight,
-        "velocity_decay_months": decay_months,
-        "y3_gmv": y3_gmv,
-        "net_spread": NET_SPREAD,
-        "gp_conversion": GP_CONVERSION,
-        "y3_gp": y3_gp,
-        "multiple": MULTIPLE,
-        "terminal_value": terminal_value,
-        "pv": {
-            "p25": pv_per_token,
-            "p50": pv_per_token,
-            "p75": pv_per_token,
-            "p90": pv_per_token,
-        },
-        "ev": pv_per_token,
-        "prob_above_spot": 1.0 if pv_per_token > SPOT else 0.0,
-        "prob_y2_undiscounted_up_30": None,
-        "prob_y2_undiscounted_down_30": None,
-        "is_primary": primary,
+        "p25": median_pv * e(-0.6745 * sigma),
+        "p50": median_pv,
+        "p75": median_pv * e(0.6745 * sigma),
+        "p90": median_pv * e(1.2816 * sigma),
     }
 
 
-def build_result():
-    scenarios = [
-        _scenario("decay_6m", "A: 6M velocity decay", 0.40, 6),
-        _scenario("decay_12m", "B: 12M velocity decay", 0.40, 12, primary=True),
-        _scenario("decay_24m", "C: 24M velocity decay", 0.20, 24),
-    ]
-    weighted_pv = sum(sc["weight"] * sc["pv"]["p50"] for sc in scenarios)
-    weighted_gmv = sum(sc["weight"] * sc["y3_gmv"] for sc in scenarios)
-    weighted_gp = sum(sc["weight"] * sc["y3_gp"] for sc in scenarios)
-    primary = scenarios[1]
-    full_fdv_pv = primary["terminal_value"] / FULL_FDV_SUPPLY / _discount_factor()
+def _prob_above(target: float, median: float, sigma: float = LOG_NORMAL_SIGMA) -> float:
+    if target <= 0 or median <= 0:
+        return 1.0 if target <= 0 else 0.0
+    z = math.log(target / median) / sigma
+    return 0.5 * math.erfc(z / math.sqrt(2))
 
-    return {
-        "token": TOKEN,
-        "name": NAME,
+
+def run() -> dict:
+    """Fetch live market data, compute CARDS scenarios, return standardized result dict."""
+    # ── Market data ───────────────────────────────────────────────────────────
+    try:
+        spot, mcap, fdv, circ = _fetch_cg_market()
+    except Exception as e:
+        print(f"[CARDS] CoinGecko failed ({e}); using fallback")
+        spot, mcap, fdv, circ = _FB_SPOT, _FB_MCAP, _FB_FDV, _FB_CIRC
+
+    disc         = (1.0 + DISCOUNT_RATE) ** 3
+    scenario_list = []
+
+    y3_gp_p50     = 0.0
+    y3_supply_p50 = 0.0
+
+    for sc_key, sc_label, y3_gp, y3_supply, is_primary in SCENARIOS:
+        # Y3 price formula from dashboard: Y3_GP × 15 × 1.10 / Y3_supply
+        y3_price  = y3_gp * MULTIPLE * OPTIONALITY / max(y3_supply, 1.0)
+        pv_median = y3_price / disc
+
+        pv_dist = _lognorm_pv(pv_median)
+        ev      = pv_median * math.exp(LOG_NORMAL_SIGMA ** 2 / 2)
+
+        scenario_list.append({
+            "key": sc_key,
+            "label": sc_label,
+            "is_primary": is_primary,
+            "pv": pv_dist,
+            "ev": ev,
+            "prob_above_spot": _prob_above(spot, pv_median),
+            "prob_3x": _prob_above(3 * spot, pv_median),
+            "y3_price_p50": y3_price,
+            "y3_mcap_p50": y3_price * y3_supply,
+            "y3_supply_p50": float(y3_supply),
+            "y3_gp_p50": float(y3_gp),
+        })
+
+        if is_primary:
+            y3_gp_p50     = float(y3_gp)
+            y3_supply_p50 = float(y3_supply)
+
+    result = {
+        "token": "CARDS",
+        "name": "Collector Crypt",
         "as_of_utc": datetime.now(timezone.utc).isoformat(),
         "market": {
-            "spot": SPOT,
-            "market_cap": FLOAT_VALUE,
-            "fdv": FDV,
-            "circulating_supply": SUPPLY_Y3,
-            "max_supply": FULL_FDV_SUPPLY,
+            "spot": spot, "market_cap": mcap, "fdv": fdv,
+            "circulating_supply": circ, "max_supply": float(MAX_SUPPLY),
         },
         "model": {
-            "type": "3Y GMV-to-GP velocity decay model",
+            "type": "3Y GP × 15 × 1.10 Manual Scenarios",
             "discount_rate": DISCOUNT_RATE,
             "multiple": MULTIPLE,
-            "paths": 3,
-            "supply_y3": SUPPLY_Y3,
+            "paths": 1,
             "note": (
-                "CARDS uses 30D annualized Gacha GMV, fixed 12.35% net spread, "
-                "60% GP conversion, 15x GP, and capped 7D/30D GMV velocity "
-                "decaying linearly to zero over 6/12/24 months with 40/40/20 weights."
+                "Y3_price = Y3_GP × 15 × 1.10 / Y3_supply. "
+                "GP = Gacha pack sales GP + marketplace fees. "
+                "Q1 2026: $146.9M GMV at 5.9% margin = $8.6M GP ($34.4M annualized). "
+                "Y3 supply risk is the dominant headwind (team + foundation + community unlocks). "
+                "Distributions approximate log-normal σ=1.0."
             ),
         },
         "current_gp": {
-            "gacha_gmv_30d": GMV_30D,
-            "gacha_gmv_30d_ann": GMV_30D_ANNUALIZED,
-            "net_revenue_30d": NET_REVENUE_30D,
-            "net_revenue_30d_ann": NET_REVENUE_30D_ANNUALIZED,
-            "net_spread": NET_SPREAD,
-            "gp_conversion": GP_CONVERSION,
-            "current_gp_proxy": NET_REVENUE_30D_ANNUALIZED * GP_CONVERSION,
-            "latest_7d_avg_gmv": LATEST_7D_AVG_GMV,
-            "prior_30d_avg_gmv": PRIOR_30D_AVG_GMV,
-            "gmv_velocity_monthly": GMV_VELOCITY_MONTHLY,
-            "velocity_source": "Capped 7D/30D GMV velocity; 30D/180D unavailable until enough history exists.",
-            "y3_gp_p50": primary["y3_gp"],
-            "y3_gmv_p50": primary["y3_gmv"],
-            "weighted_pv": weighted_pv,
-            "weighted_y3_gmv": weighted_gmv,
-            "weighted_y3_gp": weighted_gp,
-            "base_full_fdv_pv": full_fdv_pv,
-            "fdv_to_net_revenue_30d_ann": FDV / NET_REVENUE_30D_ANNUALIZED,
-            "float_value_to_gp_proxy": FLOAT_VALUE / (NET_REVENUE_30D_ANNUALIZED * GP_CONVERSION),
+            "gmv_q1_2026": float(GMV_Q1_2026),
+            "gross_margin": float(GROSS_MARGIN_Q1),
+            "gross_profit_q1": float(GP_Q1_2026),
+            "gross_profit_ann": float(GP_ANN_RUN_RATE),
+            "locked_supply": float(LOCKED_SUPPLY_EST),
+            "treasury_assets": float(TREASURY_ASSETS),
+            "treasury_card_pct": float(TREASURY_CARD_PCT),
+            "y3_gp_p50": float(y3_gp_p50),
+            "y3_supply_p50": float(y3_supply_p50),
         },
-        "scenarios": scenarios
-        + [
-            {
-                "key": "weighted",
-                "label": "Weighted 40/40/20",
-                "weight": 1.0,
-                "y3_gmv": weighted_gmv,
-                "net_spread": NET_SPREAD,
-                "gp_conversion": GP_CONVERSION,
-                "y3_gp": weighted_gp,
-                "multiple": MULTIPLE,
-                "pv": {"p25": weighted_pv, "p50": weighted_pv, "p75": weighted_pv, "p90": weighted_pv},
-                "ev": weighted_pv,
-                "prob_above_spot": 1.0 if weighted_pv > SPOT else 0.0,
-                "prob_y2_undiscounted_up_30": None,
-                "prob_y2_undiscounted_down_30": None,
-                "is_primary": False,
-            }
-        ],
+        "scenarios": scenario_list,
         "caveats": [
-            "DefiLlama revenue is net of pack buyback spends, but not audited company GP.",
-            "True inventory turnover velocity is unavailable without card-base or cohort reporting.",
-            "Foundation unlock bucket remains excluded from the float-friendly primary denominator.",
+            "Gacha revenue is highly seasonal and tied to Pokémon/TCG hype cycles; Q1 2026 peak may not be representative.",
+            "Supply expansion (team, foundation, community unlocks) is the dominant model headwind; vesting schedules not fully public.",
+            "No formal buyback % is publicly committed; full GP→buyback assumption may overstate token demand.",
+            "Gross margin (5.9% Q1 2026) is highly compressed; recovery to 8%+ is assumed in base/bull but not guaranteed.",
+            "Distributions approximate log-normal σ=1.0; no Monte Carlo simulation.",
         ],
+        "data_freshness": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
 
-
-def run():
-    result = build_result()
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    with open(os.path.join(RESULTS_DIR, "cards_result.json"), "w") as f:
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_DIR / "cards_result.json", "w") as f:
         json.dump(result, f, indent=2)
+
     return result
-
-
-if __name__ == "__main__":
-    run()

@@ -1,7 +1,7 @@
 """HYPE webapp valuation agent — Binance/MS90 architecture.
 
-Uses hype_gp_capture_12m_start_run.run_once() which models perp GP as
-Binance volume × HL market share × 0.026% clean treasury take-rate, plus separate
+Uses hype_gp_capture_12m_start_run.run_once() which models perp treasury
+revenue as Binance volume × HL market share × 0.026% clean revenue take-rate, plus separate
 USDC yield GP. Four supply/emission scenarios replace the old DR-sensitivity
 approach.
 """
@@ -64,15 +64,11 @@ def run() -> dict:
             "ev":              sc["discounted_ev"],
             "prob_above_spot": sc["prob_current_spot_justified"],
             "prob_3x":         sc["prob_3x_vs_spot"],
-            "prob_y2_undiscounted_up_30":   sc.get("prob_y2_undiscounted_up_30"),
-            "prob_y2_undiscounted_down_30": sc.get("prob_y2_undiscounted_down_30"),
             # ── Model outputs table / cards ───────────────────────────────
             "y3_price_p50":    y3_price_p50,
             "y3_mcap_p50":     y3_price_p50 * y3_supply_p50,
             "y3_supply_p50":   y3_supply_p50,
             "y3_gp_p50":       sc["y3_ttm_gp"]["p50"],
-            "y3_perp_gp_p50":  sc.get("y3_perp_ttm_gp", {}).get("p50"),
-            "y3_usdc_yield_gp_p50": sc.get("y3_usdc_yield_ttm_gp", {}).get("p50"),
             "ev_mcap":         sc["probability_weighted_ev_mcap"],
             "burn_3y_est":     sc["current_buy_tokens_per_month"] * 36,
             "y3_volume": {
@@ -105,7 +101,6 @@ def run() -> dict:
         "ms30_vs_binance":        ms30,                # MCP MS30
         "ms30_ms180_trend":       ms30_ms180_trend,    # MS30 / MS180
         "growth_velocity_pp":     growth_velocity_pp,  # pp above 90D seed
-        "market_share_velocity":  mc.get("market_share_velocity"),
         # ── market share trend data table ────────────────────────────────────
         "ms180_vs_binance":       ms180,
         "defillama_30d_ann":      r.get("defillama_ann_30d", r["trailing_30d_revenue"] * 365 / 30),
@@ -179,8 +174,8 @@ def run() -> dict:
     # 5. Buyback horizon
     bby = current_gp["buyback_years_fee_only"]
     mcp_bullets.append(
-        f"At spot, fee-only buyback horizon is {bby:.1f}Y "
-        f"(trailing 30D annualised revenue / target supply at spot price)."
+        f"At spot, clean-revenue-only buyback horizon is {bby:.1f}Y "
+        f"(trailing 30D clean treasury revenue / target supply at spot price)."
     )
 
     result = {
@@ -200,7 +195,7 @@ def run() -> dict:
             "multiple":      15.0,
             "paths":         mc["paths"],
             "note": (
-                "HL vol × Binance market share × 0.026% clean treasury take-rate + USDC yield; "
+                "HL vol × Binance market share × 0.026% clean treasury revenue take-rate + USDC yield; "
                 "MS30/MS90 momentum decays over 12 months; 4 supply/emission scenarios"
             ),
         },

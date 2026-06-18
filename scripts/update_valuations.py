@@ -36,11 +36,15 @@ CG_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
 CG_BASE    = "https://pro-api.coingecko.com/api/v3" if CG_API_KEY else "https://api.coingecko.com/api/v3"
 
 TOKENS = [
-    ("uni",   "agents.uni",   "Uniswap",     "UNI",   "Ethereum",  "uniswap"),
-    ("ethfi", "agents.ethfi", "ether.fi",    "ETHFI", "Ethereum",  "ether-fi"),
-    ("jup",   "agents.jup",   "Jupiter",     "JUP",   "Solana",    "jupiter-exchange-solana"),
-    ("hype",  "agents.hype",  "Hyperliquid", "HYPE",  "HyperEVM",  "hyperliquid"),
-    ("sky",   "agents.sky",   "Sky",         "SKY",   "Ethereum",  "sky"),
+    ("uni",     "agents.uni",     "Uniswap",        "UNI",   "Ethereum",  "uniswap"),
+    ("ethfi",   "agents.ethfi",   "ether.fi",       "ETHFI", "Ethereum",  "ether-fi"),
+    ("jup",     "agents.jup",     "Jupiter",        "JUP",   "Solana",    "jupiter-exchange-solana"),
+    ("hype",    "agents.hype",    "Hyperliquid",    "HYPE",  "HyperEVM",  "hyperliquid"),
+    ("sky",     "agents.sky",     "Sky",            "SKY",   "Ethereum",  "sky"),
+    ("lighter", "agents.lighter", "Lighter",        "LIT",   "zkSync",    "lighter"),
+    ("vvv",     "agents.vvv",     "Venice AI",      "VVV",   "Ethereum",  "venice-token"),
+    ("bp",      "agents.bp",      "Backpack",       "BP",    "Solana",    "backpack"),
+    ("cards",   "agents.cards",   "Collector Crypt","CARDS", "Solana",    "collector-crypt"),
 ]
 
 UA = "Mozilla/5.0 Hermes valuation cron"

@@ -1,0 +1,95 @@
+{
+  "token": "VVV",
+  "name": "Venice AI",
+  "as_of_utc": "2026-06-17T20:03:42.417889+00:00",
+  "market": {
+    "spot": 15.91,
+    "market_cap": 741540644.0,
+    "fdv": 1274187838.0,
+    "circulating_supply": 46761130.62990031,
+    "max_supply": 80349559.29919048
+  },
+  "model": {
+    "type": "3Y GP\u00d715 Manual Scenarios",
+    "discount_rate": 0.25,
+    "multiple": 15.0,
+    "paths": 1,
+    "note": "Y3_price = Y3_platform_revenue \u00d7 15 / Y3_supply. Venice burns ~9% of subscription revenue on-chain (VVV buyback-and-burn). Annual emissions 3M VVV/yr from July 2026 (9M gross over 3 years). Distributions approximate log-normal \u03c3=1.0 for comparability."
+  },
+  "current_gp": {
+    "defillama_30d_ann": 3041666.6666666665,
+    "on_chain_burn_30d": 250000.0,
+    "est_total_platform_revenue_ann": 32000000.0,
+    "buyback_pct_of_revenue": 0.09,
+    "buyback_years_onchain": 243.79418432876713,
+    "buyback_years_est_revenue": 257.4793902777778,
+    "annual_emissions": 3000000,
+    "gross_3y_unlock_tokens": 9000000,
+    "y3_revenue_p50": 55000000.0,
+    "buyback_tokens_p50": 967261.224364827,
+    "y3_supply_p50": 54793869.40553548
+  },
+  "scenarios": [
+    {
+      "key": "bear",
+      "label": "Bear: $15M revenue",
+      "is_primary": false,
+      "pv": {
+        "p25": 1.0601416000729327,
+        "p50": 2.081112245435567,
+        "p75": 4.085329901028234,
+        "p90": 7.496996578788594
+      },
+      "ev": 3.431174025764125,
+      "prob_above_spot": 0.020973511213718203,
+      "prob_3x": 0.0008661568531685295,
+      "y3_price_p50": 4.064672354366342,
+      "y3_mcap_p50": 225000000.0,
+      "y3_supply_p50": 55355015.21009462,
+      "y3_gp_p50": 15000000
+    },
+    {
+      "key": "base",
+      "label": "Base: $55M revenue",
+      "is_primary": true,
+      "pv": {
+        "p25": 3.92699466424,
+        "p50": 7.708891607449201,
+        "p75": 15.132948958794106,
+        "p90": 27.77050307308285
+      },
+      "ev": 12.7098135667232,
+      "prob_above_spot": 0.23435688340125682,
+      "prob_3x": 0.034137634004559686,
+      "y3_price_p50": 15.05642892079922,
+      "y3_mcap_p50": 825000000.0,
+      "y3_supply_p50": 54793869.40553548,
+      "y3_gp_p50": 55000000
+    },
+    {
+      "key": "bull",
+      "label": "Bull: $120M revenue",
+      "is_primary": false,
+      "pv": {
+        "p25": 8.627410903451551,
+        "p50": 16.93604936957682,
+        "p75": 33.246332121957,
+        "p90": 61.010406555624314
+      },
+      "ev": 27.9228248372488,
+      "prob_above_spot": 0.52491631787827,
+      "prob_3x": 0.1500740884577119,
+      "y3_price_p50": 33.07822142495473,
+      "y3_mcap_p50": 1800000000.0000002,
+      "y3_supply_p50": 54416468.6751281,
+      "y3_gp_p50": 120000000
+    }
+  ],
+  "caveats": [
+    "Venice does not publicly disclose platform revenue; $32M/yr is estimated from April 2026 subscription burn rates.",
+    "On-chain burns ($250K/30D) measured via DefiLlama are the only confirmed component \u2014 total revenue is indicative.",
+    "No Monte Carlo simulation; distributions approximate log-normal \u03c3=1.0 for comparability.",
+    "VVV has no max supply cap; 3Y emissions assume the 3M/yr rate holds from July 2026."
+  ],
+  "data_freshness": "2026-06-17"
+}

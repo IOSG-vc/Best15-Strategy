@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell, LabelList,
@@ -81,7 +81,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
     sections: [
       {
         heading: "Core revenue model",
-        text: "Perp GP = Binance Futures monthly volume × HL market share × 0.034% take-rate. USDC yield = USDC TVL × net yield × 90% capture. TVL follows the simulated HL volume path via live-estimated elasticity. Both streams are simulated over 36 months.",
+        text: "Perp treasury revenue = Binance Futures monthly volume × HL market share × 0.026% clean revenue take-rate. The ~0.034% total fee rate is tracked as activity context only because DefiLlama dailyFees can include builder-code fees that do not accrue to the treasury. USDC yield = USDC TVL × net yield × 90% capture.",
       },
       {
         heading: "Market share momentum",
@@ -97,7 +97,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "Data sources",
-        text: "Binance volume: BTCUSDT Binance Futures ZIP data scaled by Blockworks annual totals. Market share: DefiLlama MCP derivatives volume (fallback: revenue ÷ 0.034% take-rate). USDC TVL: DefiLlama stablecoins API. Yield: FRED SOFR minus 50bp haircut.",
+        text: "Binance volume: BTCUSDT Binance Futures ZIP data scaled by Blockworks annual totals. Market share: DefiLlama MCP derivatives volume (fallback: clean treasury revenue ÷ 0.026% take-rate). USDC TVL: DefiLlama stablecoins API. Yield: FRED SOFR minus 50bp haircut.",
       },
     ],
   },
@@ -122,6 +122,78 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       {
         heading: "Multiple regime",
         text: "20× trough / 15× normal / 10× peak regime, applied to Year-3 trailing revenue and discounted at 25%. The +10% optionality case sits on top of the stable-yield case.",
+      },
+    ],
+  },
+  cards: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = platform gross profit from Gacha pack sales + marketplace trading fees. Gacha packs ($50 Elite / $250 Legendary / $1,000 Pokémon) are 98% of revenue. The 2% marketplace fee (1% platform + 1% royalty) covers secondary trades of tokenized cards. Model: Y3_price = Y3_GP × 15 × 1.10 / Y3_supply. GP is assumed to flow into CARDS buybacks — no explicit buyback % is publicly committed.",
+      },
+      {
+        heading: "Margin structure",
+        text: "Gross margin is thin by design: COGS is physical card inventory cost. Q1 2026 margin was 5.9% ($8.6M GP on $146.9M GMV), compressed from 10-12% in Q3 2025. Bull scenario assumes margin partially recovers to ~8% with operating leverage or better card sourcing.",
+      },
+      {
+        heading: "Supply inflation risk",
+        text: "Only 12.9% of the 2B max supply (257M CARDS) is circulating. Foundation (36.76%), community (20%), team (19.5%), investors (11.87%), and advisors (4.37%) tokens unlock on vesting schedules. By Y3, an estimated 800M–1.5B tokens could be circulating. Even with strong GP growth, per-token value is compressed by supply expansion — this is the dominant model headwind.",
+      },
+      {
+        heading: "Revenue concentration risk",
+        text: "Gacha drives 98% of revenue and is cyclical — tied to Pokémon/TCG hype cycles. Q1 2026 peak weekly Gacha spend was $21.5M; typical weekly spend is $1.5–2.3M. Scenarios model $20M–$65M sustained annual GP to capture this volatility.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal σ=1.0. No formal buyback % is publicly disclosed; full GP→buyback assumption may overstate token demand. Y3 supply estimates are based on tokenomics allocation; specific vesting schedules are not publicly documented.",
+      },
+    ],
+  },
+  bp: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = Backpack exchange revenue (spot + perpetuals trading fees). Model values BP via its equity conversion right: stakers who lock BP for 1+ year receive 20% of Backpack company equity at IPO, shared pro-rata. PV = Y3_revenue × P/S_multiple × 20% / Y3_staking_supply / (1.25)³. P/S benchmarked against regulated crypto exchanges (Coinbase ~9×, Kraken ~7×).",
+      },
+      {
+        heading: "Supply / dilution path",
+        text: "Phase 1 (250M, TGE): immediately eligible to stake. Phase 2 (375M): unlocks on business milestones (new regulatory licenses, product launches, geographic expansion) — each unlock dilutes per-BP equity value. Phase 3 (375M): post-IPO treasury, excluded from staking. Scenarios use Phase-2-unlock assumptions proportional to business success.",
+      },
+      {
+        heading: "Revenue uncertainty",
+        text: "Backpack reported $100M+ in 2025 revenue but has not disclosed 2026 figures. June 2026 futures 24h volume is ~$247M; 30-day rolling from January 2026 was $22.4B. Fee rates are not publicly listed for perps; spot taker fee is ~0.095%. Year-3 revenue scenarios ($150M–$500M) assume continued growth from the $1B+ annual volume run rate.",
+      },
+      {
+        heading: "Key risks",
+        text: "IPO contingency: if Backpack does not IPO, equity conversion does not occur and BP loses its primary value driver. Phase 2 dilution: all milestone unlocks flow directly into staking eligibility, compressing per-BP equity. Legal/regulatory risk: equity-for-token swaps may face regulatory challenges in certain jurisdictions. No buyback or revenue-share mechanism currently exists.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal σ=1.0. IPO probability is treated as given (not modeled separately). Company valuation at IPO is highly uncertain; P/S range 4–10× captures most plausible outcomes for a regulated mid-tier crypto exchange.",
+      },
+    ],
+  },
+  vvv: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "GP = estimated total platform revenue (subscription + API). Venice allocates ~9% of subscription revenue to on-chain VVV buybacks-and-burns; the remainder funds the company treasury. On-chain burns ($250K/30D, $3M ann.) are the only measured component. Total platform revenue (~$32M ann.) is estimated from April 2026 subscription burn rates × implied capture ratio. Year-3 GP uses direct revenue growth assumptions — no market-share simulation.",
+      },
+      {
+        heading: "Supply / emission path",
+        text: "VVV has no max supply cap. Annual emissions are 3M VVV/yr from July 2026 (stepped down from 14M at launch). 3Y gross issuance ≈ 9M tokens. Burn offset per scenario: burn spend ÷ average price. Bear assumes minimal offset; bull assumes further emission cuts and higher burn spend from growing revenue.",
+      },
+      {
+        heading: "Revenue uncertainty",
+        text: "Venice does not publicly disclose platform revenue. The ~$32M/yr estimate derives from subscription tier burn ratios and is not confirmed by Venice. On-chain DefiLlama figures capture only the VVV buyback-and-burn spend — not subscription or API revenue flowing off-chain. Treat all revenue figures as indicative, not measured.",
+      },
+      {
+        heading: "Multiple & discount rate",
+        text: "15× revenue multiple (standard across dashboard) applied to Year-3 estimated platform revenue, discounted at 25%. Total revenue is used (not just holder-captured burns) because burns are a discretionary allocation from revenue, not revenue itself. The 15× multiple implies strong sustained growth and may be aggressive for current pricing.",
+      },
+      {
+        heading: "Model limitations",
+        text: "Scenarios are manually constructed with no Monte Carlo simulation. Price distributions approximate log-normal σ = 1.0 for comparability with other dashboard tokens. Short price history; no historical backtest is presented. Data freshness: June 17, 2026.",
       },
     ],
   },
@@ -321,6 +393,7 @@ function fmtPrice(n: number): string {
 }
 
 function fmtLarge(n: number): string {
+  if (n == null || isNaN(n)) return "$0";
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
   return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
@@ -891,7 +964,7 @@ function TokenModelAssumptions({ tokenKey, model }: {
           <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Valuation logic</div>
           <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{`${multipleLine}
 Discount rate: ${drPct}%
-Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo
+${model.paths > 0 ? `Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo` : `Manual scenarios (log-normal σ=1.0)`}
 Horizon: 3 years`}</pre>
         </div>
       </div>
@@ -926,17 +999,18 @@ const MS_CONFIG: Record<string, MsConfig> = {
   hype: {
     yCapPct: 0.35,
     chartNote: "Chart uses daily revenue-implied HL volume for rolling continuity; headline cards use DefiLlama MCP derivatives-volume aggregates.",
-    tableNote: "DefiLlama MCP checked: revenue excludes Coinbase/USDC yield; stablecoin yield is modeled separately.",
+    tableNote: "DefiLlama fee rows include builder-code fees in dailyFees. Valuation uses clean treasury revenue at ~0.026% of notional; stablecoin yield is modeled separately.",
     driversTitle: "Perps + stablecoin yield",
     driversBody: null,   // filled inline below
     tableRows: (gp) => ([
       ["MS30 vs Binance Futures",        pct(gp["ms30_vs_binance"] as number)],
       ["MS180 vs Binance Futures",       pct(gp["ms180_vs_binance"] as number)],
       ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`],
-      ["DefiLlama 30D fee rev. ann.",    fmtLarge(gp["defillama_30d_ann"] as number)],
-      ["DefiLlama 180D fee rev. ann.",   fmtLarge(gp["defillama_180d_ann"] as number)],
-      ["Buyback yrs (fees + USDC)",      `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
-      ["Fee-only buyback years",         `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+      ["DefiLlama 30D total fees ann.",  fmtLarge(gp["defillama_30d_ann"] as number)],
+      ["Clean treasury rev. ann.",       fmtLarge(gp["clean_treasury_revenue_ann"] as number)],
+      ["DefiLlama 180D total fees ann.", fmtLarge(gp["defillama_180d_ann"] as number)],
+      ["Buyback yrs (clean rev + USDC)", `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
+      ["Clean-rev-only buyback years",   `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y"),
   },
   lighter: {
@@ -1106,7 +1180,7 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           <div className="text-lg font-bold text-white mb-3">{cfg.driversTitle}</div>
           {tokenKey === "hype" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              DefiLlama rows are observed fee revenue. MC models future perps GP from Binance volume × HL share × 0.034% take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
+              DefiLlama rows show total fee activity, but builder-code fees do not accrue to the Hyperliquid treasury. MC models future perps treasury revenue from Binance volume × HL share × 0.026% clean revenue take-rate. Stablecoin yield modeled separately as USDC TVL × net yield × 90% capture; current run-rate{" "}
               <span className="text-gray-200 font-medium">{fmtLarge(gp["usdc_gp_annual"] as number)}</span>.
             </p>
           )}
@@ -1215,6 +1289,171 @@ function UniBinanceSpotShareSection({ data }: { data: ValuationData }) {
           This is the HYPE-like primary lens: Binance spot denominator × UNI/Binance spot share. The DEX-native chart above remains a protocol-market sensitivity.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ── Tech score helpers ───────────────────────────────────────────────────────
+
+const TECH_DASH_BASE = "https://crypto-tech-dashboard-2nd-try-v2-0.vercel.app";
+
+const TOKEN_CG_ID: Record<string, string> = {
+  hype:    "hyperliquid",
+  uni:     "uniswap",
+  ethfi:   "ether-fi",
+  jup:     "jupiter-exchange-solana",
+  lighter: "lighter",
+  sky:     "sky",
+  vvv:     "venice-token",
+};
+
+function techGrade(score: number): { letter: string; color: string; bg: string } {
+  if (score >= 80) return { letter: "A",  color: "#4ade80", bg: "rgba(74,222,128,0.12)" };
+  if (score >= 65) return { letter: "B+", color: "#86efac", bg: "rgba(134,239,172,0.10)" };
+  if (score >= 55) return { letter: "B",  color: "#fbbf24", bg: "rgba(251,191,36,0.10)" };
+  if (score >= 45) return { letter: "C+", color: "#fb923c", bg: "rgba(251,146,60,0.10)" };
+  if (score >= 35) return { letter: "C",  color: "#f87171", bg: "rgba(248,113,113,0.10)" };
+  return               { letter: "D",  color: "#ef4444", bg: "rgba(239,68,68,0.10)" };
+}
+
+// ── TechScoreCard ────────────────────────────────────────────────────────────
+
+function TechScoreCard({ tokenKey }: { tokenKey: string }) {
+  const cgId = TOKEN_CG_ID[tokenKey];
+  const [score, setScore] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cgId) { setLoading(false); return; }
+    let cancelled = false;
+    fetch(`${TECH_DASH_BASE}/api/scores/${cgId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) {
+          setScore(data?.score?.overall_score ?? null);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [cgId]);
+
+  if (!cgId) return null;
+
+  const grade = score !== null ? techGrade(score) : null;
+
+  return (
+    <div
+      className="rounded-xl border px-5 py-4 flex items-center gap-5"
+      style={{ background: grade ? grade.bg : "#1a1d29", borderColor: grade ? grade.color + "55" : "#2d3144" }}
+    >
+      <div>
+        <div className="text-xs text-gray-500 mb-1">Technical Score</div>
+        {loading ? (
+          <div className="text-lg font-bold text-gray-600">—</div>
+        ) : score !== null ? (
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black font-mono" style={{ color: grade!.color }}>
+              {grade!.letter}
+            </span>
+            <span className="text-lg font-bold font-mono text-white">{score.toFixed(0)}</span>
+            <span className="text-xs text-gray-500">/ 100</span>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-600">not tracked</div>
+        )}
+      </div>
+      <div className="text-xs text-gray-600 leading-relaxed max-w-xs">
+        Composite of Trend (40%), Reversal (25%), Breadth (15%), Risk (10%) + TS percentiles.{" "}
+        <a
+          href={`/crypto-tech#token=${cgId}`}
+          className="text-blue-400 hover:text-blue-300 underline"
+        >
+          Full breakdown →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── TechScoreHistoryChart ────────────────────────────────────────────────────
+
+function TechScoreHistoryChart({ tokenKey }: { tokenKey: string }) {
+  const cgId = TOKEN_CG_ID[tokenKey];
+  const [months, setMonths] = useState<{ month: string; score: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!cgId) { setLoading(false); return; }
+    let cancelled = false;
+    fetch(`${TECH_DASH_BASE}/api/scores/${cgId}/monthly`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) {
+          setMonths(data?.months ?? []);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [cgId]);
+
+  if (!cgId) return null;
+  if (!loading && months.length === 0) return null;
+
+  const chartData = months.map(m => ({ ...m, grade: techGrade(m.score) }));
+
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-semibold text-gray-200">Technical Score — monthly history</div>
+        <div className="flex items-center gap-3 text-xs text-gray-600">
+          {(["A","B+","B","C+","C","D"] as const).map(l => {
+            const g = techGrade(l === "A" ? 82 : l === "B+" ? 68 : l === "B" ? 58 : l === "C+" ? 47 : l === "C" ? 37 : 20);
+            return (
+              <span key={l} className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-sm" style={{ background: g.color }} />
+                {l}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      {loading ? (
+        <div className="h-36 flex items-center justify-center text-gray-600 text-sm">Loading…</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+            <XAxis
+              dataKey="month"
+              tickFormatter={(m: string) => { const [, mo] = m.split("-"); return mo; }}
+              tick={{ fill: "#6b7280", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+            <Tooltip
+              contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+              labelFormatter={(m: string) => m}
+              formatter={(v: number, _: string, entry: { payload?: { grade?: ReturnType<typeof techGrade> } }) => [
+                `${v.toFixed(1)} — ${entry.payload?.grade?.letter ?? ""}`,
+                "Overall Score",
+              ]}
+            />
+            <Bar dataKey="score" radius={[3, 3, 0, 0]} maxBarSize={40}>
+              {chartData.map((d, i) => (
+                <Cell key={i} fill={d.grade.color} fillOpacity={0.75} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+      <p className="text-xs text-gray-600 mt-3">
+        Monthly overall_score from the IOSG Tech Dashboard. Last value of each calendar month.
+        Grades: A ≥80 · B+ ≥65 · B ≥55 · C+ ≥45 · C ≥35 · D &lt;35.
+      </p>
     </div>
   );
 }
@@ -1632,7 +1871,7 @@ function HypeHistoricalCharts({ hc }: { hc: HistCharts }) {
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-gray-600 mt-3 leading-relaxed">
-            Uses each date&apos;s HYPE price and trailing-30D annualized DefiLlama fee revenue only. Target = current circulating supply + modeled 3Y gross issuance. Current fee-only 30D horizon is {bbLatest ? fmtYr(bbLatest.years) : "—"}.
+            Historical line uses each date&apos;s HYPE price and trailing-30D annualized DefiLlama total fees for continuity. Target = current circulating supply + modeled 3Y gross issuance. Corrected current clean-revenue-only horizon is shown in the snapshot table.
           </p>
         </div>
       )}
@@ -1776,7 +2015,7 @@ function HypeModelAssumptions({ data }: { data: ValuationData }) {
         <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
           <div className="text-sm font-semibold text-gray-200 mb-3">Core revenue lines</div>
           <pre className="text-xs font-mono text-gray-400 leading-relaxed bg-[#252836] rounded-lg p-4 overflow-x-auto whitespace-pre-wrap">
-{`perp_GP_t = BinanceVol_t × HLShare_t × 0.034%
+{`perp_treasury_revenue_t = BinanceVol_t × HLShare_t × 0.026%
 USDC_GP_t = USDC_TVL_t × net_yield × 90% / 12
 USDC TVL follows HL volume path ^ 0.22`}
           </pre>
@@ -1863,6 +2102,21 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: (gp) => deltaText(gp["y3_gp_p50"], gp["current_gp"], "vs current annualized GP") },
     { label: "Y3 avg money-market TVL",  value: (gp) => fmtLarge(gp["y3_avg_money_market_tvl_p50"]), sub: (gp) => deltaText(gp["y3_avg_money_market_tvl_p50"], gp["money_market_tvl"], "vs current denominator") },
     { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
+  ],
+  vvv: [
+    { label: "Y3 Revenue P50",           value: (gp) => fmtLarge(gp["y3_revenue_p50"]),      sub: "Est. total platform revenue (base scenario)" },
+    { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(2)}M`, sub: "Cumulative VVV buyback-and-burn over 3 years" },
+    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,     sub: "Supply after emissions and buyback burns at Year 3" },
+  ],
+  bp: [
+    { label: "Y3 Revenue P50",           value: (gp) => fmtLarge(gp["y3_revenue_p50"]),          sub: "Estimated Backpack exchange revenue (base scenario)" },
+    { label: "Y3 Equity pool P50",       value: (gp) => fmtLarge((gp["y3_revenue_p50"] as number) * 7 * 0.20), sub: "Y3 revenue × 7× P/S × 20% equity stake" },
+    { label: "Y3 Staking supply P50",    value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M BP`, sub: "Phase 1 + partial Phase 2 eligible stakers (base)" },
+  ],
+  cards: [
+    { label: "Y3 Gross profit P50",      value: (gp) => fmtLarge(gp["y3_gp_p50"]),               sub: "Annual platform GP (base scenario, sustained from Q1 2026)" },
+    { label: "Y3 Supply P50",            value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B CARDS`, sub: "Est. circulating after team + investor + community unlock" },
+    { label: "GP margin (Q1 2026)",      value: (gp) => `${((gp["gross_margin"] as number) * 100).toFixed(1)}%`,    sub: "Compressed from 10–12% at launch; key downside risk" },
   ],
 };
 
@@ -1990,6 +2244,24 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   return (
     <div className="space-y-5">
 
+      {/* ── Tech score card ──────────────────────────────────────────── */}
+      <TechScoreCard tokenKey={tokenKey} />
+
+      {/* ── WIP banner ───────────────────────────────────────────────── */}
+      {(tokenKey === "vvv" || tokenKey === "bp" || tokenKey === "cards") && (
+        <div className="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 px-5 py-4">
+          <span className="mt-0.5 text-yellow-400 text-base leading-none">⚠</span>
+          <div>
+            <span className="text-sm font-semibold text-yellow-400">Work in progress</span>
+            <span className="text-sm text-yellow-300/70 ml-2">
+              {tokenKey === "vvv" && "Revenue estimates are unverified — Venice does not publicly disclose platform revenue. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
+              {tokenKey === "bp" && "Preliminary model. Equity conversion is contingent on a Backpack IPO that has not yet occurred. Revenue estimates use 2025 data; 2026 figures are undisclosed. Scenarios are manually constructed, not Monte Carlo. Treat all figures as indicative."}
+              {tokenKey === "cards" && "Preliminary model. Gacha revenue is highly seasonal and hard to extrapolate. No formal buyback % has been publicly committed. Supply schedule (team, foundation, community unlocks) is estimated — actual vesting is not fully public. Treat all figures as indicative."}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Metric cards ─────────────────────────────────────────────── */}
       {isHypeWithMs ? (
         /* HYPE-specific cards matching the dashboard design */
@@ -2099,8 +2371,59 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               : <MetricCard label="Official USDS + DAI" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky supply page API" />
             }
           </>}
+          {tokenKey === "vvv" && <>
+            <MetricCard
+              label="Est. platform rev. ann."
+              value={fmtLarge(gp["est_total_platform_revenue_ann"] as number)}
+              sub={`On-chain burns only: ${fmtLarge(gp["defillama_30d_ann"] as number)}/yr`}
+            />
+            <MetricCard
+              label="Buyback years (est. rev.)"
+              value={`${(gp["buyback_years_est_revenue"] as number).toFixed(1)}y`}
+              sub={`On-chain burns only: ${(gp["buyback_years_onchain"] as number).toFixed(0)}y`}
+            />
+            <MetricCard
+              label="Annual emissions"
+              value={`${((gp["annual_emissions"] as number) / 1e6).toFixed(0)}M VVV/yr`}
+              sub={`3Y gross unlock ${((gp["gross_3y_unlock_tokens"] as number) / 1e6).toFixed(0)}M tokens · no max supply`}
+            />
+          </>}
+          {tokenKey === "bp" && <>
+            <MetricCard
+              label="2025 revenue (reported)"
+              value={fmtLarge(gp["revenue_2025_ann"] as number)}
+              sub="Backpack has not disclosed 2026 figures"
+            />
+            <MetricCard
+              label="Equity pool at $1B co. val."
+              value={fmtLarge(gp["equity_pool_at_1b_val"] as number)}
+              sub={`$${(gp["equity_per_bp_phase1_only"] as number).toFixed(2)}/BP if only Phase 1 (250M) stakes`}
+            />
+            <MetricCard
+              label="FDV-implied company val."
+              value={fmtLarge(gp["implied_company_val_at_fdv"] as number)}
+              sub="Current FDV ÷ 20% equity stake"
+            />
+          </>}
+          {tokenKey === "cards" && <>
+            <MetricCard
+              label="Annual GP run rate"
+              value={fmtLarge(gp["gross_profit_ann"] as number)}
+              sub={`Q1 2026 ×4 · ${((gp["gross_margin"] as number) * 100).toFixed(1)}% margin on $${((gp["gmv_q1_2026"] as number)/1e6).toFixed(0)}M GMV`}
+            />
+            <MetricCard
+              label="Supply still locked"
+              value={`${((gp["locked_supply"] as number) / 1e9).toFixed(2)}B CARDS`}
+              sub={`${(((gp["locked_supply"] as number) / 2e9) * 100).toFixed(0)}% of max supply — team, foundation, community`}
+            />
+            <MetricCard
+              label="Physical card treasury"
+              value={fmtLarge(gp["treasury_assets"] as number)}
+              sub={`${((gp["treasury_card_pct"] as number) * 100).toFixed(0)}% in physical Pokémon & TCG cards`}
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
@@ -2166,6 +2489,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       {tokenKey !== "hype" && d.hist_charts && <TokenHistoricalCharts hc={d.hist_charts} tokenKey={tokenKey} />}
 
       {d.caveats && d.caveats.length > 0 && <TokenCaveats caveats={d.caveats} />}
+
+      {/* ── Tech score monthly history ────────────────────────────────── */}
+      <TechScoreHistoryChart tokenKey={tokenKey} />
 
       {/* ── HYPE: DefiLlama MCP weekly answer ────────────────────────── */}
       {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
@@ -2242,7 +2568,7 @@ export default function ValuationDashboard({ data }: Props) {
         ) : (
           <>
             {/* Token picker */}
-            <div className="flex gap-3 mb-8 flex-wrap">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
               {tokens.map(([key, token]) => {
                 const active   = key === selected;
                 const spot     = token.data?.market.spot;
@@ -2254,7 +2580,7 @@ export default function ValuationDashboard({ data }: Props) {
                   <button
                     key={key}
                     onClick={() => setSelected(key)}
-                    className="flex items-center gap-4 px-5 py-3 rounded-xl border transition-all text-left"
+                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl border transition-all text-left"
                     style={{
                       background:   active ? `${ring}12` : "#1a1d29",
                       borderColor:  active ? ring : "#2d3144",
