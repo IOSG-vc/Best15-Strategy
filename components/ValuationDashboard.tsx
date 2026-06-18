@@ -1292,6 +1292,94 @@ PV/token = Year-3 TTM GP × ${mult}× / effective Y3 supply / (1 + DR)^3`}</pre>
             </p>
           </div>
         </div>
+
+        {/* ── Section 4: Current-model backtest ────────────────────────── */}
+        {(() => {
+          const bbt = data.hist_charts?.binance_spot_backtest;
+          if (!bbt || !bbt.chart?.length) return null;
+          const btChart   = bbt.chart;
+          const btSignals = bbt.signals ?? {};
+          const fmtRet = (v: number | null) => v == null ? "n/a" : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+          const step    = Math.max(1, Math.floor(btChart.length / 180));
+          const sampled = btChart.filter((_, i) => i % step === 0);
+          const ticks   = sampled
+            .filter((_, i) => i % Math.floor(Math.max(sampled.length / 5, 1)) === 0)
+            .map(r => r.date);
+          const allPvs  = sampled.map(r => r.pv).filter(Boolean);
+          const pvMin   = allPvs.length ? Math.min(...allPvs) : 0;
+          const pvMax   = allPvs.length ? Math.max(...allPvs) : 10;
+          const yDomain: [number, number] = [Math.max(0, pvMin * 0.9), pvMax * 1.05];
+          const sigColor: Record<string, string> = { GOOD: "#16a34a", NEUTRAL: "#ca8a04", BAD: "#dc2626" };
+          return (
+            <div className="space-y-4">
+              {/* top: 2-col description + table */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Current-model backtest</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Binance spot primary diagnostic, not the old DEX-native replay. Latest signal:{" "}
+                    <span className="font-bold" style={{ color: sigColor[bbt.latest_signal] ?? "#374151" }}>
+                      {bbt.latest_signal}
+                    </span>
+                    {bbt.last_realized_row && (
+                      <>; last realized-return row: <span className="font-bold text-gray-900">{bbt.last_realized_row}</span></>
+                    )}.
+                  </p>
+                </div>
+                <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#e2e6f0]">
+                        {["SIGNAL", "OBS", "AVG +30D", "AVG +90D", "RECENT DATES"].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {["GOOD", "NEUTRAL", "BAD"].map(sig => {
+                        const s = btSignals[sig];
+                        if (!s) return null;
+                        return (
+                          <tr key={sig} className="border-b border-[#e2e6f0] last:border-0">
+                            <td className="px-4 py-3 font-semibold text-xs" style={{ color: sigColor[sig] }}>{sig}</td>
+                            <td className="px-4 py-3 font-mono text-gray-700">{s.obs}</td>
+                            <td className="px-4 py-3 font-mono text-gray-700">{fmtRet(s.avg_30d)}</td>
+                            <td className="px-4 py-3 font-mono text-gray-700">{fmtRet(s.avg_90d)}</td>
+                            <td className="px-4 py-3 text-xs text-gray-500">{s.recent_dates?.slice(0,3).join(", ")}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {/* bottom: chart */}
+              <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-base font-bold text-gray-900">Spot vs current-model PV proxy</h4>
+                  <span className="text-xs font-mono text-gray-500">black=spot · blue=Binance-current PV proxy</span>
+                </div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={sampled} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e6f0" vertical={false} />
+                    <XAxis dataKey="date" ticks={ticks} tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={yDomain} tickFormatter={v => `$${v.toFixed(2)}`} tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={55} />
+                    <Tooltip
+                      formatter={(v: number, name: string) => [`$${v.toFixed(3)}`, name === "spot" ? "Spot" : "PV proxy"]}
+                      labelFormatter={(l: string) => l}
+                      contentStyle={{ background: "#fff", border: "1px solid #e2e6f0", borderRadius: 8, fontSize: 12 }}
+                    />
+                    <Line dataKey="spot" stroke="#111827" strokeWidth={1.5} dot={false} connectNulls />
+                    <Line dataKey="pv"   stroke="#2563eb" strokeWidth={1.5} dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
+                <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+                  PV proxy = rolling Binance spot denominator × historical UNI/Binance terminal share × no-lookahead full-activation take rate × {mult}× / effective Y3 supply / DR³, normalized to the current selected-model P50. Current spot {fmtPrice(spot)} is the horizontal comparison reference for the selected model. This is the explicit checklist backtest for the selected model.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }

@@ -89,6 +89,12 @@ export interface HistCharts {
   secondary_chart?: SecondaryChart;
   eoy3_ms: { date: string; eoy3: number; ms90: number; ms30: number }[];
   binance_spot_eoy3_ms?: { date: string; eoy3: number; ms90: number; ms30: number }[];
+  binance_spot_backtest?: {
+    chart: BacktestRow[];
+    signals: Record<string, BacktestSignal>;
+    latest_signal: string;
+    last_realized_row: string | null;
+  };
 }
 
 export interface ValuationData {
