@@ -1,11 +1,10 @@
 # JUP / Jupiter Locked Valuation Model
 
-Locked: 2026-05-09. Corrected: 2026-05-15 for supply schedule and optional product tracking. Purpose: recurring JUP valuation report and cross-project ranking.
+Locked: 2026-05-09. Corrected: 2026-05-15 for supply schedule and optional product tracking. Updated: 2026-06-17 for the stricter crypto-valuation skill architecture: Binance-denominator perps and spot market-share modeling, full percentile ladders, and 2Y ±30% probabilities.
 
 ## Core framing
 
-- Primary denominator: **entity protocol GP**, not holder revenue.
-- Main valuation formula:
+JUP is modeled as a 3Y product-line GP capture model, but the growth engine is now external market share rather than raw Jupiter GP extrapolation.
 
 ```text
 PV/JUP =
@@ -13,195 +12,95 @@ PV/JUP =
   × 15x GP multiple
   × premium multiplier
   ÷ Year-3 effective supply
-  ÷ (1 + discount rate)^3
+  ÷ (1 + 24.4%)^3
 ```
 
-- Multiple: **15x Y3 TTM entity GP**, same as UNI.
-- Discount rate: **24.4%** unless liquid-token framework is refreshed and clearly differs.
-- Product simulation: **simulate only two core lines**:
-  1. Perps GP path.
-  2. Spot / exchange GP path = Aggregator/Ultra + Jupiterz.
-- Premiums:
-  - Core MC: no premium.
-  - Optionality case: **+10% value premium** for smaller/non-monetized products.
-  - Optionality + Jupnet case: **+20% total value premium** = +10% optionality + separate +10% Jupnet premium.
-- Do **not** add separate hand-weighted recovery scenarios as the main valuation table. If mentioned, keep as supporting sanity only.
+- Multiple: 15x Y3 TTM entity GP.
+- Discount rate: 24.4%.
+- Primary case: `+10% Opt + Jupnet`, a 20% value premium over core.
+- Buybacks: 50% of modeled entity GP buys JUP at current spot and reduces effective supply.
+- Scheduled unlocks: 0 JUP/month until Jupiter announces a public cold-storage/community reserve distribution plan.
 
-## Product suite and treatment
+## Modeled product lines
 
-| Product | Description | Model treatment |
-|---|---|---|
-| Aggregator / Ultra | Solana swap router / monetized Ultra swaps | Core spot MC line |
-| Jupiterz | Jupiter-linked Solana spot DEX / trading venue | Combine with Aggregator; assume same bps rake as Aggregator once monetized |
-| Jupiter Perps | Perpetual futures exchange backed by JLP | Core perps MC line; GP = 25% of gross fees, 75% to JLP |
-| Lend | Lending/borrowing market | Tracked as live optional revenue; not separate MC until material |
-| jupSOL | Liquid-staked SOL token | Included in optionality; staking yield is pass-through, only deposit/withdraw fees are protocol income |
-| DCA | Dollar-cost averaging tool | Included in optionality |
-| Limit Orders | Limit-order execution | Included in optionality |
-| Studio | Launchpad / token issuance tooling | Included in optionality |
-| Prediction | Prediction market interface/aggregator | Current GP = 0; included in optionality only if economics change |
-| Ape-Jupiter | Memecoin trading app | Included in optionality |
-| JupUSD | Stablecoin / basis-trading product | Included in optionality until revenue tracked |
-| Jupnet | Planned cross-chain/liquidity/perps infra | Separate +10% Jupnet premium in base report; can be breakout sensitivity if live adoption appears |
-| Litterbox Trust | Buyback/lock vehicle, not a product | Supply mechanic |
+| Product line | Current treatment |
+|---|---|
+| Jupiter Perps | Core MC line. Binance Futures monthly denominator × JUP/Binance perps share × clean GP take-rate. |
+| Spot aggregator / Ultra + Jupiterz | Core MC line. Binance spot monthly denominator × JUP/Binance spot share × observed rake. |
+| Lend, jupSOL, DCA, Limit Orders, Studio, Prediction, Ape-Jupiter, JupUSD | Tracked as live optional revenue where available, but represented in the +10% optionality premium until individually material. |
+| Jupnet | Separate +10% value premium until live adoption/revenue can be modeled directly. |
+| Litterbox Trust | Supply/buyback mechanic, not a product line. |
 
-## Current anchored data from 2026-05-09 work
+## Denominator-share methodology
 
-Market snapshot:
+Perps now match the HYPE/Lighter-style architecture:
 
 ```text
-JUP spot:              $0.240596
-Market cap:            ~$800M
-FDV:                   ~$1.65B
-Circulating supply:    3.322B JUP
-Total supply:          6.862B JUP
-Max supply:            10.0B JUP
+JUP perps GP =
+  sampled Binance Futures monthly volume
+  × JUP/Binance Futures perps share path
+  × clean perps GP take-rate
 ```
 
-Core product seeds from latest model:
+Spot now matches the UNI-style external denominator architecture:
 
 ```text
-Perps GP seed:               $2.329M/month
-Spot GP seed:                $2.151M/month
-  = Aggregator/Ultra + Jupiterz at same rake
-Total simulated GP seed:     $4.480M/month
-Annualized:                  $53.8M
+JUP spot GP =
+  sampled Binance spot monthly volume
+  × JUP/Binance spot share path
+  × observed spot rake
 ```
 
-Jupiterz treatment:
+The Binance denominators use BTCUSDT quote-volume histories scaled to Blockworks annual exchange totals. Monthly denominator paths sample historical Binance monthly log returns and are capped at 2x historical peak monthly denominator volume to avoid unrealistic far-tail exchange-size outcomes.
+
+Market-share path:
 
 ```text
-Jupiterz 30D GMV:            ~$905M
-Aggregator/Ultra rake:       ~3.07bps from audit April data
-Jupiterz implied GP:         ~$0.278M/month at same rake
+share velocity =
+  70% × MS30/MS180 monthly-equivalent velocity
+  + 30% × MS7/MS30 monthly-equivalent velocity
 ```
 
-## Buyback / treasury / supply mechanics
+The velocity is capped/floored through the shared UNI helper, decayed over 12 months, compounded into a 36-month share path, and capped at 10% absolute share for both JUP/Binance Futures and JUP/Binance spot.
 
-- 50% of simulated entity GP goes to JUP buybacks / Litterbox Trust.
-- 50% goes to Jupiter protocol treasury / DAO / operating balance sheet / Net-Zero support.
-- Because the denominator is **entity GP**, do not haircut GP by 50% in the valuation multiple.
-- Model buybacks as supply mechanics:
+## Data caveats
+
+- The public DefiLlama summary endpoint returned no accessible direct Jupiter derivatives dailyVolume in this environment. Perps numerator therefore falls back to clean-GP-implied volume using a 1.50bps clean take-rate unless a direct dailyVolume series is available.
+- Jupiter aggregator dailyVolume may not be exposed by the public DEX summary slug. When unavailable, aggregator volume falls back to fee-implied volume using the observed rake. Jupiterz volume remains directly fetched from DefiLlama DEX volume.
+- Smaller products are not yet separate MC drivers because they are small relative to perps/spot and/or lack clean recurring economics.
+
+## Latest output, 2026-06-18
 
 ```text
-monthly buyback dollars = 50% × simulated monthly entity GP
-monthly JUP bought = monthly buyback dollars ÷ assumed JUP buyback price
+Spot / MCap / FDV       $0.1856 / $616.2M / $1.27B
+Perps MS30 / MS90       1.04% / 1.07% vs Binance Futures
+Spot MS30 / MS90        0.51% / 0.58% vs Binance spot
+Perps clean take-rate   1.50 bps
+Spot rake               12.95 bps
 ```
 
-- Default buyback token denominator: current spot, with sensitivity if needed.
-- Litterbox tokens reduce effective float while locked; total supply only falls after burns.
-- Default scheduled unlock path: **0 JUP/month** until Jupiter announces a new distribution plan for the cold-storage/community reserve.
-- The ~3.405B JUP cold-storage/community reserve is minted/treasury-held, but has **no public DefiLlama-tracked distribution timeline**.
-- Do not assume the old `53.47M JUP/month` schedule continues or restarts. If that rate were applied to the reserve, it would imply ~64 months, not 36, but this is **not a public schedule**.
-- Y3 effective supply:
+| Case | P25 | P50 | P75 | P90 | EV | P>spot | 2Y +30% | 2Y -30% |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Core GP | $0.164 | $0.382 | $0.699 | $0.992 | $0.475 | 72.1% | 77.3% | 9.3% |
+| +10% Optionality | $0.180 | $0.421 | $0.769 | $1.091 | $0.522 | 74.3% | 79.9% | 7.8% |
+| +10% Opt + Jupnet | $0.197 | $0.459 | $0.839 | $1.190 | $0.570 | 76.2% | 82.1% | 6.6% |
+
+P50 product state in the primary case:
 
 ```text
-current effective circulating supply
-+ public scheduled unlocks, currently 0 until new reserve plan
-- simulated buyback accumulation
-- burns if verified
-```
-
-## MC methodology
-
-1. Fetch current market data and product data if available.
-2. Use product seed rule:
-
-```text
-seed = min(latest full 30D product GP, trailing 12M median monthly product GP)
-```
-
-3. Simulate separate paths:
-   - Perps GP path from perps monthly GP/volume/fee history.
-   - Spot GP path from Aggregator/Ultra + Jupiterz GMV/rake history.
-4. Use monthly return bootstrap/log-return MC. Treat perps and spot as separate drivers, optionally with a shared weak common market factor.
-5. Do not separately simulate Lend, jupSOL, DCA, Limit, Studio, Prediction, Ape, JupUSD in the main locked model; those are covered by the +10% optionality premium.
-6. Run at least 50k paths when feasible.
-7. Report discounted PV per token as the main output.
-
-## Latest locked output from 2026-05-09 run
-
-Assumptions:
-
-```text
-Core:                 spot + perps MC only
-Optionality:          +10% value premium
-Jupnet:               separate +10% value premium
-Multiple:             15x GP
-Discount rate:        24.4%
-Supply:               gross unlocks included, buybacks reduce effective supply
-Buybacks:             50% of simulated GP, bought at current spot
-```
-
-Valuation table:
-
-| Case | P25 | P50 | P75 | EV / mean |
-|---|---:|---:|---:|---:|
-| Core spot+perps MC | $0.067 | $0.121 | $0.191 | $0.144 |
-| +10% optionality | $0.073 | $0.133 | $0.210 | $0.158 |
-| +10% optionality + 10% Jupnet | $0.080 | $0.145 | $0.230 | $0.173 |
-
-Probability checks from latest run:
-
-| Case | Prob PV > spot | Prob PV > 2x spot |
-|---|---:|---:|
-| Core | 15.6% | 0.5% |
-| +10% optionality | 19.1% | 1.5% |
-| +10% optionality + Jupnet | 22.8% | 2.9% |
-
-P50 model state:
-
-```text
-Y3 TTM GP P50:                         ~$74.5M
-P50 annual perps GP:                   ~$33.2M
-P50 annual spot/Aggregator+Jupiterz GP:~$27.6M
-Y3 effective supply P50:               ~4.81B JUP
-```
-
-Discord report output should prioritize the final premium case:
-
-```text
-JUP PV, spot+perps MC + 10% optionality + 10% Jupnet:
-P25 $0.080 | P50 $0.145 | P75 $0.230 | EV $0.173
-```
-
-Always show spot and model_price/spot:
-
-```text
-Spot used in latest run: $0.2406
-P50/spot: ~0.60x
-EV/spot:  ~0.72x
+Y3 TTM entity GP P50          ~$121.3M (+112.0% vs current annualized GP)
+  Perps GP P50                ~$29.6M (+4.0% vs current)
+  Spot/Agg+Jupiterz GP P50    ~$66.3M (+130.5% vs current)
+Y3 perps daily volume P50     ~$540.5M/day (+2.6% vs current)
+Y3 spot daily volume P50      ~$140.4M/day (+127.4% vs current)
+Y3 effective supply P50       ~2.49B JUP (-25.1% vs current)
+P50 buyback accumulation      ~832M JUP
 ```
 
 ## Report format
 
-Use 3 short Discord-friendly sections/tables:
+Use three short Discord-friendly sections:
 
-1. Key assumptions.
-2. Model results: P25/P50/P75/EV and model_price/spot.
-3. KPI/watchlist and changes since last run.
-
-Avoid wide Markdown tables. Prefer aligned text blocks.
-
-## Actionable KPI watchlist
-
-Core:
-- Monthly entity GP.
-- Monthly buybacks.
-- Current GP vs 12M median GP.
-- Buyback yield on mcap / FDV.
-
-Perps:
-- Perps volume, gross fees, GP, fee bps, JLP TVL, OI/utilization if available, share vs Hyperliquid / Solana perps.
-
-Aggregator + Jupiterz:
-- Aggregator/Ultra GMV, fee bps, Jupiterz GMV, monetized vs unmonetized volume, new fee adapter/treasury address, fee-switch proposals.
-
-Supply:
-- Gross monthly unlocks, Net-Zero offsets, Litterbox holdings, burns, effective circulating supply, total supply.
-
-Jupnet:
-- Mainnet launch, perps launch, sequencer/settlement fee design, cross-chain liquidity, market-maker participation, first 30/90D volume, explicit JUP fee capture.
-
-Other optionality:
-- Lend deposits/borrows/utilization, jupSOL AUM/inflows, JupUSD TVL/yield/revenue adapter, Ape volume/fees, PM aggregator fee split changes.
+1. Key assumptions and current market-share/take-rate seeds.
+2. Model results: P25/P50/P75/P90/EV, probability above spot, 2Y ±30% probabilities.
+3. KPI/watchlist: perps volume/share/take-rate, spot volume/share/rake, monthly buybacks, reserve-distribution announcements, and Jupnet revenue design.
