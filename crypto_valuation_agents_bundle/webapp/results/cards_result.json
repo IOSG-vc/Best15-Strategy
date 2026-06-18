@@ -1,11 +1,11 @@
 {
   "token": "CARDS",
   "name": "Collector Crypt",
-  "as_of_utc": "2026-06-17T20:03:51.602201+00:00",
+  "as_of_utc": "2026-06-18T20:36:53.657271+00:00",
   "market": {
-    "spot": 0.237671,
-    "market_cap": 61123666.0,
-    "fdv": 474580820.0,
+    "spot": 0.276023,
+    "market_cap": 70706270.0,
+    "fdv": 548982770.0,
     "circulating_supply": 257552230.609334,
     "max_supply": 2000000000.0
   },
@@ -39,8 +39,8 @@
         "p90": 0.4057742183233396
       },
       "ev": 0.18571196393166245,
-      "prob_above_spot": 0.227625211226553,
-      "prob_3x": 0.03249675456549469,
+      "prob_above_spot": 0.1850496692632304,
+      "prob_3x": 0.02302691602922181,
       "y3_price_p50": 0.22,
       "y3_mcap_p50": 330000000.0,
       "y3_supply_p50": 1500000000.0,
@@ -57,8 +57,8 @@
         "p90": 1.3694879868412715
       },
       "ev": 0.6267778782693609,
-      "prob_above_spot": 0.6807170496851963,
-      "prob_3x": 0.26470482868434264,
+      "prob_above_spot": 0.6255567773311173,
+      "prob_3x": 0.21813589590097107,
       "y3_price_p50": 0.7425000000000002,
       "y3_mcap_p50": 742500000.0000001,
       "y3_supply_p50": 1000000000.0,
@@ -75,8 +75,8 @@
         "p90": 3.2335133022641123
       },
       "ev": 1.4798922125804352,
-      "prob_above_spot": 0.9080491519610624,
-      "prob_3x": 0.5910414858509823,
+      "prob_above_spot": 0.8808487563118542,
+      "prob_3x": 0.53213112113329,
       "y3_price_p50": 1.753125,
       "y3_mcap_p50": 1402500000.0,
       "y3_supply_p50": 800000000.0,
@@ -90,5 +90,5 @@
     "Gross margin (5.9% Q1 2026) is highly compressed; recovery to 8%+ is assumed in base/bull but not guaranteed.",
     "Distributions approximate log-normal \u03c3=1.0; no Monte Carlo simulation."
   ],
-  "data_freshness": "2026-06-17"
+  "data_freshness": "2026-06-18"
 }
