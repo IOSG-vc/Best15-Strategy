@@ -2299,6 +2299,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const gp = d.current_gp;
   const isHypeWithMs = tokenKey === "hype" && typeof gp["ms90_vs_binance"] === "number";
   const isLighterLayout = tokenKey === "lighter" && typeof gp["ms90_vs_binance"] === "number";
+  const isEthfiLayout = tokenKey === "ethfi";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -2437,6 +2438,60 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </div>
         </div>
+      ) : isEthfiLayout ? (
+        /* ETHFI 5+3 card layout */
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard
+              label="Spot / mcap / circ"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(1)}M ${d.token}.`}
+            />
+            <MetricCard
+              label="Card GMV 30D ann."
+              value={fmtLarge(gp["card_gdv_30d_ann"] as number)}
+              sub="Current Cash card spend proxy."
+            />
+            <MetricCard
+              label="Velocity ensemble"
+              value={`${(((gp["card_velocity_ensemble"] as unknown as { ensemble_monthly: number })?.ensemble_monthly ?? 0) * 100).toFixed(1)}%`}
+              sub="70% 30D/180D + 30% 7D/30D ensemble."
+            />
+            <MetricCard
+              label="Y3 GP split P50"
+              value={fmtLarge(gp["y3_gp_p50"] as number)}
+              sub={`Card ${fmtLarge(gp["y3_card_gp_p50"] as number)} · staking ${fmtLarge(gp["y3_stake_gp_p50"] as number)} · vault ${fmtLarge(gp["y3_vault_gp_p50"] as number)}.`}
+            />
+            <MetricCard
+              label="P50 PV + cash + optionality"
+              value={fmtPrice(primary.pv.p50)}
+              sub="Weighted MC after treasury cash and optionality."
+              highlighted
+              termKey="p50"
+            />
+          </div>
+          {/* Row 2: 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <MetricCard
+              label="P(above spot)"
+              value={pct(primary.prob_above_spot)}
+              sub={`2Y +30% ${primary.prob_spot_up_30_2y != null ? pct(primary.prob_spot_up_30_2y) : "—"} · 2Y -30% ${primary.prob_spot_down_30_2y != null ? pct(primary.prob_spot_down_30_2y) : "—"}.`}
+              accent={primary.prob_above_spot >= 0.5 ? "green" : primary.prob_above_spot >= 0.35 ? "yellow" : "red"}
+            />
+            <MetricCard
+              label="Discount rate"
+              value={`${(d.model.discount_rate * 100).toFixed(1)}%`}
+              sub="Applied to Year-3 valuation."
+              termKey="dr"
+            />
+            <MetricCard
+              label="Card take-rate"
+              value={`${((gp["card_take_bps_30d"] as number) ?? 0).toFixed(1)}bps`}
+              sub="30D Cash card revenue / GMV proxy."
+            />
+          </div>
+        </div>
       ) : (
         /* Per-token cards matching HYPE style */
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2455,14 +2510,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             {gp["ms30_vs_binance_spot"] != null
               ? <MetricCard label="MS30 vs Binance spot" value={pct(gp["ms30_vs_binance_spot"] as number)} sub={`Velocity ${(gp["binance_spot_momentum_initial"] as number)?.toFixed(2)}×`} accent={(gp["binance_spot_momentum_initial"] as number) >= 1.0 ? "green" : "default"} />
               : <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
-            }
-          </>}
-          {tokenKey === "ethfi" && <>
-            <MetricCard label="Total GP (ann.)" value={fmtLarge(gp["total_annualized"] as number)} sub="Card + staking + vault" />
-            <MetricCard label="Card GDV (ann.)" value={fmtLarge(gp["card_gdv_30d_ann"] as number)} sub={`Take: ${((gp["card_take_bps_30d"] as number) ?? 0).toFixed(2)} bps`} />
-            {gp["ms30_vs_lrt"] != null
-              ? <MetricCard label="MS30 vs Total LRT" value={pct(gp["ms30_vs_lrt"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "default" : "red"} />
-              : <MetricCard label="Staking APY / TVL" value={pct(gp["staking_apy"] as number)} sub={`TVL ${fmtLarge(gp["stake_tvl"] as number)}`} />
             }
           </>}
           {tokenKey === "jup" && <>
