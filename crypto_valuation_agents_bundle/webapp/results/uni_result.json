@@ -1,11 +1,11 @@
 {
   "token": "UNI",
   "name": "Uniswap",
-  "as_of_utc": "2026-06-18T21:24:19.043837+00:00",
+  "as_of_utc": "2026-06-18T21:29:24.465011+00:00",
   "market": {
-    "spot": 3.03,
-    "market_cap": 1882016500.0,
-    "fdv": 2705837065.0,
+    "spot": 3.04,
+    "market_cap": 1890210253.0,
+    "fdv": 2717617493.0,
     "circulating_supply": 621691561.5538775,
     "max_supply": 1000000000.0
   },
@@ -23,9 +23,9 @@
     "take_bps_current": 1.126,
     "take_bps_full": 3.3758031094120446,
     "ann_volume": 520500118359.6667,
-    "mcap_current_state_gp": 32.11176696878936,
-    "mcap_full_activation_gp": 10.71088817533388,
-    "fdv_full_activation_gp": 15.399396457942123,
+    "mcap_current_state_gp": 32.25157227173746,
+    "mcap_full_activation_gp": 10.757520270280606,
+    "fdv_full_activation_gp": 15.466440953548602,
     "base_seed_monthly": 42780831646.0,
     "start_total_dex_monthly_p50": 164728656574.0,
     "start_total_dex_monthly_p25": 86350936627.0,
@@ -97,7 +97,7 @@
     "binance_spot_y3_gp_p75": 1458536175.2718818,
     "binance_spot_full_activation_p50": 3.6977406040348653,
     "binance_spot_full_activation_ev": 46.062953429540904,
-    "binance_spot_full_activation_prob_above_spot": 0.5346875
+    "binance_spot_full_activation_prob_above_spot": 0.534025
   },
   "scenarios": [
     {
@@ -110,10 +110,10 @@
         "p90": 5.879216821329842
       },
       "ev": 3.2961633452098495,
-      "prob_above_spot": 0.1751875,
-      "prob_3x": 0.0666,
-      "prob_spot_up_30_2y": 0.1912375,
-      "prob_spot_down_30_2y": 0.6792125,
+      "prob_above_spot": 0.1746875,
+      "prob_3x": 0.0664,
+      "prob_spot_up_30_2y": 0.1906375,
+      "prob_spot_down_30_2y": 0.6799875,
       "distribution": {
         "p5": 0.02497319691783169,
         "p10": 0.04817306210971657,
@@ -147,10 +147,10 @@
         "p90": 65.30293995009181
       },
       "ev": 46.062953429540904,
-      "prob_above_spot": 0.5346875,
-      "prob_3x": 0.343625,
-      "prob_spot_up_30_2y": 0.593325,
-      "prob_spot_down_30_2y": 0.280625,
+      "prob_above_spot": 0.534025,
+      "prob_3x": 0.34315,
+      "prob_spot_up_30_2y": 0.5924875,
+      "prob_spot_down_30_2y": 0.2812375,
       "distribution": {
         "p5": 0.07622544506083168,
         "p10": 0.1842001599589942,
@@ -184,10 +184,10 @@
         "p90": 17.626179774736126
       },
       "ev": 9.882059031873373,
-      "prob_above_spot": 0.3605375,
-      "prob_3x": 0.1751,
-      "prob_spot_up_30_2y": 0.43935,
-      "prob_spot_down_30_2y": 0.3984875,
+      "prob_above_spot": 0.3598375,
+      "prob_3x": 0.17455,
+      "prob_spot_up_30_2y": 0.438475,
+      "prob_spot_down_30_2y": 0.39935,
       "distribution": {
         "p5": 0.0748708666138326,
         "p10": 0.14442519792174136,
@@ -221,10 +221,10 @@
         "p90": 12.104170885905043
       },
       "ev": 6.786163125253123,
-      "prob_above_spot": 0.28945,
-      "prob_3x": 0.1299125,
-      "prob_spot_up_30_2y": 0.3369125,
-      "prob_spot_down_30_2y": 0.506,
+      "prob_above_spot": 0.2888625,
+      "prob_3x": 0.1296,
+      "prob_spot_up_30_2y": 0.3360375,
+      "prob_spot_down_30_2y": 0.5068125,
       "distribution": {
         "p5": 0.0514149847245161,
         "p10": 0.09917902223946799,
