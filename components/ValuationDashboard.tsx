@@ -133,7 +133,11 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "Volume simulation",
-        text: "Monthly volume history pulled from DeFiLlama (2021–present). Model bootstraps monthly log-returns and seeds each MC run at min(latest 30D volume, trailing 12M median). 36 months simulated.",
+        text: "Primary HYPE-style denominator-share model: sample historical Binance spot monthly volume from 2022-present, apply monthly log-return bootstraps from the same window, then multiply by UNI/Binance spot share. Share starts from MS90 and blended velocity — 70% MS30/MS180 + 30% MS7/MS30 monthly-equivalent — decays over 12 months.",
+      },
+      {
+        heading: "DEX-native sensitivity",
+        text: "The former total-DEX denominator model remains as a sensitivity: total DEX monthly volume × UNI/total-DEX share, using the same 2022-present sampling window and blended velocity decay.",
       },
       {
         heading: "Discount rate",
@@ -141,7 +145,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "Supply & multiple",
-        text: "15× GP multiple applied to Year-3 GP, discounted at DR. FDV sensitivity shown as secondary scenario. Protocol fees burn UNI via TokenJar → Firepit.",
+        text: "15× GP multiple applied to Year-3 GP, discounted at DR. Primary denominator uses effective Year-3 supply: current circulating UNI plus observed reserved-supply release, capped at max supply. FDV remains a max-supply sensitivity. Protocol fees burn UNI via TokenJar → Firepit.",
       },
       { heading: "Model locked", text: "Methodology locked 2026-05-09." },
     ],
@@ -162,7 +166,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "Supply & multiple",
-        text: "15× GP multiple. 854.7M ETHFI projected supply at Y3. Treasury cash added back to equity value.",
+        text: "15× GP multiple. Y3 supply uses the larger of scheduled supply and current circulating supply when no burn is modeled. Net profit accumulates to treasury cash and is added back to equity value.",
       },
       {
         heading: "Key risks",
@@ -174,7 +178,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
     sections: [
       {
         heading: "What is being valued",
-        text: "Jupiter's entity-level gross profit from: (1) Perpetuals — 25% of gross perps fees, (2) Spot aggregator/Ultra + Jupiterz — combined ~3.55bps rake on GMV. Smaller products covered by +10% optionality premium.",
+        text: "Jupiter's modeled gross profit from two external-denominator product lines: (1) Perps — Binance Futures volume × JUP/Binance perps share × clean take-rate, (2) Spot aggregator/Ultra + Jupiterz — Binance spot volume × JUP/Binance spot share × observed rake. Smaller products covered by +10% optionality premium.",
       },
       {
         heading: "Buyback mechanics",
@@ -185,12 +189,40 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
         text: "0 scheduled unlocks assumed. The ~3.4B JUP cold-storage/community reserve has no public distribution timeline.",
       },
       {
+        heading: "Market-share paths",
+        text: "Perps and spot use the updated valuation-skill standard: 70% MS30/MS180 + 30% MS7/MS30 monthly-equivalent share velocity, capped and linearly decayed over 12 months. MC draws sample Binance Futures and Binance spot monthly denominators.",
+      },
+      {
         heading: "Discount rate & multiple",
         text: "Fixed at 24.4%, 15× GP multiple. Three premium cases: Core, +10% Optionality, +10% Opt + Jupnet.",
       },
       {
         heading: "Model locked",
-        text: "Methodology locked 2026-05-09, corrected 2026-05-15 for supply schedule.",
+        text: "Methodology locked 2026-05-09, corrected 2026-05-15 for supply schedule, updated 2026-06-17 for Binance-denominator perps/spot share modeling, 2Y probabilities, and full percentile ladders.",
+      },
+    ],
+  },
+  sky: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "Sky GP = modeled Sky supply × gross-income take-rate − savings-cost rate − stUSDS-cost rate. NP subtracts OPEX. Protocol financial rates remain locked until the full Sky financial refresh is run.",
+      },
+      {
+        heading: "Money-market share path",
+        text: "HYPE-style denominator-share model: sample starting broad money-market / yield-vault TVL from historical monthly denominators, sample monthly denominator shocks from historical money-market returns, then multiply by Sky share.",
+      },
+      {
+        heading: "Market share momentum",
+        text: "Sky share starts from MS90. The share path uses the same velocity ensemble standard as the newer models: 70% capped MS30/MS180 monthly-equivalent velocity + 30% capped MS7/MS30 velocity, linearly decayed over 12 months. Absolute cap: 35% of the money-market denominator.",
+      },
+      {
+        heading: "Supply path",
+        text: "DAI is held flat in the base model. USDS fills the residual between modeled total Sky stable supply and flat DAI. SKY token supply is held flat; no buybacks or burns are modeled.",
+      },
+      {
+        heading: "Data sources",
+        text: "USDS and DAI supply use Sky's official supply page backing API. The growth denominator uses the repo's broad money-market / yield-vault TVL history, not DefiLlama stablecoin market share.",
       },
     ],
   },
@@ -563,6 +595,8 @@ function ScenarioTable({
   scenarios: ValuationScenario[];
   spot: number;
 }) {
+  const show2YMove = scenarios.some((s) => s.prob_spot_up_30_2y !== undefined || s.prob_spot_down_30_2y !== undefined);
+
   return (
     <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden">
       <div className="px-6 py-4 border-b border-[#2d3144]">
@@ -586,6 +620,16 @@ function ScenarioTable({
               <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 whitespace-nowrap">
                 P(spot) <InfoTooltip termKey="prob_above_spot" />
               </th>
+              {show2YMove && (
+                <>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 whitespace-nowrap">
+                    2Y +30%
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 whitespace-nowrap">
+                    2Y -30%
+                  </th>
+                </>
+              )}
               <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 whitespace-nowrap">
                 3× <InfoTooltip termKey="prob_3x" />
               </th>
@@ -642,6 +686,22 @@ function ScenarioTable({
                     </span>
                   </td>
 
+                  {/* 2Y undiscounted move probabilities */}
+                  {show2YMove && (
+                    <>
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        {s.prob_spot_up_30_2y !== undefined
+                          ? <span className="font-mono text-sm text-emerald-300">{pct(s.prob_spot_up_30_2y)}</span>
+                          : <span className="text-gray-600">—</span>}
+                      </td>
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        {s.prob_spot_down_30_2y !== undefined
+                          ? <span className="font-mono text-sm text-red-300">{pct(s.prob_spot_down_30_2y)}</span>
+                          : <span className="text-gray-600">—</span>}
+                      </td>
+                    </>
+                  )}
+
                   {/* 3× prob */}
                   <td className="px-4 py-4 text-right whitespace-nowrap">
                     {s.prob_3x !== undefined
@@ -668,11 +728,28 @@ const TOKEN_GP_META: Record<string, Record<string, GpMeta>> = {
     annualized_current_state:   { label: "GP current state (ann.)",   fmt: "money" },
     annualized_full_activation: { label: "GP full activation (ann.)",  fmt: "money" },
     ann_volume:                 { label: "Annual volume",              fmt: "money" },
+    base_seed_monthly:          { label: "Base seed monthly vol.",      fmt: "money" },
+    start_total_dex_monthly_p50:{ label: "Start total DEX P50",         fmt: "money" },
+    latest30_total_dex_volume:  { label: "Latest 30D total DEX",        fmt: "money" },
+    trailing12_median_total_dex_volume: { label: "T12M median total DEX", fmt: "money" },
+    latest30_volume:            { label: "Latest 30D volume",          fmt: "money" },
+    trailing12_median_volume:   { label: "T12M median monthly vol.",    fmt: "money" },
     lp_fee_bps_30d:             { label: "LP take 30D",               fmt: "bps"   },
+    trailing12_lp_fee_bps:      { label: "LP take T12M",              fmt: "bps"   },
     take_bps_current:           { label: "Protocol take — current",    fmt: "bps"   },
     take_bps_full:              { label: "Protocol take — full activ.", fmt: "bps"   },
     mcap_current_state_gp:      { label: "Mcap / GP (current)",        fmt: "x"     },
     mcap_full_activation_gp:    { label: "Mcap / GP (full activ.)",    fmt: "x"     },
+    fdv_full_activation_gp:     { label: "FDV / GP (full activ.)",     fmt: "x"     },
+    ms_momentum_initial:        { label: "MS momentum initial",         fmt: "x"     },
+    eoy3_share_model:           { label: "EOY3 share model",            fmt: "pct"   },
+    start_binance_spot_monthly_p50: { label: "Start Binance spot P50",  fmt: "money" },
+    latest30_binance_spot_volume: { label: "Latest 30D Binance spot",   fmt: "money" },
+    ms90_vs_binance_spot:       { label: "MS90 vs Binance spot",        fmt: "pct"   },
+    ms30_ms180_binance_spot_trend: { label: "Binance spot MS trend",    fmt: "x"     },
+    binance_spot_eoy3_share_model: { label: "Binance spot EOY3 share",  fmt: "pct"   },
+    binance_spot_full_activation_p50: { label: "Binance spot P50 PV",   fmt: "money" },
+    binance_spot_full_activation_ev: { label: "Binance spot EV PV",     fmt: "money" },
   },
   ethfi: {
     card_annualized:   { label: "Card GP (ann.)",    fmt: "money" },
@@ -688,12 +765,67 @@ const TOKEN_GP_META: Record<string, Record<string, GpMeta>> = {
   },
   jup: {
     perps_30d:          { label: "Perps 30D GP",      fmt: "money" },
+    perps_30d_volume:   { label: "Perps 30D volume",  fmt: "money" },
+    perps_clean_take_rate_bps: { label: "Perps clean take", fmt: "bps" },
     aggregator_30d:     { label: "Aggregator 30D GP", fmt: "money" },
+    aggregator_30d_volume: { label: "Aggregator 30D vol.", fmt: "money" },
     jupiterz_30d:       { label: "Jupiterz 30D GP",   fmt: "money" },
     total_30d:          { label: "Total 30D GP",      fmt: "money" },
+    spot_30d_volume:    { label: "Spot 30D volume",   fmt: "money" },
+    spot_take_rate_bps: { label: "Spot rake",         fmt: "bps" },
     seed_monthly:       { label: "Seed monthly GP",   fmt: "money" },
     seed_annualized:    { label: "Seed GP (ann.)",    fmt: "money" },
+    mcap_entity_gp:     { label: "Mcap / entity GP",  fmt: "x" },
+    perps_ms30_vs_binance_futures: { label: "Perps MS30 vs Binance", fmt: "pct" },
+    perps_share_velocity_capped: { label: "Perps share velocity", fmt: "x" },
+    perps_eoy3_share_model: { label: "Perps EOY3 share", fmt: "pct" },
+    spot_ms30_vs_binance_spot: { label: "Spot MS30 vs Binance", fmt: "pct" },
+    spot_share_velocity_capped: { label: "Spot share velocity", fmt: "x" },
+    spot_eoy3_share_model: { label: "Spot EOY3 share", fmt: "pct" },
+    start_binance_futures_monthly_p50: { label: "Start Binance futures", fmt: "money" },
+    start_binance_spot_monthly_p50: { label: "Start Binance spot", fmt: "money" },
     optional_tracked_30d:{ label: "Optional 30D",     fmt: "money" },
+    y3_daily_mean_gp_p50:{ label: "Y3 daily GP P50", fmt: "money" },
+    y3_perps_daily_mean_volume_p50: { label: "Y3 perps daily vol.", fmt: "money" },
+    y3_spot_daily_mean_volume_p50: { label: "Y3 spot daily vol.", fmt: "money" },
+  },
+  sky: {
+    gross_income:                  { label: "Gross income (ann.)",       fmt: "money" },
+    current_gp:                    { label: "Current GP (ann.)",         fmt: "money" },
+    current_np_base_opex:          { label: "Current NP @ base OPEX",    fmt: "money" },
+    mcap_current_gp:               { label: "Mcap / current GP",         fmt: "x" },
+    fdv_current_gp:                { label: "FDV / current GP",          fmt: "x" },
+    gross_income_take_rate_bps:    { label: "Gross income take-rate",    fmt: "bps" },
+    savings_cost_rate_bps:         { label: "Savings cost rate",         fmt: "bps" },
+    stusds_cost_rate_bps:          { label: "stUSDS cost rate",          fmt: "bps" },
+    net_gp_take_rate_bps:          { label: "Net GP take-rate",          fmt: "bps" },
+    usds_supply:                   { label: "Official USDS",            fmt: "money" },
+    dai_supply:                    { label: "Official DAI",             fmt: "money" },
+    total_sky_stable_supply:       { label: "Official USDS + DAI",      fmt: "money" },
+    money_market_tvl:              { label: "Money-market denominator", fmt: "money" },
+    ms7_vs_money_market:           { label: "MS7 vs money markets",     fmt: "pct" },
+    ms90_vs_money_market:          { label: "MS90 vs money markets",    fmt: "pct" },
+    ms30_vs_money_market:          { label: "MS30 vs money markets",    fmt: "pct" },
+    ms180_vs_money_market:         { label: "MS180 vs money markets",   fmt: "pct" },
+    ms30_ms180_trend:              { label: "MS30/MS180 trend",         fmt: "x" },
+    ms7_ms30_trend:                { label: "MS7/MS30 trend",           fmt: "x" },
+    velocity_ensemble_monthly:     { label: "Velocity ensemble",        fmt: "pct" },
+    velocity_long_component_monthly: { label: "70% leg velocity",       fmt: "pct" },
+    velocity_short_component_monthly:{ label: "30% leg velocity",       fmt: "pct" },
+    eoy3_money_market_share:       { label: "EOY3 money-market share",  fmt: "pct" },
+    y3_gp_p50:                     { label: "Y3 GP P50",               fmt: "money" },
+    y3_gross_income_p50:           { label: "Y3 gross income P50",     fmt: "money" },
+    y3_savings_cost_p50:           { label: "Y3 savings cost P50",     fmt: "money" },
+    y3_stusds_cost_p50:            { label: "Y3 stUSDS cost P50",      fmt: "money" },
+    y3_total_stable_supply_p50:    { label: "Y3 total stable P50",      fmt: "money" },
+    y3_usds_supply_p50:            { label: "Y3 USDS P50",              fmt: "money" },
+    y3_avg_money_market_tvl_p50:   { label: "Y3 avg money-market TVL", fmt: "money" },
+    y3_avg_total_stable_supply_p50:{ label: "Y3 avg Sky supply",       fmt: "money" },
+    y3_gp_change_vs_current:       { label: "Y3 GP vs current",         fmt: "pct" },
+    y3_total_stable_supply_change_vs_current: { label: "Y3 supply vs current", fmt: "pct" },
+    y3_usds_supply_change_vs_current: { label: "Y3 USDS vs current",    fmt: "pct" },
+    y3_money_market_tvl_change_vs_current: { label: "Y3 denominator vs current", fmt: "pct" },
+    treasury_cash_p50:             { label: "Treasury cash P50",        fmt: "money" },
   },
 };
 
@@ -741,6 +873,9 @@ function TokenModelAssumptions({ tokenKey, model }: {
   if (!m) return null;
 
   const drPct = (model.discount_rate * 100).toFixed(1);
+  const multipleLine = tokenKey === "sky"
+    ? `Multiple: ${model.multiple}× NP primary; 10× GP sensitivity`
+    : `Multiple: ${model.multiple}× GP`;
 
   return (
     <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6 space-y-4">
@@ -754,7 +889,7 @@ function TokenModelAssumptions({ tokenKey, model }: {
         </div>
         <div className="bg-[#0d1117] rounded-xl border border-[#2d3144] px-5 py-4">
           <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Valuation logic</div>
-          <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{`Multiple: ${model.multiple}× GP
+          <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{`${multipleLine}
 Discount rate: ${drPct}%
 Paths: ${(model.paths / 1000).toFixed(0)}k Monte Carlo
 Horizon: 3 years`}</pre>
@@ -839,36 +974,46 @@ const MS_CONFIG: Record<string, MsConfig> = {
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
   sky: {
-    yCapPct: 0.08,
-    chartNote: "Rolling 30D and 90D mean of (USDS + DAI) / total USD stablecoin supply (DefiLlama). Directly drives gross income — higher share → more revenue at current yield.",
-    tableNote: "Total stablecoin denominator from DefiLlama /stablecoincharts/all (includes USDT, USDC, FDUSD, PYUSD, etc.).",
-    driversTitle: "Decentralized stablecoin market",
+    yCapPct: 0.40,
+    chartNote: "Rolling 30D and 90D mean of official Sky supply divided by broad money-market / yield-vault TVL. This is the share seed used by the MC path.",
+    tableNote: "USDS/DAI supply comes from Sky's official supply page API. The denominator is broad money-market / yield-vault TVL, not DefiLlama total stablecoin supply.",
+    driversTitle: "Money-market share x yield spread",
     driversBody: null,
     tableRows: (gp) => ([
-      ["MS30 vs All Stablecoins",        pct(gp["ms30_vs_stables"] as number)],
-      ["MS90 vs All Stablecoins",        pct(gp["ms90_vs_stables"] as number)],
-      ["MS180 vs All Stablecoins",       pct(gp["ms180_vs_stables"] as number)],
+      ["MS30 vs Money Markets",          pct(gp["ms30_vs_money_market"] as number)],
+      ["MS7 vs Money Markets",           pct(gp["ms7_vs_money_market"] as number)],
+      ["MS90 vs Money Markets",          pct(gp["ms90_vs_money_market"] as number)],
+      ["MS180 vs Money Markets",         pct(gp["ms180_vs_money_market"] as number)],
       ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
-      ["Total stablecoin market",        fmtLarge(gp["total_stablecoin_supply"] as number)],
-      ["USDS supply",                    fmtLarge(gp["usds_supply"] as number)],
-      ["DAI supply",                     fmtLarge(gp["dai_supply"] as number)],
-      ["Gross income (ann.)",            fmtLarge(gp["gross_income"] as number)],
+      ["MS7/MS30 trend",                 `${(gp["ms7_ms30_trend"] as number)?.toFixed(2)}×`],
+      ["Velocity ensemble",              `${(((gp["velocity_ensemble_monthly"] as number) ?? 0) * 100).toFixed(2)}% / mo`],
+      ["Money-market denominator",       fmtLarge(gp["money_market_tvl"] as number)],
+      ["Official USDS supply",           fmtLarge(gp["usds_supply"] as number)],
+      ["Official DAI supply",            fmtLarge(gp["dai_supply"] as number)],
+      ["Gross income take-rate",         `${((gp["gross_income_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`],
+      ["Savings cost rate",              `${((gp["savings_cost_rate_bps"] as number) ?? 0).toFixed(1)} bps`],
+      ["stUSDS cost rate",               `${((gp["stusds_cost_rate_bps"] as number) ?? 0).toFixed(1)} bps`],
+      ["Net GP take-rate",               `${((gp["net_gp_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
   jup: {
-    yCapPct: 1.00,
-    chartNote: "Rolling 30D and 90D JUP Perps fees / total tracked Solana perps fees (JUP + Drift + Flash Trade). Fee revenue is a proxy for perps volume share.",
-    tableNote: "Denominator covers DefiLlama-tracked Solana perps protocols with active fee data; excludes Zeta/Ranger (no fee data available).",
-    driversTitle: "Solana perps fee share",
+    yCapPct: 0.03,
+    chartNote: "Rolling 30D and 90D JUP perps volume divided by Binance Futures proxy. If direct derivatives volume is unavailable, JUP volume is clean-GP-implied from the modeled perps take-rate.",
+    tableNote: "Perps denominator is Binance Futures; spot denominator is Binance spot. Both use BTCUSDT quote-volume histories scaled to Blockworks annual exchange totals.",
+    driversTitle: "Binance-denominator perps + spot share",
     driversBody: null,
     tableRows: (gp) => ([
-      ["MS30 vs Solana Perps",            pct(gp["ms30_vs_sol_perps"] as number)],
-      ["MS90 vs Solana Perps",            pct(gp["ms90_vs_sol_perps"] as number)],
-      ["MS180 vs Solana Perps",           pct(gp["ms180_vs_sol_perps"] as number)],
-      ["MS30/MS180 trend",                `${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`],
-      ["JUP Perps 30D fees",              fmtLarge(gp["jup_perps_30d_fees"] as number)],
-      ["Solana Perps 30D fees (tracked)", fmtLarge(gp["sol_perps_30d_fees"] as number)],
-      ["Perps 30D GP",                    fmtLarge(gp["perps_30d"] as number)],
+      ["Perps MS30 vs Binance Futures",   pct(gp["perps_ms30_vs_binance_futures"] as number)],
+      ["Perps MS90 vs Binance Futures",   pct(gp["perps_ms90_vs_binance_futures"] as number)],
+      ["Perps MS180 vs Binance Futures",  pct(gp["perps_ms180_vs_binance_futures"] as number)],
+      ["Spot MS30 vs Binance spot",       pct(gp["spot_ms30_vs_binance_spot"] as number)],
+      ["Spot MS90 vs Binance spot",       pct(gp["spot_ms90_vs_binance_spot"] as number)],
+      ["Perps share velocity",            `${(gp["perps_share_velocity_capped"] as number)?.toFixed(2)}×`],
+      ["Spot share velocity",             `${(gp["spot_share_velocity_capped"] as number)?.toFixed(2)}×`],
+      ["Perps clean take-rate",           `${((gp["perps_clean_take_rate_bps"] as number) ?? 0).toFixed(2)} bps`],
+      ["Spot rake",                       `${((gp["spot_take_rate_bps"] as number) ?? 0).toFixed(2)} bps`],
+      ["Y3 perps GP P50",                 fmtLarge(gp["y3_perps_gp_p50"] as number)],
+      ["Y3 spot GP P50",                  fmtLarge(gp["y3_spot_gp_p50"] as number)],
     ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "NaN×"),
   },
   ethfi: {
@@ -983,15 +1128,92 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
           )}
           {tokenKey === "jup" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              JUP GP = 25% of Perps fees + aggregator rake + Jupiterz volume × 3.55bps. Market share uses Perps fee revenue as a volume proxy, comparing JUP vs Drift and Flash Trade (only Solana perps protocols with accessible fee history on DefiLlama). Zeta and Ranger excluded — no fee data available.
+              JUP perps GP = Binance Futures volume × JUP/Binance perps share × clean take-rate. Spot GP = Binance spot volume × JUP/Binance spot share × observed aggregator/Jupiterz rake. Product-line history calibrates take-rate and current share; smaller products remain in the optionality premium.
             </p>
           )}
           {tokenKey === "sky" && (
             <p className="text-sm text-gray-400 leading-relaxed">
-              Sky GP = gross income − savings-rate cost − stUSDS expense. Gross income = (USDS + DAI supply) × yield. Market share trend tracks Sky&apos;s share of total USD stablecoin supply (USDT, USDC, FDUSD, PYUSD, etc.) — growing share means more gross income at the same yield.
+              Sky GP = modeled Sky supply × net GP take-rate. The MC path samples a starting broad money-market / yield-vault TVL from historical monthly denominators, applies Sky&apos;s MS90 share seed, then decays a 70% MS30/MS180 + 30% MS7/MS30 velocity ensemble over 12 months. DAI stays flat; USDS fills the residual modeled supply.
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function UniBinanceSpotShareSection({ data }: { data: ValuationData }) {
+  const history = (data as unknown as { binance_spot_ms_history?: MsPoint[] }).binance_spot_ms_history ?? [];
+  const eoy3 = (data.hist_charts as unknown as { binance_spot_eoy3_ms?: Array<MsPoint & { eoy3?: number }> } | undefined)?.binance_spot_eoy3_ms ?? [];
+  if (!history.length) return null;
+
+  const eoy3ByDate = new Map(eoy3.map((row) => [row.date, row.eoy3 ?? null]));
+  const chart = history.map((row) => ({ ...row, eoy3: eoy3ByDate.get(row.date) ?? null }));
+  const step = Math.max(1, Math.floor(chart.length / 6));
+  const ticks = chart.filter((_, i) => i % step === 0 || i === chart.length - 1).map((d) => d.date);
+  const vals = chart.flatMap((d) => [d.ms30, d.ms90, d.eoy3]).filter((v): v is number => v != null);
+  const yMin = Math.max(0, Math.min(...vals) - 0.01);
+  const yMax = Math.min(0.70, Math.max(...vals) + 0.01);
+  const latest = chart[chart.length - 1];
+  const gp = data.current_gp;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      <div className="lg:col-span-3 bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
+        <h3 className="text-xl font-bold text-white mb-5">UNI / Binance Spot Share Dynamics</h3>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={chart} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
+            <XAxis
+              dataKey="date"
+              ticks={ticks}
+              tickFormatter={(d: string) => { const [, m, day] = d.split("-"); return `${parseInt(m)}/${parseInt(day)}`; }}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
+            />
+            <YAxis
+              domain={[yMin, yMax]}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={36}
+            />
+            <Tooltip
+              contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
+              labelStyle={{ color: "#9ca3af", marginBottom: 2 }}
+              formatter={(v: number, name: string) => [
+                `${(v * 100).toFixed(2)}%`,
+                name === "ms30" ? "MS30" : name === "ms90" ? "MS90" : "EOY3 model",
+              ]}
+            />
+            <Line type="monotone" dataKey="eoy3" stroke="#60a5fa" strokeWidth={2} dot={false} connectNulls />
+            <Line type="monotone" dataKey="ms90" stroke="#6b7280" strokeWidth={1.5} dot={false} connectNulls />
+            <Line type="monotone" dataKey="ms30" stroke="#e5e7eb" strokeWidth={1.5} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+        <p className="text-xs text-gray-600 mt-4 leading-relaxed">
+          Rolling Uniswap volume divided by BTCUSDT-scaled Binance spot volume. This is the primary UNI denominator. Binance spot is calibrated to Blockworks annual Binance spot totals; current-year daily values use the latest calibrated BTCUSDT share.
+        </p>
+      </div>
+      <div className="lg:col-span-2 bg-[#1a1d29] rounded-xl border border-[#2d3144] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-4 tracking-wide">Binance spot snapshot</div>
+        <table className="w-full">
+          <tbody>
+            {[
+              ["MS30 vs Binance spot", latest?.ms30 != null ? pct(latest.ms30) : "—"],
+              ["MS90 vs Binance spot", latest?.ms90 != null ? pct(latest.ms90) : "—"],
+              ["EOY3 modeled share", latest?.eoy3 != null ? pct(latest.eoy3) : "—"],
+              ["MS30/MS180 trend", gp["ms30_ms180_binance_spot_trend"] != null ? `${(gp["ms30_ms180_binance_spot_trend"] as number).toFixed(2)}×` : "—"],
+              ["Start Binance spot P50", fmtLarge(gp["start_binance_spot_monthly_p50"] as number)],
+              ["P50 PV sensitivity", fmtPrice(gp["binance_spot_full_activation_p50"] as number)],
+            ].map(([label, value]) => (
+              <tr key={label} className="border-b border-[#252836] last:border-0">
+                <td className="py-2.5 text-sm text-gray-400 pr-3">{label}</td>
+                <td className="py-2.5 text-sm font-mono font-semibold text-gray-200 text-right whitespace-nowrap">{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="text-xs text-gray-600 mt-4 leading-relaxed">
+          This is the HYPE-like primary lens: Binance spot denominator × UNI/Binance spot share. The DEX-native chart above remains a protocol-market sensitivity.
+        </p>
       </div>
     </div>
   );
@@ -1013,19 +1235,19 @@ const TOKEN_COLORS: Record<string, string> = {
 const SIGNAL_COLOR: Record<string, string> = { GOOD: "#4ade80", NEUTRAL: "#9ca3af", BAD: "#f87171" };
 
 const TOKEN_BACKTEST_NOTE: Record<string, string> = {
-  uni:   "PV proxy = rolling 30D full-activation GP × 15× / DR³ / circ supply, normalised to current P50.",
+  uni:   "PV proxy = rolling total DEX volume × UNI share with no-lookahead fee rule × 15× / DR³ / effective Y3 supply, normalised to current selected-model P50.",
   ethfi: "PV proxy = historical staking TVL × estimated GP/TVL rate × 15× / DR³ / supply, normalised to current P50.",
   jup:   "PV proxy = rolling 30D perps fees × 25% take × 15× / DR³ / circ supply, normalised to current P50.",
   lighter: "PV proxy = trailing 30D Lighter revenue annualized × 15× / DR³ / circulating supply. Short-history diagnostic, not a full historical MC replay.",
-  sky:   "PV proxy = historical (USDS+DAI) supply × net GP/supply rate × GP multiple / DR³ / supply, normalised to current P50.",
+  sky:   "PV proxy = historical money-market TVL × Sky share × net GP/supply rate × GP multiple / DR³ / supply, normalised to current P50.",
 };
 
 const TOKEN_EOY3_LABEL: Record<string, string> = {
   uni:   "Model implied EOY3 UNI/Total DEX market share",
   ethfi: "Model implied EOY3 ether.fi/LRT market share",
-  jup:   "Model implied EOY3 JUP/Solana Perps fee share",
+  jup:   "Model implied EOY3 JUP/Binance Futures perps share",
   lighter: "Model implied EOY3 Lighter/Binance Futures market share",
-  sky:   "Model implied EOY3 Sky/Total stablecoin supply share",
+  sky:   "Model implied EOY3 Sky/Money-market denominator share",
 };
 
 function TokenHistoricalCharts({ hc, tokenKey }: { hc: HistCharts; tokenKey: string }) {
@@ -1221,11 +1443,27 @@ function TokenHistoricalCharts({ hc, tokenKey }: { hc: HistCharts; tokenKey: str
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-gray-600 mt-3 leading-relaxed">
-            Historical time series of the model-implied Year-3 terminal market share using MS90 as seed and MS30/MS180 velocity-decay rule (12M linear decay). The current EOY3 model point is {e3Latest ? pct(e3Latest.eoy3) : "—"}.
+            Historical time series of the model-implied Year-3 terminal market share using MS90 as seed and blended velocity decay (12M linear decay). The current EOY3 model point is {e3Latest ? pct(e3Latest.eoy3) : "—"}.
           </p>
         </div>
       )}
 
+    </div>
+  );
+}
+
+function TokenCaveats({ caveats }: { caveats: string[] }) {
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
+      <h3 className="text-lg font-bold text-white mb-3">Caveats</h3>
+      <ul className="space-y-2">
+        {caveats.map((caveat, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0" />
+            <span className="text-sm text-gray-400 leading-relaxed">{caveat}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -1584,11 +1822,19 @@ Multiple: 20× trough / 15× normal / 10× peak`}
 type GpFn = (gp: Record<string, number>) => string;
 interface Y3CardCfg { label: string; value: GpFn; sub: GpFn | string }
 
+function deltaText(future: number | undefined, current: number | undefined, suffix = "vs current"): string {
+  if (!future || !current || current <= 0) return suffix;
+  const delta = (future / current - 1) * 100;
+  const sign = delta >= 0 ? "+" : "";
+  return `${sign}${delta.toFixed(1)}% ${suffix}`;
+}
+
 const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
   uni: [
-    { label: "Y3 TTM Volume P50",        value: (gp) => fmtLarge(gp["y3_volume_p50"]),   sub: "P50 3-year trailing volume" },
-    { label: "Y3 GP P50 (full activ.)",  value: (gp) => fmtLarge(gp["y3_gp_p50"]),       sub: (gp) => `P25 ${fmtLarge(gp["y3_gp_p25"])} · P75 ${fmtLarge(gp["y3_gp_p75"])}` },
-    { label: "Mcap / GP (full activ.)",  value: (gp) => `${(gp["mcap_full_activation_gp"] ?? 0).toFixed(1)}×`, sub: "At current mcap and full-activation take-rate" },
+    { label: "Y3 Binance-volume P50",    value: (gp) => fmtLarge(gp["binance_spot_y3_volume_p50"] ?? gp["y3_volume_p50"]), sub: "Primary P50 Year-3 trailing volume" },
+    { label: "Y3 GP P50 (primary)",      value: (gp) => fmtLarge(gp["binance_spot_y3_gp_p50"] ?? gp["y3_gp_p50"]),          sub: (gp) => `DEX sensitivity ${fmtLarge(gp["y3_gp_p50"])}` },
+    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,               sub: (gp) => `Reserved release +${((gp["y3_reserved_supply_release"] ?? 0) / 1e6).toFixed(0)}M over 3Y` },
+    { label: "Mcap / GP (full activ.)",  value: (gp) => `${(gp["mcap_full_activation_gp"] ?? 0).toFixed(1)}×`,             sub: "At current mcap and full-activation take-rate" },
   ],
   ethfi: [
     { label: "Y3 GP P50 (weighted)",     value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "Weighted 20/40/40 bear/base/bull" },
@@ -1597,10 +1843,13 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
   ],
   jup: [
-    { label: "Y3 Total GP P50",          value: (gp) => fmtLarge(gp["y3_gp_p50"]),            sub: "Perps + spot at P50 path" },
-    { label: "Y3 Perps GP P50",          value: (gp) => fmtLarge(gp["y3_perps_gp_p50"]),      sub: "Jupiter Perps only" },
+    { label: "Y3 Total GP P50",          value: (gp) => fmtLarge(gp["y3_gp_p50"]),            sub: (gp) => deltaText(gp["y3_gp_p50"], (gp["total_30d"] ?? 0) * 12, "vs current annualized GP") },
+    { label: "Y3 Perps GP P50",          value: (gp) => fmtLarge(gp["y3_perps_gp_p50"]),      sub: (gp) => deltaText(gp["y3_perps_gp_p50"], (gp["perps_30d"] ?? 0) * 12, "vs current annualized perps GP") },
+    { label: "Y3 Spot GP P50",           value: (gp) => fmtLarge(gp["y3_spot_gp_p50"]),       sub: (gp) => deltaText(gp["y3_spot_gp_p50"], ((gp["total_30d"] ?? 0) - (gp["perps_30d"] ?? 0)) * 12, "vs current annualized spot GP") },
+    { label: "Y3 perps daily volume",    value: (gp) => fmtLarge(gp["y3_perps_daily_mean_volume_p50"]), sub: (gp) => deltaText(gp["y3_perps_daily_mean_volume_p50"], (gp["perps_30d_volume"] ?? 0) / 30, "vs current daily perps volume") },
+    { label: "Y3 spot daily volume",     value: (gp) => fmtLarge(gp["y3_spot_daily_mean_volume_p50"]), sub: (gp) => deltaText(gp["y3_spot_daily_mean_volume_p50"], (gp["spot_30d_volume"] ?? 0) / 30, "vs current daily spot volume") },
     { label: "Buyback tokens P50",       value: (gp) => `${((gp["buyback_tokens_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Cumulative JUP buyback over 3 years" },
-    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B`, sub: "Circ. supply after buybacks at Year 3" },
+    { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B`, sub: (gp) => deltaText(gp["y3_supply_p50"], gp["current_circulating_supply"], "vs current circulating supply") },
   ],
   lighter: [
     { label: "Y3 Revenue P50",            value: (gp) => fmtLarge(gp["y3_revenue_p50"]),       sub: "Perps revenue + HYPE-style yield case" },
@@ -1609,8 +1858,10 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Effective supply P50",      value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`, sub: "Supply after fixed unlocks and buybacks" },
   ],
   sky: [
-    { label: "Y3 USDS Supply P50",       value: (gp) => fmtLarge(gp["y3_usds_supply_p50"]),  sub: "Base $70M OPEX scenario" },
-    { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "GP after savings rate & stUSDS cost" },
+    { label: "Y3 Total Stable P50",      value: (gp) => fmtLarge(gp["y3_total_stable_supply_p50"]), sub: (gp) => deltaText(gp["y3_total_stable_supply_p50"], gp["total_sky_stable_supply"], "vs current official USDS + DAI") },
+    { label: "Y3 USDS Supply P50",       value: (gp) => fmtLarge(gp["y3_usds_supply_p50"]),  sub: (gp) => deltaText(gp["y3_usds_supply_p50"], gp["usds_supply"], "vs current USDS") },
+    { label: "Y3 GP P50",                value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: (gp) => deltaText(gp["y3_gp_p50"], gp["current_gp"], "vs current annualized GP") },
+    { label: "Y3 avg money-market TVL",  value: (gp) => fmtLarge(gp["y3_avg_money_market_tvl_p50"]), sub: (gp) => deltaText(gp["y3_avg_money_market_tvl_p50"], gp["money_market_tvl"], "vs current denominator") },
     { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
   ],
 };
@@ -1619,9 +1870,27 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
   const cards = TOKEN_Y3_CARDS[tokenKey];
   if (!cards) return null;
 
-  const gp   = data.current_gp;
+  const gp: Record<string, number> = {
+    ...(data.current_gp as Record<string, number>),
+    current_circulating_supply: data.market.circulating_supply,
+  };
   const circ = data.market.circulating_supply;
   const spot = data.market.spot;
+  const disc = Math.pow(1 + data.model.discount_rate, 3);
+  const multiple = data.model.multiple || 15;
+  const fullTakeBps = (gp["take_bps_full"] as number | undefined) ?? 0;
+  const currentTakeBps = (gp["take_bps_current"] as number | undefined) ?? fullTakeBps;
+
+  const scenarioSupply = (s: ValuationScenario) =>
+    s.y3_supply_p50 ?? (s.key.includes("fdv") ? ((data.market.max_supply as number | undefined) ?? circ) : circ);
+  const scenarioTakeBps = (s: ValuationScenario) =>
+    s.key === "current_state" ? currentTakeBps : fullTakeBps;
+  const scenarioP50AnnualGp = (s: ValuationScenario) =>
+    s.pv.p50 * scenarioSupply(s) * disc / multiple;
+  const scenarioP50DailyMeanVolume = (s: ValuationScenario) => {
+    const take = scenarioTakeBps(s);
+    return take > 0 ? scenarioP50AnnualGp(s) / (take / 10000) / 365 : 0;
+  };
 
   return (
     <div className="space-y-3">
@@ -1633,28 +1902,41 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#2d3144]">
-                {["SCENARIO", "P50 PV", "P50 MCAP", "EV PV", "EV MCAP", "P(SPOT)", "P(3×)"].map((h) => (
+                {["SCENARIO", "P50 EOY3 PRICE", "P50 EOY3 MCAP", "P50 EOY DAILY MEAN VOL", "P50 ANNUALIZED GP", "P50 PV", "EV PV", "EV MCAP", "P(SPOT)", "P(3×)", "P(+30% 2Y)", "P(-30% 2Y)"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {data.scenarios.map((s, i) => {
-                const p50mcap = circ > 0 ? s.pv.p50 * circ : 0;
-                const evMcap  = circ > 0 ? s.ev  * circ : 0;
-                const isPrimary = s.is_primary;
-                return (
-                  <tr key={s.key} className={i < data.scenarios.length - 1 ? "border-b border-[#2d3144]" : ""}>
-                    <td className={`px-5 py-4 whitespace-nowrap ${isPrimary ? "text-white font-semibold" : "text-gray-400"}`}>{s.label}</td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.pv.p50)}</td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50mcap)}</td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.ev)}</td>
-                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(evMcap)}</td>
+	              {data.scenarios.map((s, i) => {
+                    const supply = scenarioSupply(s);
+                    const p50Price = s.y3_price_p50 ?? (s.pv.p50 * disc);
+	                const p50mcap = s.y3_mcap_p50 ?? (supply > 0 ? p50Price * supply : 0);
+	                const evMcap  = s.ev_mcap ?? (supply > 0 ? s.ev * supply : 0);
+                    const p50DailyVolume = s.y3_daily_mean_volume_p50 ?? scenarioP50DailyMeanVolume(s);
+                    const p50AnnualGp = s.y3_gp_p50 ?? scenarioP50AnnualGp(s);
+	                const isPrimary = s.is_primary;
+	                return (
+	                  <tr key={s.key} className={i < data.scenarios.length - 1 ? "border-b border-[#2d3144]" : ""}>
+	                    <td className={`px-5 py-4 whitespace-nowrap ${isPrimary ? "text-white font-semibold" : "text-gray-400"}`}>{s.label}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(p50Price)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50mcap)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50DailyVolume)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(p50AnnualGp)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.pv.p50)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtPrice(s.ev)}</td>
+	                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-white" : "text-gray-300"}`}>{fmtLarge(evMcap)}</td>
                     <td className="px-5 py-4 font-mono whitespace-nowrap" style={{ color: s.prob_above_spot >= 0.5 ? "#4ade80" : "#f87171" }}>
                       {pct(s.prob_above_spot)}
                     </td>
                     <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
                       {s.prob_3x != null ? pct(s.prob_3x) : "—"}
+                    </td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
+                      {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
+                    </td>
+                    <td className={`px-5 py-4 font-mono whitespace-nowrap ${isPrimary ? "text-gray-200" : "text-gray-400"}`}>
+                      {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
                     </td>
                   </tr>
                 );
@@ -1764,14 +2046,16 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           <MetricCard
             label="Spot / mcap / circ"
             value={fmtPrice(spot)}
-            sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
+            sub={tokenKey === "sky"
+              ? `Mcap ${fmtLarge(d.market.market_cap)} · FDV ${fmtLarge(d.market.fdv)} · max ${(d.market.max_supply / 1e9).toFixed(2)}B`
+              : `Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(0)}M ${d.token}`}
           />
           {/* Card 2–4: token-specific GP metrics */}
           {tokenKey === "uni" && <>
             <MetricCard label="GP current state (ann.)" value={fmtLarge(gp["annualized_current_state"] as number)} sub="Protocol fees at current take rate" />
             <MetricCard label="GP full activation (ann.)" value={fmtLarge(gp["annualized_full_activation"] as number)} sub="25% of LP fees → protocol" />
-            {gp["ms30_vs_dex"] != null
-              ? <MetricCard label="MS30 vs Total DEX" value={pct(gp["ms30_vs_dex"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.05 ? "green" : "default"} />
+            {gp["ms30_vs_binance_spot"] != null
+              ? <MetricCard label="MS30 vs Binance spot" value={pct(gp["ms30_vs_binance_spot"] as number)} sub={`Velocity ${(gp["binance_spot_momentum_initial"] as number)?.toFixed(2)}×`} accent={(gp["binance_spot_momentum_initial"] as number) >= 1.0 ? "green" : "default"} />
               : <MetricCard label="Annual volume" value={fmtLarge(gp["ann_volume"] as number)} sub={`Mcap/GP ${(gp["mcap_current_state_gp"] as number)?.toFixed(0)}× (current state)`} />
             }
           </>}
@@ -1785,11 +2069,17 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           </>}
           {tokenKey === "jup" && <>
             <MetricCard label="Total 30D GP" value={fmtLarge(gp["total_30d"] as number)} sub="Perps + aggregator + Jupiterz" />
-            <MetricCard label="Seed GP (ann.)" value={fmtLarge(gp["seed_annualized"] as number)} sub={`Seed monthly ${fmtLarge(gp["seed_monthly"] as number)}`} />
-            {gp["ms30_vs_sol_perps"] != null
-              ? <MetricCard label="MS30 vs Solana Perps" value={pct(gp["ms30_vs_sol_perps"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "default"} />
+            <MetricCard label="Perps take / spot rake" value={`${((gp["perps_clean_take_rate_bps"] as number) ?? 0).toFixed(2)} / ${((gp["spot_take_rate_bps"] as number) ?? 0).toFixed(2)} bps`} sub="Clean GP economics" />
+            {gp["perps_ms30_vs_binance_futures"] != null
+              ? <MetricCard label="Perps MS30 vs Binance" value={pct(gp["perps_ms30_vs_binance_futures"] as number)} sub={`Spot MS30 ${pct(gp["spot_ms30_vs_binance_spot"] as number)}`} accent={(gp["perps_ms30_ms180_binance_futures_trend"] as number) >= 1.0 ? "green" : "default"} />
               : <MetricCard label="Perps 30D" value={fmtLarge(gp["perps_30d"] as number)} sub={`Aggregator ${fmtLarge(gp["aggregator_30d"] as number)}`} />
             }
+            <MetricCard
+              label="Share velocity"
+              value={`${(gp["perps_share_velocity_capped"] as number)?.toFixed(2)}× / ${(gp["spot_share_velocity_capped"] as number)?.toFixed(2)}×`}
+              sub="Perps / spot · 70% MS30/MS180 + 30% MS7/MS30"
+              accent={(gp["perps_share_velocity_capped"] as number) >= 1.0 ? "green" : "red"}
+            />
           </>}
           {tokenKey === "lighter" && <>
             <MetricCard label="Holder revenue ann." value={fmtLarge(gp["holders_revenue_30d_ann"] as number)} sub={`Capture ${pct(gp["holder_capture_30d"] as number)} of 30D revenue`} />
@@ -1802,11 +2092,11 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </>}
           {tokenKey === "sky" && <>
-            <MetricCard label="Gross income (ann.)" value={fmtLarge(gp["gross_income"] as number)} sub={`Yield ${((gp["gross_income_yield_pct"] as number) ?? 0).toFixed(2)}% on USDS+DAI supply`} />
-            <MetricCard label="Current GP (ann.)" value={fmtLarge(gp["current_gp"] as number)} sub={`After savings rate & stUSDS cost`} />
-            {gp["ms30_vs_stables"] != null
-              ? <MetricCard label="MS30 vs All Stablecoins" value={pct(gp["ms30_vs_stables"] as number)} sub={`MS30/MS180 trend ${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`} accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "default"} />
-              : <MetricCard label="USDS + DAI supply" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky stablecoin total" />
+            <MetricCard label="Gross income take-rate" value={`${((gp["gross_income_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`} sub={`Gross income ${fmtLarge(gp["gross_income"] as number)} ann.`} />
+            <MetricCard label="Net GP take-rate" value={`${((gp["net_gp_take_rate_bps"] as number) ?? 0).toFixed(1)} bps`} sub={`After savings and stUSDS costs`} />
+            {gp["ms90_vs_money_market"] != null
+              ? <MetricCard label="Velocity ensemble" value={`${(((gp["velocity_ensemble_monthly"] as number) ?? 0) * 100).toFixed(2)}%/mo`} sub={`70% MS30/MS180 + 30% MS7/MS30`} accent={(gp["velocity_ensemble_monthly"] as number) > 0 ? "green" : "default"} />
+              : <MetricCard label="Official USDS + DAI" value={fmtLarge((gp["usds_supply"] as number) + (gp["dai_supply"] as number))} sub="Sky supply page API" />
             }
           </>}
           {/* Fallback for unknown tokens */}
@@ -1844,6 +2134,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
       {/* ── Market share trend ───────────────────────────────────────── */}
       {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {tokenKey === "uni" && <UniBinanceSpotShareSection data={d} />}
 
       {/* ── Model assumptions ────────────────────────────────────────── */}
       {tokenKey === "hype" && <HypeModelAssumptions data={d} />}
@@ -1873,6 +2164,8 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
       {/* ── Non-HYPE: Historical charts (backtest, secondary, EOY3 MS) ─ */}
       {tokenKey !== "hype" && d.hist_charts && <TokenHistoricalCharts hc={d.hist_charts} tokenKey={tokenKey} />}
+
+      {d.caveats && d.caveats.length > 0 && <TokenCaveats caveats={d.caveats} />}
 
       {/* ── HYPE: DefiLlama MCP weekly answer ────────────────────────── */}
       {tokenKey === "hype" && d.mcp_bullets && d.mcp_bullets.length > 0 && (
