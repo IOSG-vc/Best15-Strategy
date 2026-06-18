@@ -590,7 +590,7 @@ function DistributionChart({
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl font-bold text-white">Selected-model PV price distribution</h2>
+      <h2 className="text-3xl font-bold text-gray-900">Selected-model PV price distribution</h2>
 
       <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
         <div className="flex items-center justify-between mb-1">
@@ -1146,35 +1146,6 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
 
   return (
     <div className="space-y-5">
-      {/* ── Chart ───────────────────────────────────────────────────── */}
-      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
-        <h3 className="text-xl font-bold text-white mb-5">Market share trend</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={history} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
-            <XAxis
-              dataKey="date"
-              ticks={ticks}
-              tickFormatter={(d: string) => { const [, m, day] = d.split("-"); return `${parseInt(m)}/${parseInt(day)}`; }}
-              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
-            />
-            <YAxis
-              domain={[yMin, yMax]}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} width={36}
-            />
-            <Tooltip
-              contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
-              labelStyle={{ color: "#9ca3af", marginBottom: 2 }}
-              formatter={(v: number, name: string) => [`${(v * 100).toFixed(2)}%`, name === "ms30" ? "MS30" : "MS90"]}
-            />
-            <Line type="monotone" dataKey="ms90" stroke="#6b7280" strokeWidth={1.5} dot={false} connectNulls />
-            <Line type="monotone" dataKey="ms30" stroke="#e5e7eb" strokeWidth={1.5} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
-        <p className="text-xs text-gray-600 mt-4 leading-relaxed">{cfg.chartNote}</p>
-      </div>
-
       {/* ── Current Data + Core revenue drivers ─────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Current Data table (light card) */}
@@ -1948,7 +1919,7 @@ function HypeModelOutputs({ data }: { data: ValuationData }) {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl font-bold text-white">Model Outputs</h2>
+      <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
 
       {/* ── All-scenario table ──────────────────────────────────────── */}
       <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
@@ -2200,7 +2171,7 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl font-bold text-white">Model Outputs</h2>
+      <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
 
       {/* ── Scenario table ──────────────────────────────────────────────── */}
       <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
@@ -2557,8 +2528,8 @@ export default function ValuationDashboard({ data }: Props) {
   const activeToken = data.tokens[selected];
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
-      <header className="border-b border-[#2d3144] px-6 py-4">
+    <div className="min-h-screen bg-[#f0f3f8] text-gray-900">
+      <header className="border-b border-[#e2e6f0] px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Crypto Valuations</h1>
@@ -2588,8 +2559,8 @@ export default function ValuationDashboard({ data }: Props) {
                     onClick={() => setSelected(key)}
                     className="w-full flex items-center gap-4 px-5 py-3 rounded-xl border transition-all text-left"
                     style={{
-                      background:   active ? `${ring}12` : "#1a1d29",
-                      borderColor:  active ? ring : "#2d3144",
+                      background:   active ? `${ring}18` : "#ffffff",
+                      borderColor:  active ? ring : "#e2e6f0",
                     }}
                   >
                     <div>
@@ -2628,8 +2599,8 @@ export default function ValuationDashboard({ data }: Props) {
             {activeToken && (
               <div>
                 <div className="flex items-baseline gap-3 mb-6 flex-wrap">
-                  <h2 className="text-3xl font-bold text-white">{activeToken.symbol}</h2>
-                  <span className="text-lg text-gray-400">{activeToken.name}</span>
+                  <h2 className="text-3xl font-bold text-gray-900">{activeToken.symbol}</h2>
+                  <span className="text-lg text-gray-500">{activeToken.name}</span>
                   {activeToken.data && (
                     <span
                       className="text-3xl font-bold font-mono ml-auto"
