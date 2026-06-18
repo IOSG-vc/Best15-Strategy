@@ -1384,6 +1384,65 @@ PV/token = Year-3 TTM GP × ${mult}× / effective Y3 supply / (1 + DR)^3`}</pre>
     );
   }
 
+  // ── SKY: architecture + snapshot layout ──────────────────────────────────
+  if (tokenKey === "sky") {
+    const mc = gp["mc_path"] as unknown as {
+      start_money_market_tvl_p50: number;
+      current_money_market_tvl: number;
+      y3_avg_money_market_tvl_p50: number;
+    };
+    const startP50   = mc?.start_money_market_tvl_p50 ?? 0;
+    const currentDen = mc?.current_money_market_tvl   ?? (gp["money_market_tvl"] as number ?? 0);
+    const y3AvgDen   = mc?.y3_avg_money_market_tvl_p50 ?? (gp["y3_avg_money_market_tvl_p50"] as number ?? 0);
+    const y3VsCurr   = gp["y3_money_market_tvl_change_vs_current"] as number ?? 0;
+    const ms7ms30    = gp["ms7_ms30_trend"] as number ?? 0;
+    const mult       = data.model.multiple;
+    const dr         = (data.model.discount_rate * 100).toFixed(0);
+
+    const sRow = (label: string, value: string) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-4">{label}</td>
+        <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
+      </tr>
+    );
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left: architecture + code */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Money-market share architecture</h3>
+          <pre className="text-xs font-mono text-gray-600 bg-white border border-[#e2e6f0] rounded-lg p-4 leading-relaxed whitespace-pre-wrap">{`money_market_tvl_start = uniform historical monthly draw
+money_market_tvl_t = money_market_tvl_start × sampled monthly return path
+share_t = MS90 × decayed_velocity_ensemble_t
+Sky_supply_t = money_market_tvl_t × share_t
+USDS_t = max(Sky_supply_t - flat_DAI, 0)
+GP_t = Sky_supply_t × net_GP_take_rate
+NP_t = GP_t - OPEX
+PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
+          <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+            The MC path is denominator × share: starting money-market TVL is a uniform historical monthly draw with P50 {fmtLarge(startP50)}, not fixed at the current {fmtLarge(currentDen)} denominator. Current short leg MS7/MS30 is {ms7ms30.toFixed(2)}×, so it contributes no positive acceleration right now.
+          </p>
+        </div>
+        {/* Right: current snapshot table */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Current snapshot</h3>
+          <table className="w-full"><tbody>
+            {sRow("MS7 vs money markets",    pct(gp["ms7_vs_money_market"]  as number))}
+            {sRow("MS30 vs money markets",   pct(gp["ms30_vs_money_market"] as number))}
+            {sRow("MS90 valuation seed",     pct(gp["ms90_vs_money_market"] as number))}
+            {sRow("MS180 vs money markets",  pct(gp["ms180_vs_money_market"] as number))}
+            {sRow("MS30/MS180 trend",        `${(gp["ms30_ms180_trend"] as number ?? 0).toFixed(2)}×`)}
+            {sRow("MS7/MS30 trend",          `${ms7ms30.toFixed(2)}×`)}
+            {sRow("Current denominator",     fmtLarge(currentDen))}
+            {sRow("Start denominator P50",   fmtLarge(startP50))}
+            {sRow("Y3 avg denominator P50",  fmtLarge(y3AvgDen))}
+            {sRow("Y3 denominator vs current", `${y3VsCurr >= 0 ? "+" : ""}${(y3VsCurr * 100).toFixed(1)}%`)}
+          </tbody></table>
+        </div>
+      </div>
+    );
+  }
+
   // ── ETHFI: two-column layout ─────────────────────────────────────────────
   if (tokenKey === "ethfi") {
     const vel = gp["card_velocity_ensemble"] as unknown as {
