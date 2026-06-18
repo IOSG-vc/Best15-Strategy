@@ -1,0 +1,4 @@
+interface:
+  display_name: "Crypto Valuation"
+  short_description: "Build and audit crypto token valuation models."
+  default_prompt: "Use the crypto valuation skill to build, audit, or update a token valuation model with protocol-specific revenue, market share, supply, buybacks, Monte Carlo outputs, and dashboard reporting."
