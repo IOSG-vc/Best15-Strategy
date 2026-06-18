@@ -1176,48 +1176,119 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
         <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
       </tr>
     );
+    const takeFull   = gp["take_bps_full"]     as number ?? 0;
+    const takeCurr   = gp["take_bps_current"]  as number ?? 0;
+    const lpFee30    = gp["lp_fee_bps_30d"]    as number ?? 0;
+    const lpFee12m   = gp["trailing12_lp_fee_bps"] as number ?? 0;
+    const frontendBps = Math.max(0, takeFull - 0.25 * lpFee30);
+    const circ       = data.market.circulating_supply;
+    const maxSup     = data.market.max_supply;
+    const reserved   = gp["reserved_supply"]              as number ?? 0;
+    const annRelease = gp["annual_reserved_supply_release"] as number ?? 0;
+    const y3Release  = gp["y3_reserved_supply_release"]   as number ?? 0;
+    const y3EffSup   = gp["y3_effective_supply"]          as number ?? 0;
+    const primary    = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+    const prob3x     = primary.prob_3x ?? 0;
+    const dr         = data.model.discount_rate;
+    const mult       = data.model.multiple;
+
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left: share history table (takes 2/3) */}
-        <div className="lg:col-span-2 bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-5">UNI / Binance spot share history</h3>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider w-48">Point</th>
-                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">Date</th>
-                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">MS30</th>
-                <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">MS90</th>
-              </tr>
-            </thead>
-            <tbody>
-              {startPt && tr("Start of long series", startPt.date, pct(startPt.ms30), startPt.ms90 ? pct(startPt.ms90) : "—")}
-              {tr("Current", freshness, pct(gp["ms30_vs_binance_spot"] as number), pct(gp["ms90_vs_binance_spot"] as number))}
-              {tr("Current spot reference", fmtPrice(spot), `P/S ${((gp["mcap_current_state_gp"] as number) ?? 0).toFixed(1)}x`, `P/GP ${((gp["mcap_full_activation_gp"] as number) ?? 0).toFixed(1)}x`)}
-              {tr("Model terminal", "EOY3", pct(gp["binance_spot_eoy3_share_model"] as number), `seed ${pct(gp["ms90_vs_binance_spot"] as number)}`)}
-            </tbody>
-          </table>
-          <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-            Long-run rolling Uniswap volume divided by BTCUSDT-scaled Binance spot volume, shown from 2022-present. Binance spot is calibrated to Blockworks annual Binance spot totals; current-year daily values use the latest calibrated BTCUSDT share.
-          </p>
-        </div>
-        {/* Right: snapshot + model pivot stacked */}
-        <div className="flex flex-col gap-5">
-          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
-            <div className="text-xs font-mono text-gray-500 mb-3 tracking-wide">Primary Binance spot snapshot</div>
-            <table className="w-full"><tbody>
-              {snapshotRow("MS30 vs Binance spot",  pct(gp["ms30_vs_binance_spot"]  as number))}
-              {snapshotRow("MS90 vs Binance spot",  pct(gp["ms90_vs_binance_spot"]  as number))}
-              {snapshotRow("MS180 vs Binance spot", pct(gp["ms180_vs_binance_spot"] as number))}
-              {snapshotRow("Raw blended velocity",  `${((gp["binance_spot_momentum_initial"] as number) ?? 0).toFixed(2)}×`)}
-              {snapshotRow("Latest 30D Binance spot", fmtLarge(gp["latest30_binance_spot_volume"] as number))}
-            </tbody></table>
+      <div className="space-y-5">
+        {/* ── Section 1: Share history + snapshot ──────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">UNI / Binance spot share history</h3>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider w-48">Point</th>
+                  <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">Date</th>
+                  <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider pr-6">MS30</th>
+                  <th className="text-right pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">MS90</th>
+                </tr>
+              </thead>
+              <tbody>
+                {startPt && tr("Start of long series", startPt.date, pct(startPt.ms30), startPt.ms90 ? pct(startPt.ms90) : "—")}
+                {tr("Current", freshness, pct(gp["ms30_vs_binance_spot"] as number), pct(gp["ms90_vs_binance_spot"] as number))}
+                {tr("Current spot reference", fmtPrice(spot), `P/S ${((gp["mcap_current_state_gp"] as number) ?? 0).toFixed(1)}x`, `P/GP ${((gp["mcap_full_activation_gp"] as number) ?? 0).toFixed(1)}x`)}
+                {tr("Model terminal", "EOY3", pct(gp["binance_spot_eoy3_share_model"] as number), `seed ${pct(gp["ms90_vs_binance_spot"] as number)}`)}
+              </tbody>
+            </table>
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Long-run rolling Uniswap volume divided by BTCUSDT-scaled Binance spot volume, shown from 2022-present. Binance spot is calibrated to Blockworks annual Binance spot totals; current-year daily values use the latest calibrated BTCUSDT share.
+            </p>
           </div>
-          <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col flex-1">
-            <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Model pivot</div>
-            <div className="text-lg font-bold text-white mb-3 leading-snug">Binance spot is primary; total DEX is sensitivity</div>
+          <div className="flex flex-col gap-5">
+            <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+              <div className="text-xs font-mono text-gray-500 mb-3 tracking-wide">Primary Binance spot snapshot</div>
+              <table className="w-full"><tbody>
+                {snapshotRow("MS30 vs Binance spot",    pct(gp["ms30_vs_binance_spot"]  as number))}
+                {snapshotRow("MS90 vs Binance spot",    pct(gp["ms90_vs_binance_spot"]  as number))}
+                {snapshotRow("MS180 vs Binance spot",   pct(gp["ms180_vs_binance_spot"] as number))}
+                {snapshotRow("Raw blended velocity",    `${((gp["binance_spot_momentum_initial"] as number) ?? 0).toFixed(2)}×`)}
+                {snapshotRow("Latest 30D Binance spot", fmtLarge(gp["latest30_binance_spot_volume"] as number))}
+              </tbody></table>
+            </div>
+            <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col flex-1">
+              <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">Model pivot</div>
+              <div className="text-lg font-bold text-white mb-3 leading-snug">Binance spot is primary; total DEX is sensitivity</div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                The total-DEX version remains in the scenario table so we can compare protocol-native share versus the HYPE-like CEX denominator.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Section 2: Model assumptions + Supply treatment ──────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Model assumptions</h3>
+            <pre className="text-xs font-mono text-gray-600 bg-white border border-[#e2e6f0] rounded-lg p-4 leading-relaxed whitespace-pre-wrap">{`binance_spot_volume_t = sampled 2022-present Binance spot month × bootstrapped Binance spot growth
+uni_volume_t = binance_spot_volume_t × UNI/Binance spot share_t
+full_activation_GP_t = uni_volume_t × ${takeFull.toFixed(2)}bps
+PV/token = Year-3 TTM GP × ${mult}× / effective Y3 supply / (1 + DR)^3`}</pre>
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Frontend fee is treated as captured by token under the token-alignment proposal. Total DEX and max-supply cases remain sensitivities.
+            </p>
+          </div>
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Supply treatment</h3>
+            <table className="w-full"><tbody>
+              {snapshotRow("Current circulating supply",      `${(circ / 1e6).toFixed(0)}M`)}
+              {snapshotRow("Max supply",                      `${(maxSup / 1e6).toFixed(0)}M`)}
+              {snapshotRow("Reserved supply",                 `${(reserved / 1e6).toFixed(0)}M`)}
+              {snapshotRow("Observed annual reserved release",`${(annRelease / 1e6).toFixed(0)}M`)}
+              {snapshotRow("Modeled 3Y reserved release",     `${(y3Release / 1e6).toFixed(0)}M`)}
+              {snapshotRow("Effective Y3 supply",             `${(y3EffSup / 1e6).toFixed(0)}M`)}
+            </tbody></table>
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Release is inferred from 365D CoinGecko circulating supply movement, capped at remaining reserved supply.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Section 3: Take-rate assumptions + 3× probability ────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Take-rate assumptions</h3>
+            <table className="w-full"><tbody>
+              {snapshotRow("LP fee bps, recent 30D",   `${lpFee30.toFixed(2)}bps`)}
+              {snapshotRow("LP fee bps, trailing 12M", `${lpFee12m.toFixed(2)}bps`)}
+              {snapshotRow("Current protocol take",    `${takeCurr.toFixed(2)}bps`)}
+              {snapshotRow("Full-activation take",     `${takeFull.toFixed(2)}bps`)}
+              {snapshotRow("Frontend fee assumption",  `${frontendBps.toFixed(2)}bps`)}
+            </tbody></table>
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Full activation = 25% of observed LP fees plus the token-captured frontend fee assumption. The fee line uses the recent 30D LP fee rate; the backtest uses a no-lookahead rule that takes the lower of rolling 30D and trailing 12M LP fee bps at each historical date.
+            </p>
+          </div>
+          <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-5 flex flex-col">
+            <div className="text-xs font-mono text-gray-500 mb-1 tracking-wide">3× probability interpretation</div>
+            <div className="text-lg font-bold text-white mb-3 leading-snug">
+              {pct(prob3x)} is a right-tail metric, not the base case
+            </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              The total-DEX version remains in the scenario table so we can compare protocol-native share versus the HYPE-like CEX denominator.
+              The selected-model P50 PV is only {fmtPrice(primary.pv.p50)}. The 3× probability comes from high Binance-volume historical regimes in the Monte Carlo tail, so it should be read as asymmetric upside probability rather than central-case conviction.
             </p>
           </div>
         </div>
