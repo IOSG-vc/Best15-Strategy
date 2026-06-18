@@ -412,6 +412,8 @@ function MetricCard({
   accent,
   termKey,
   highlighted,
+  highlightBg,
+  highlightBorder,
 }: {
   label: string;
   value: string;
@@ -419,10 +421,15 @@ function MetricCard({
   accent?: "green" | "red" | "yellow" | "blue" | "default";
   termKey?: string;
   highlighted?: boolean;
+  highlightBg?: string;
+  highlightBorder?: string;
 }) {
   if (highlighted) {
     return (
-      <div className="bg-[#0d1117] rounded-xl border border-[#1e2d40] px-5 py-4 flex flex-col gap-1">
+      <div
+        className="rounded-xl border px-5 py-4 flex flex-col gap-1"
+        style={{ background: highlightBg ?? "#0d1117", borderColor: highlightBorder ?? "#1e2d40" }}
+      >
         <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
           {label}
           {termKey && <InfoTooltip termKey={termKey} />}
@@ -2258,6 +2265,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
 
   const gp = d.current_gp;
   const isHypeWithMs = tokenKey === "hype" && typeof gp["ms90_vs_binance"] === "number";
+  const isLighterLayout = tokenKey === "lighter" && typeof gp["ms90_vs_binance"] === "number";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -2329,6 +2337,73 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </div>
         </div>
+      ) : isLighterLayout ? (
+        /* Lighter 5+3 card layout */
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard
+              label="Spot / mcap / circ"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e6).toFixed(1)}M LIT.`}
+            />
+            <MetricCard
+              label="MS90 valuation seed"
+              value={pct(gp["ms90_vs_binance"] as number)}
+              sub="Starting Lighter/Binance share."
+              termKey="ms90"
+            />
+            <MetricCard
+              label="MS30 / MS180"
+              value={`${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`}
+              sub={(gp["ms30_ms180_trend"] as number) < 1.0
+                ? "Momentum below 1.0×, so positive share acceleration is not added."
+                : gp["ms30_vs_binance"] == null
+                ? "MS30 data unavailable; model uses MS90 seed."
+                : `Model momentum floor ${(gp["model_momentum_floor"] as number)?.toFixed(2)}×`}
+              accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "red"}
+            />
+            <MetricCard
+              label="Velocity ensemble"
+              value={(() => {
+                const ms30v = gp["ms30_vs_binance"] as number | null;
+                const ms180v = gp["ms180_vs_binance"] as number | null;
+                return ms30v != null && ms180v != null ? `${((ms30v - ms180v) * 100).toFixed(1)}%` : "0.0%";
+              })()}
+              sub={gp["ms30_vs_binance"] == null
+                ? "30D/180D is negative; 7D/30D unavailable in imported artifact."
+                : "70% 30D/180D + 30% 7D/30D."}
+            />
+            <MetricCard
+              label="P50 PV + HYPE-style yield"
+              value={fmtPrice(primary.pv.p50)}
+              sub="Primary P50 PV."
+              highlighted
+              highlightBg="#071d19"
+              highlightBorder="#0e3530"
+              termKey="p50"
+            />
+          </div>
+          {/* Row 2: 3 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {(() => {
+              const optSc = d.scenarios.find((s) => s.key.includes("optionality") || s.key.includes("opt"));
+              const optPv = optSc ? optSc.pv.p50 : primary.pv.p50 * 1.10;
+              return <MetricCard label="PV + 10% optionality" value={fmtPrice(optPv)} sub="Yield case × 1.10 optionality." />;
+            })()}
+            <MetricCard
+              label="Discount rate"
+              value={`${(d.model.discount_rate * 100).toFixed(1)}%`}
+              sub="Applied over the 3-year horizon."
+              termKey="dr"
+            />
+            <MetricCard
+              label="Net revenue take-rate"
+              value={`${((gp["net_revenue_take_rate"] as number) * 100).toFixed(4)}%`}
+              sub="Holder revenue / 30D perps volume."
+            />
+          </div>
+        </div>
       ) : (
         /* Per-token cards matching HYPE style */
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2369,16 +2444,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               value={`${(gp["perps_share_velocity_capped"] as number)?.toFixed(2)}× / ${(gp["spot_share_velocity_capped"] as number)?.toFixed(2)}×`}
               sub="Perps / spot · 70% MS30/MS180 + 30% MS7/MS30"
               accent={(gp["perps_share_velocity_capped"] as number) >= 1.0 ? "green" : "red"}
-            />
-          </>}
-          {tokenKey === "lighter" && <>
-            <MetricCard label="Holder revenue ann." value={fmtLarge(gp["holders_revenue_30d_ann"] as number)} sub={`Capture ${pct(gp["holder_capture_30d"] as number)} of 30D revenue`} />
-            <MetricCard label="MS90 valuation seed" value={pct(gp["ms90_vs_binance"] as number)} sub="Starting Lighter/Binance share used in model" termKey="ms90" />
-            <MetricCard
-              label="MS30 / MS180"
-              value={`${(gp["ms30_ms180_trend"] as number)?.toFixed(2)}×`}
-              sub={`Model momentum floor ${(gp["model_momentum_floor"] as number)?.toFixed(2)}×`}
-              accent={(gp["ms30_ms180_trend"] as number) >= 1.0 ? "green" : "red"}
             />
           </>}
           {tokenKey === "sky" && <>
