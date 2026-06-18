@@ -1008,7 +1008,7 @@ interface MsConfig {
   tableNote: string;
   driversTitle: string;
   driversBody: React.ReactNode;
-  tableRows: (gp: Record<string, number>) => [string, string][];
+  tableRows: (gp: Record<string, number>, data: ValuationData) => [string, string][];
   yCapPct: number;   // y-axis max cap as decimal
 }
 
@@ -1019,16 +1019,25 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "DefiLlama fee rows include builder-code fees in dailyFees. Valuation uses clean treasury revenue at ~0.026% of notional; stablecoin yield is modeled separately.",
     driversTitle: "Perps + stablecoin yield",
     driversBody: null,   // filled inline below
-    tableRows: (gp) => ([
-      ["MS30 vs Binance Futures",        pct(gp["ms30_vs_binance"] as number)],
-      ["MS180 vs Binance Futures",       pct(gp["ms180_vs_binance"] as number)],
-      ["MS30/MS180 trend",               `${(gp["ms30_ms180_trend"] as number).toFixed(2)}×`],
-      ["DefiLlama 30D total fees ann.",  fmtLarge(gp["defillama_30d_ann"] as number)],
-      ["Clean treasury rev. ann.",       fmtLarge(gp["clean_treasury_revenue_ann"] as number)],
-      ["DefiLlama 180D total fees ann.", fmtLarge(gp["defillama_180d_ann"] as number)],
-      ["Buyback yrs (clean rev + USDC)", `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
-      ["Clean-rev-only buyback years",   `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
-    ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y"),
+    tableRows: (gp, data) => {
+      const perpGp = gp["perp_gp_annual"] as number;
+      const usdcGp = gp["usdc_gp_annual"] as number;
+      const mcap   = data.market.market_cap;
+      const ms30   = gp["ms30_vs_binance"] as number;
+      const ms180  = gp["ms180_vs_binance"] as number;
+      const ms90   = gp["ms90_vs_binance"] as number;
+      return ([
+        ["DefiLlama 30D revenue ann.",          fmtLarge(gp["defillama_30d_ann"] as number)],
+        ["Perps treasury revenue ann.",         fmtLarge(perpGp)],
+        ["USDC yield revenue ann.",             fmtLarge(usdcGp)],
+        ["P/S: mcap / clean revenue",          perpGp > 0 ? `${(mcap / perpGp).toFixed(1)}x` : "—"],
+        ["P/GP: mcap / clean revenue + yield", perpGp > 0 ? `${(mcap / (perpGp + usdcGp)).toFixed(1)}x` : "—"],
+        ["Buyback years: clean revenue + yield", `${(gp["buyback_years_base"] as number).toFixed(1)}y`],
+        ["Clean-revenue-only buyback years",   `${(gp["buyback_years_fee_only"] as number).toFixed(1)}y`],
+        ["30D/180D component",                 `${((ms30 - ms180) * 100).toFixed(1)}%`],
+        ["7D/30D component",                   `${(ms90 * 100).toFixed(1)}%`],
+      ] as [string, string][]).filter(([, v]) => v && v !== "$0" && v !== "0.0y" && v !== "—");
+    },
   },
   lighter: {
     yCapPct: 0.08,
@@ -1036,7 +1045,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "Revenue and holder revenue from DefiLlama; stablecoin yield is a HYPE-style sensitivity, not confirmed current Lighter protocol revenue.",
     driversTitle: "Perps holder revenue + optional TVL yield",
     driversBody: null,
-    tableRows: (gp) => ([
+    tableRows: (gp, _data) => ([
       ["MS30 vs Binance Futures",             pct(gp["ms30_vs_binance"] as number)],
       ["MS90 vs Binance Futures",             pct(gp["ms90_vs_binance"] as number)],
       ["MS180 vs Binance Futures",            pct(gp["ms180_vs_binance"] as number)],
@@ -1054,7 +1063,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "Volume from DefiLlama; denominator is total DEX volume across all chains and protocols.",
     driversTitle: "DEX spot market share",
     driversBody: null,
-    tableRows: (gp) => ([
+    tableRows: (gp, _data) => ([
       ["MS30 vs Total DEX",              pct(gp["ms30_vs_dex"] as number)],
       ["MS90 vs Total DEX",              pct(gp["ms90_vs_dex"] as number)],
       ["MS180 vs Total DEX",             pct(gp["ms180_vs_dex"] as number)],
@@ -1070,7 +1079,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "USDS/DAI supply comes from Sky's official supply page API. The denominator is broad money-market / yield-vault TVL, not DefiLlama total stablecoin supply.",
     driversTitle: "Money-market share x yield spread",
     driversBody: null,
-    tableRows: (gp) => ([
+    tableRows: (gp, _data) => ([
       ["MS30 vs Money Markets",          pct(gp["ms30_vs_money_market"] as number)],
       ["MS7 vs Money Markets",           pct(gp["ms7_vs_money_market"] as number)],
       ["MS90 vs Money Markets",          pct(gp["ms90_vs_money_market"] as number)],
@@ -1093,7 +1102,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "Perps denominator is Binance Futures; spot denominator is Binance spot. Both use BTCUSDT quote-volume histories scaled to Blockworks annual exchange totals.",
     driversTitle: "Binance-denominator perps + spot share",
     driversBody: null,
-    tableRows: (gp) => ([
+    tableRows: (gp, _data) => ([
       ["Perps MS30 vs Binance Futures",   pct(gp["perps_ms30_vs_binance_futures"] as number)],
       ["Perps MS90 vs Binance Futures",   pct(gp["perps_ms90_vs_binance_futures"] as number)],
       ["Perps MS180 vs Binance Futures",  pct(gp["perps_ms180_vs_binance_futures"] as number)],
@@ -1113,7 +1122,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
     tableNote: "Denominator sums top LRT protocols from DefiLlama; excludes traditional liquid staking (Lido, Rocket Pool).",
     driversTitle: "LRT restaking market share",
     driversBody: null,
-    tableRows: (gp) => ([
+    tableRows: (gp, _data) => ([
       ["MS30 vs Total LRT",              pct(gp["ms30_vs_lrt"] as number)],
       ["MS90 vs Total LRT",              pct(gp["ms90_vs_lrt"] as number)],
       ["MS180 vs Total LRT",             pct(gp["ms180_vs_lrt"] as number)],
@@ -1142,7 +1151,7 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
   const yMin = Math.max(0, Math.min(...ms30Vals) - 0.01);
   const yMax = Math.min(cfg.yCapPct, Math.max(...ms90Vals.concat(ms30Vals)) + 0.01);
 
-  const tableRows = cfg.tableRows(gp);
+  const tableRows = cfg.tableRows(gp, data);
 
   return (
     <div className="space-y-5">
