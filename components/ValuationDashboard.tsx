@@ -568,10 +568,11 @@ const DIST_LABELS_CORE: { key: string; label: string; isMedian?: boolean }[] = [
 function DistributionChart({
   scenario,
   spot,
+  ev,
 }: {
   scenario: ValuationScenario;
   spot: number;
-  ev?: number;
+  ev: number;
 }) {
   const dist = scenario.distribution;
   const hasFull = dist && Object.keys(dist).length > 4;
@@ -585,56 +586,54 @@ function DistributionChart({
 
   if (!rows.length) return null;
 
-  const yMax = Math.max(...rows.map(r => r.value)) * 1.15;
-  const labelKeys = new Set(["p25", "p50", "p75", "p90"]);
-
-  const getBarColor = (row: (typeof rows)[0]) => {
-    if (row.isMedian) return "#111827";
-    if (row.value >= spot) return "#3b82f6";
-    return "#d1d5db";
-  };
+  const yMax = Math.max(...rows.map(r => r.value), ev) * 1.12;
 
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold text-white">Selected-model PV price distribution</h2>
 
-      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
-        <div className="text-base font-bold text-gray-900 mb-4">Percentile ladder + current spot</div>
+      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] p-6">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <div className="text-sm font-semibold text-gray-300">Percentile ladder + current spot</div>
+            <div className="text-xs text-gray-500 mt-0.5">Percentile ladder + probability-weighted EV</div>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-5 border-t border-orange-400" />
+              Spot {fmtPrice(spot)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-5 border-t border-dashed border-blue-400" />
+              EV {fmtPrice(ev)}
+            </span>
+          </div>
+        </div>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={rows} margin={{ top: 24, right: 120, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={rows} margin={{ top: 24, right: 16, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2d3144" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#9ca3af", fontSize: 11 }}
+              tick={{ fill: "#6b7280", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tickFormatter={(v: number) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(2)}`}
-              tick={{ fill: "#9ca3af", fontSize: 10 }}
+              tickFormatter={(v: number) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v.toFixed(0)}`}
+              tick={{ fill: "#6b7280", fontSize: 10 }}
               axisLine={false}
               tickLine={false}
-              width={54}
+              width={40}
               domain={[0, yMax]}
             />
             <Tooltip
-              contentStyle={{ background: "#ffffff", border: "1px solid #e2e6f0", borderRadius: 8, fontSize: 11 }}
+              contentStyle={{ background: "#1a1d29", border: "1px solid #2d3144", borderRadius: 8, fontSize: 11 }}
               formatter={(v: number) => [fmtPrice(v), "PV"]}
             />
-            <ReferenceLine
-              y={spot}
-              stroke="#dc2626"
-              strokeWidth={1.5}
-              strokeDasharray="5 3"
-              label={{
-                value: `current spot ${fmtPrice(spot)}`,
-                position: "right",
-                fontSize: 10,
-                fill: "#6b7280",
-              }}
-            />
-            <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={52}>
+            <ReferenceLine y={spot} stroke="#fb923c" strokeWidth={1.5} />
+            <ReferenceLine y={ev}   stroke="#60a5fa" strokeWidth={1.5} strokeDasharray="4 3" />
+            <Bar dataKey="value" radius={[3, 3, 0, 0]} maxBarSize={48}>
               <LabelList
                 dataKey="value"
                 position="top"
@@ -642,16 +641,15 @@ function DistributionChart({
                   const { x, y, width, value, index } = props as { x?: unknown; y?: unknown; width?: unknown; value?: unknown; index?: number };
                   const nx = Number(x), ny = Number(y), nw = Number(width), nv = Number(value);
                   if (!isFinite(nx) || !isFinite(ny) || !isFinite(nw) || !isFinite(nv)) return null;
-                  const row = rows[index ?? 0];
-                  if (!row || !labelKeys.has(row.key)) return null;
+                  const isP50 = rows[index ?? 0]?.isMedian;
                   return (
                     <text
                       x={nx + nw / 2}
-                      y={ny - 5}
+                      y={ny - 4}
                       textAnchor="middle"
-                      fontSize={10}
-                      fill={row.isMedian ? "#111827" : "#374151"}
-                      fontWeight={row.isMedian ? 700 : 500}
+                      fontSize={9}
+                      fill={isP50 ? "#e2e8f0" : "#6b7280"}
+                      fontWeight={isP50 ? 600 : 400}
                     >
                       {fmtPrice(nv)}
                     </text>
@@ -659,14 +657,19 @@ function DistributionChart({
                 }}
               />
               {rows.map((row) => (
-                <Cell key={row.key} fill={getBarColor(row)} />
+                <Cell
+                  key={row.key}
+                  fill={row.isMedian ? "#1e3a4a" : "#1e2a3a"}
+                  stroke={row.isMedian ? "#38bdf8" : "#2d3144"}
+                  strokeWidth={row.isMedian ? 1.5 : 0.5}
+                />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
 
-        <p className="text-xs text-gray-500 mt-3 leading-relaxed">
-          Black bar is P50. Dashed red line marks current spot.
+        <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+          Bars show selected-model PV/token percentiles. Bold bar is P50 {fmtPrice(scenario.pv.p50)}. Blue dashed line is probability-weighted EV {fmtPrice(ev)}, which captures all paths including the right tail.
         </p>
       </div>
     </div>
@@ -2291,6 +2294,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   return (
     <div className="space-y-5">
 
+      {/* ── Tech score card ──────────────────────────────────────────── */}
+      <TechScoreCard tokenKey={tokenKey} />
+
       {/* ── Metric cards ─────────────────────────────────────────────── */}
       {isHypeWithMs ? (
         /* HYPE-specific cards matching the dashboard design */
@@ -2499,7 +2505,10 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       {tokenKey !== "hype" && <TokenModelOutputs data={d} tokenKey={tokenKey} />}
 
       {/* ── PV price distribution ─────────────────────────────────────── */}
-      <DistributionChart scenario={primary} spot={spot} />
+      <DistributionChart scenario={primary} spot={spot} ev={primary.ev} />
+
+      {/* ── Tech score monthly history ────────────────────────────────── */}
+      <TechScoreHistoryChart tokenKey={tokenKey} />
     </div>
   );
 }
