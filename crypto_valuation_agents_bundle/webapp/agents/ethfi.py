@@ -747,6 +747,7 @@ def run() -> dict:
             "card_mom": float(card_mom),
             "card_wow": float(card_wow),
             "card_velocity_ensemble": card_velocity,
+            "opex_annual": float(OPEX_ANNUAL),
             # Y3 model outputs (weighted 20/40/40)
             "y3_gp_p50":          results["weighted_20_40_40"]["y3_gp"]["p50"],
             "y3_card_gp_p50":     results["weighted_20_40_40"]["y3_card_gp"]["p50"],

@@ -1155,6 +1155,51 @@ function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey:
   const tableRows = cfg.tableRows(gp, data);
   if (!tableRows.length) return null;
 
+  // ── ETHFI: two-column layout ─────────────────────────────────────────────
+  if (tokenKey === "ethfi") {
+    const vel = gp["card_velocity_ensemble"] as unknown as {
+      raw_30d_mom: number; velocity_30_180: number; velocity_7_30: number;
+      capped_30_180: number; capped_7_30: number;
+    };
+    const mcap = data.market.market_cap;
+    const totalGp = gp["total_annualized"] as number;
+    const fmtPct = (v: number) => `${(v * 100).toFixed(1)}%`;
+    const tableRow = (label: string, value: string) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-3">{label}</td>
+        <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
+      </tr>
+    );
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Velocity Components</h3>
+          <table className="w-full"><tbody>
+            {tableRow("Raw 30D MoM",               fmtPct(vel?.raw_30d_mom ?? 0))}
+            {tableRow("30D/180D monthly-equivalent", fmtPct(vel?.velocity_30_180 ?? 0))}
+            {tableRow("7D/30D monthly-equivalent",  fmtPct(vel?.velocity_7_30 ?? 0))}
+            {tableRow("Capped 30D/180D",            fmtPct(vel?.capped_30_180 ?? 0))}
+            {tableRow("Capped 7D/30D",              fmtPct(vel?.capped_7_30 ?? 0))}
+            {(gp["opex_annual"] as number) > 0 && tableRow("OPEX", `${fmtLarge(gp["opex_annual"] as number)}/yr`)}
+          </tbody></table>
+        </div>
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Current GP Composition</h3>
+          <table className="w-full"><tbody>
+            {tableRow("Card GP ann.",              fmtLarge(gp["card_annualized"] as number))}
+            {tableRow("Staking GP ann.",           fmtLarge(gp["staking_annualized"] as number))}
+            {tableRow("Vault GP ann.",             fmtLarge(gp["vault_annualized"] as number))}
+            {tableRow("Total GP ann.",             fmtLarge(totalGp))}
+            {tableRow("P/S: mcap / total GP proxy", totalGp > 0 ? `${(mcap / totalGp).toFixed(1)}x` : "—")}
+            {tableRow("P/GP: mcap / total GP",     totalGp > 0 ? `${(mcap / totalGp).toFixed(1)}x` : "—")}
+            {tableRow("Y3 card GMV P50",           fmtLarge(gp["y3_card_gdv_ann_p50"] as number))}
+            {tableRow("Y3 stake TVL P50",          fmtLarge(gp["y3_stake_tvl_p50"] as number))}
+          </tbody></table>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       {/* ── Current Data + Core revenue drivers ─────────────────────── */}
