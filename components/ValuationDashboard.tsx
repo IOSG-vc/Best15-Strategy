@@ -1344,7 +1344,7 @@ function TechScoreCard({ tokenKey }: { tokenKey: string }) {
             <span className="text-3xl font-black font-mono" style={{ color: grade!.color }}>
               {grade!.letter}
             </span>
-            <span className="text-lg font-bold font-mono text-white">{score.toFixed(0)}</span>
+            <span className="text-lg font-bold font-mono text-gray-700">{score.toFixed(0)}</span>
             <span className="text-xs text-gray-500">/ 100</span>
           </div>
         ) : (
@@ -2567,7 +2567,7 @@ export default function ValuationDashboard({ data }: Props) {
                       <div className="flex items-center gap-2">
                         <span
                           className="text-base font-bold"
-                          style={{ color: active ? ring : "#e5e7eb" }}
+                          style={{ color: active ? ring : "#374151" }}
                         >
                           {token.symbol}
                         </span>
