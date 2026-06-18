@@ -1924,8 +1924,6 @@ function HypeModelOutputs({ data }: { data: ValuationData }) {
   const gpVsCurrent      = currentRevenue > 0 && y3_gp_p50   ? ((y3_gp_p50   / currentRevenue - 1) * 100) : null;
   const supplyVsCurrent  = circ > 0         && y3_supply_p50 ? ((y3_supply_p50 / circ          - 1) * 100) : null;
 
-  const show2Y = data.scenarios.some((s) => s.prob_spot_up_30_2y !== undefined);
-
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
@@ -1941,10 +1939,8 @@ function HypeModelOutputs({ data }: { data: ValuationData }) {
                   <th key={h} className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
                 <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">P(Spot)</th>
-                {show2Y && <>
-                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
-                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
-                </>}
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
               </tr>
             </thead>
             <tbody>
@@ -1962,14 +1958,12 @@ function HypeModelOutputs({ data }: { data: ValuationData }) {
                     <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>
                       {pct(s.prob_above_spot)}
                     </td>
-                    {show2Y && <>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
-                        {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
-                        {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
-                      </td>
-                    </>}
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                      {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
+                    </td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                      {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
+                    </td>
                   </tr>
                 );
               })}
@@ -2176,7 +2170,6 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
     return take > 0 ? scenarioP50AnnualGp(s) / (take / 10000) / 365 : 0;
   };
 
-  const show2Y = data.scenarios.some((s) => s.prob_spot_up_30_2y !== undefined);
 
   return (
     <div className="space-y-5">
@@ -2193,10 +2186,8 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
                   <th key={h} className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
                 <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">P(Spot)</th>
-                {show2Y && <>
-                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
-                  <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
-                </>}
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y +30%</th>
+                <th className="text-right px-4 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">2Y -30%</th>
               </tr>
             </thead>
             <tbody>
@@ -2214,14 +2205,12 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
                     <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>
                       {pct(s.prob_above_spot)}
                     </td>
-                    {show2Y && <>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
-                        {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
-                        {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
-                      </td>
-                    </>}
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                      {s.prob_spot_up_30_2y != null ? pct(s.prob_spot_up_30_2y) : "—"}
+                    </td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">
+                      {s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}
+                    </td>
                   </tr>
                 );
               })}
