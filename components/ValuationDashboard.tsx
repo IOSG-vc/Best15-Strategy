@@ -2146,10 +2146,41 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Mcap / GP (full activ.)",  value: (gp) => `${(gp["mcap_full_activation_gp"] ?? 0).toFixed(1)}×`,             sub: "At current mcap and full-activation take-rate" },
   ],
   ethfi: [
-    { label: "Y3 GP P50 (weighted)",     value: (gp) => fmtLarge(gp["y3_gp_p50"]),           sub: "Weighted 20/40/40 bear/base/bull" },
-    { label: "Y3 Card GDV P50",          value: (gp) => fmtLarge(gp["y3_card_gdv_ann_p50"]), sub: "Annualized card volume at Year 3" },
-    { label: "Y3 Stake TVL P50",         value: (gp) => fmtLarge(gp["y3_stake_tvl_p50"]),    sub: "ether.fi staking TVL at Year 3" },
-    { label: "Treasury cash P50",        value: (gp) => fmtLarge(gp["treasury_cash_p50"]),   sub: "Cumulative positive NP over 3 years" },
+    {
+      label: "Y3 aggregate GP",
+      value: (gp) => fmtLarge(gp["y3_gp_p50"] as number),
+      sub: (gp) => {
+        const curr = gp["total_annualized"] as number ?? 0;
+        const y3   = gp["y3_gp_p50"] as number ?? 0;
+        const pct  = curr > 0 ? `+${((y3 / curr - 1) * 100).toFixed(1)}%` : "—";
+        return `${pct} vs current annualized GP.`;
+      },
+    },
+    {
+      label: "Y3 product split",
+      value: (gp) => fmtLarge(gp["y3_card_gp_p50"] as number),
+      sub: (gp) => {
+        const cardPct  = (gp["card_annualized"] as number)  > 0 ? `+${(((gp["y3_card_gp_p50"]  as number) / (gp["card_annualized"]     as number) - 1) * 100).toFixed(1)}%` : "—";
+        const stakePct = (gp["staking_annualized"] as number) > 0 ? `+${(((gp["y3_stake_gp_p50"] as number) / (gp["staking_annualized"]  as number) - 1) * 100).toFixed(1)}%` : "—";
+        const vaultPct = (gp["vault_annualized"] as number)  > 0 ? `+${(((gp["y3_vault_gp_p50"] as number) / (gp["vault_annualized"]    as number) - 1) * 100).toFixed(1)}%` : "—";
+        return `Card ${cardPct} · staking ${stakePct} · vault ${vaultPct} vs current GP lines.`;
+      },
+    },
+    {
+      label: "Y3 effective supply",
+      value: (gp) => `${((gp["current_circulating_supply"] as number ?? 0) / 1e6).toFixed(1)}M`,
+      sub: () => "0.0% vs current circulating supply.",
+    },
+    {
+      label: "Treasury cash P50",
+      value: (gp) => fmtLarge(gp["treasury_cash_p50"] as number),
+      sub: (gp) => {
+        const cash = gp["treasury_cash_p50"] as number ?? 0;
+        const mcap = gp["market_cap"] as number ?? 0;
+        const pct  = mcap > 0 ? `${((cash / mcap) * 100).toFixed(1)}%` : "—";
+        return `${pct} of current market cap accumulated as cash.`;
+      },
+    },
   ],
   jup: [
     { label: "Y3 Total GP P50",          value: (gp) => fmtLarge(gp["y3_gp_p50"]),            sub: (gp) => deltaText(gp["y3_gp_p50"], (gp["total_30d"] ?? 0) * 12, "vs current annualized GP") },
@@ -2236,6 +2267,7 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
   const gp: Record<string, number> = {
     ...(data.current_gp as Record<string, number>),
     current_circulating_supply: data.market.circulating_supply,
+    market_cap: data.market.market_cap,
   };
   const circ = data.market.circulating_supply;
   const spot = data.market.spot;
