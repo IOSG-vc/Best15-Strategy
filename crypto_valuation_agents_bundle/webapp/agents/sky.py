@@ -8,7 +8,8 @@ Market data (spot, mcap, fdv, supply) is fetched live from CoinGecko.
 Model framework:
   Gross income / fees - savings-rate cost = GP
   GP - OPEX = net profit
-  USDS growth follows capped money-market/yield TVL path; DAI flat in base.
+  USDS follows a HYPE-style money-market denominator x Sky share path;
+  DAI is flat in base.
 """
 from __future__ import annotations
 
@@ -24,16 +25,59 @@ import numpy as np
 _MS_AMPLIFIER_CAP = 1.5
 _MS_DECAY_MONTHS = 12
 _MS_MONTHS = 36
-_SKY_STABLE_CAP = 0.20
+_VELOCITY_LONG_WEIGHT = 0.70
+_VELOCITY_SHORT_WEIGHT = 0.30
+_MAX_MONTHLY_LOG_VELOCITY = math.log(_MS_AMPLIFIER_CAP) / 6.0
+_SKY_MONEY_MARKET_SHARE_CAP = 0.35
+_SKY_INFO_BASE = "https://info-sky.blockanalitica.com"
 
 
-def _ms_eoy3(ms90: float, ms30: float, ms_anchor: float, ms_cap: float) -> float:
-    velocity = min(max(ms30 / max(ms_anchor, 1e-12), 1.0), _MS_AMPLIFIER_CAP)
-    log_v = math.log(velocity) / 6.0
+def _ms_acceleration_path(months: int = _MS_MONTHS, initial: float = 1.0) -> np.ndarray:
+    """HYPE-style cumulative share multiplier from a decaying 6M share-growth amplifier."""
+    initial = min(max(float(initial), 1.0), _MS_AMPLIFIER_CAP)
+    monthly_log_velocity = math.log(initial) / 6.0
+    return _ms_velocity_path(months, monthly_log_velocity)
+
+
+def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0) -> np.ndarray:
+    """Cumulative share multiplier from a capped monthly velocity that decays over 12M."""
+    monthly_log_velocity = min(max(float(monthly_log_velocity), 0.0), _MAX_MONTHLY_LOG_VELOCITY)
+    cumulative = []
     acc = 0.0
-    for m in range(_MS_MONTHS):
-        acc += log_v * max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
-    return min(ms90 * math.exp(acc), ms_cap)
+    for m in range(months):
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+        acc += monthly_log_velocity * decay_weight
+        cumulative.append(math.exp(acc))
+    return np.array(cumulative, dtype=float)
+
+
+def _velocity_ensemble(ms7: float | None, ms30: float, ms180: float | None) -> dict:
+    """Blend medium-term and short-term market-share velocities.
+
+    Long component follows the legacy 30D/180D six-month amplifier.
+    Short component adds a 7D/30D near-term read, both capped and floored at zero
+    monthly acceleration so deceleration does not mechanically compress MS90.
+    """
+    long_raw = float(ms30) / max(float(ms180 or ms30), 1e-12)
+    short_raw = float(ms7 or ms30) / max(float(ms30), 1e-12)
+    long_monthly = min(max(math.log(max(long_raw, 1.0)) / 6.0, 0.0), _MAX_MONTHLY_LOG_VELOCITY)
+    short_monthly = min(max(math.log(max(short_raw, 1.0)), 0.0), _MAX_MONTHLY_LOG_VELOCITY)
+    monthly = (_VELOCITY_LONG_WEIGHT * long_monthly) + (_VELOCITY_SHORT_WEIGHT * short_monthly)
+    return {
+        "monthly_log_velocity": monthly,
+        "long_raw": long_raw,
+        "short_raw": short_raw,
+        "long_monthly": long_monthly,
+        "short_monthly": short_monthly,
+        "long_weight": _VELOCITY_LONG_WEIGHT,
+        "short_weight": _VELOCITY_SHORT_WEIGHT,
+        "monthly_cap": _MAX_MONTHLY_LOG_VELOCITY,
+    }
+
+
+def _ms_eoy3(ms90: float, ms30: float, ms_anchor: float, ms_cap: float, ms7: float | None = None) -> float:
+    velocity = _velocity_ensemble(ms7, ms30, ms_anchor)
+    return min(ms90 * float(_ms_velocity_path(_MS_MONTHS, velocity["monthly_log_velocity"])[-1]), ms_cap)
 
 
 def _backtest_signals(backtest_chart: list) -> dict:
@@ -70,10 +114,6 @@ def _backtest_signals(backtest_chart: list) -> dict:
                for s, g in groups.items()}
     return {"chart": backtest_chart, "signals": signals,
             "latest_signal": backtest_chart[-1]["signal"], "last_realized_row": last_real}
-
-# DefiLlama stablecoin IDs
-_USDS_ID = 209   # Sky Dollar (USDS)
-_DAI_ID  = 5     # Dai (DAI)
 
 BUNDLE_ROOT = Path(__file__).parent.parent.parent
 DATA_PATH = BUNDLE_ROOT / "sky_data_collection.json"
@@ -156,33 +196,187 @@ def _load_growth_distribution() -> np.ndarray:
     return np.clip(rets * GROWTH_DAMPENER, MONTHLY_GROWTH_CAP_LOW, MONTHLY_GROWTH_CAP_HIGH)
 
 
-def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float) -> dict:
+def _load_money_market_monthly() -> tuple[list[str], np.ndarray]:
+    j = json.loads(EXTRA_PATH.read_text())
+    months = [str(m) for m in j["money_market_months"]]
+    tvl = np.array(j["money_market_tvl"], dtype=float)
+    return months, tvl
+
+
+def _rolling_mean(arr: np.ndarray, w: int) -> np.ndarray:
+    out = np.full(len(arr), np.nan)
+    for i in range(w - 1, len(arr)):
+        window = arr[i - w + 1: i + 1]
+        valid = window[~np.isnan(window)]
+        if len(valid) > 0:
+            out[i] = float(valid.mean())
+    return out
+
+
+def _fetch_sky_supply_official() -> tuple[dict, list[dict]]:
+    """Fetch official Sky supply data from the info.skyeco.com backing API."""
+    snapshot = _get_json(f"{_SKY_INFO_BASE}/overall/?days_ago=1")
+    hist = _get_json(f"{_SKY_INFO_BASE}/overall/historic/?days_ago=365")
+    rows = hist.get("data", []) if isinstance(hist, dict) else []
+    return snapshot, rows
+
+
+def _official_supply_snapshot(snapshot: dict) -> dict:
+    usds = float(snapshot["total_usds"])
+    dai = float(snapshot["total_dai"])
+    return {
+        "date": snapshot.get("date"),
+        "usds_supply": usds,
+        "dai_supply": dai,
+        "total_sky_stable_supply": usds + dai,
+        "source": "https://info.skyeco.com/supply",
+    }
+
+
+def _compute_money_market_ms(supply_rows: list[dict]) -> tuple[dict | None, list[dict], list[dict]]:
+    """Compute Sky share of broad money-market/yield-vault TVL from official supply rows."""
+    months, tvl = _load_money_market_monthly()
+    tvl_by_month = dict(zip(months, tvl))
+    if not supply_rows or not tvl_by_month:
+        return None, [], []
+
+    latest_tvl = float(tvl[-1])
+    rows = []
+    for row in sorted(supply_rows, key=lambda r: r.get("date", "")):
+        d = row.get("date")
+        if not d:
+            continue
+        month = str(d)[:7]
+        denom = float(tvl_by_month.get(month, latest_tvl))
+        usds = float(row.get("total_usds") or 0.0)
+        dai = float(row.get("total_dai") or 0.0)
+        total = usds + dai
+        if denom > 0 and total > 0:
+            rows.append({
+                "date": d,
+                "sky_supply": total,
+                "usds_supply": usds,
+                "dai_supply": dai,
+                "money_market_tvl": denom,
+                "ratio": total / denom,
+            })
+    if not rows:
+        return None, [], []
+
+    ratio = np.array([r["ratio"] for r in rows], dtype=float)
+    ms7 = _rolling_mean(ratio, 7)
+    ms30 = _rolling_mean(ratio, 30)
+    ms90 = _rolling_mean(ratio, 90)
+    ms180 = _rolling_mean(ratio, 180)
+
+    full = []
+    history = []
+    for i, row in enumerate(rows):
+        full_row = {
+            **row,
+            "ms7": float(ms7[i]) if not np.isnan(ms7[i]) else None,
+            "ms30": float(ms30[i]) if not np.isnan(ms30[i]) else None,
+            "ms90": float(ms90[i]) if not np.isnan(ms90[i]) else None,
+            "ms180": float(ms180[i]) if not np.isnan(ms180[i]) else None,
+        }
+        full.append(full_row)
+        if full_row["ms30"] is not None:
+            history.append({
+                "date": row["date"],
+                "ms30": round(full_row["ms30"], 6),
+                "ms90": round(full_row["ms90"], 6) if full_row["ms90"] is not None else None,
+            })
+
+    latest = full[-1]
+    snapshot = {
+        "date": latest["date"],
+        "ms7": latest["ms7"],
+        "ms30": latest["ms30"],
+        "ms90": latest["ms90"],
+        "ms180": latest["ms180"],
+        "sky_supply": latest["sky_supply"],
+        "usds_supply": latest["usds_supply"],
+        "dai_supply": latest["dai_supply"],
+        "money_market_tvl": latest["money_market_tvl"],
+        "share_cap": _SKY_MONEY_MARKET_SHARE_CAP,
+        "source": "Sky official supply / broad money-market TVL",
+    }
+    return snapshot, history[-365:], full[-365:]
+
+
+def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float,
+              usds_start: float, dai_start: float, ms_snapshot: dict | None) -> dict:
     rng = np.random.default_rng(SEED)
     monthly_log_returns = _load_growth_distribution()
+    money_market_months, money_market_tvl = _load_money_market_monthly()
+    current_denominator = float(
+        ms_snapshot.get("money_market_tvl") if ms_snapshot and ms_snapshot.get("money_market_tvl")
+        else money_market_tvl[-1]
+    )
+    start_pool = money_market_tvl[np.isfinite(money_market_tvl) & (money_market_tvl > 0)]
+    if len(start_pool) == 0:
+        start_pool = np.array([current_denominator], dtype=float)
+    start_denominator = rng.choice(start_pool, size=PATHS, replace=True)
     sampled = rng.choice(monthly_log_returns, size=(PATHS, HORIZON_MONTHS), replace=True)
-    usds = np.full(PATHS, USDS_SUPPLY, dtype=float)
-    dai = np.full(PATHS, DAI_SUPPLY, dtype=float)
+    denominator_path = start_denominator[:, None] * np.exp(np.cumsum(sampled, axis=1))
+
+    if ms_snapshot and ms_snapshot.get("ms90") and ms_snapshot.get("ms30"):
+        anchor = ms_snapshot.get("ms180") or ms_snapshot.get("ms90")
+        velocity = _velocity_ensemble(ms_snapshot.get("ms7"), float(ms_snapshot["ms30"]), float(anchor))
+        momentum = math.exp(velocity["monthly_log_velocity"] * 6.0)
+        share_path = np.minimum(
+            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"]),
+            _SKY_MONEY_MARKET_SHARE_CAP,
+        )
+    else:
+        momentum = 1.0
+        velocity = _velocity_ensemble(None, 1.0, 1.0)
+        current_share = (usds_start + dai_start) / max(float(money_market_tvl[-1]), 1.0)
+        share_path = np.full(HORIZON_MONTHS, min(current_share, _SKY_MONEY_MARKET_SHARE_CAP), dtype=float)
+
+    dai = np.full(PATHS, dai_start, dtype=float)
     monthly_gp = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
     monthly_np = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    monthly_gross_income = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    monthly_savings_cost = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    monthly_stusds_cost = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    monthly_usds_supply = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    monthly_total_supply = np.zeros((PATHS, HORIZON_MONTHS), dtype=float)
+    usds = np.full(PATHS, usds_start, dtype=float)
+    sky_total = np.full(PATHS, usds_start + dai_start, dtype=float)
 
     for m in range(HORIZON_MONTHS):
-        usds *= np.exp(sampled[:, m])
+        sky_total = denominator_path[:, m] * share_path[m]
+        usds = np.maximum(sky_total - dai, 0.0)
         total = usds + dai
         gross_income_m = total * GROSS_INCOME_YIELD / 12.0
         savings_cost_m = (usds * USDS_SAVINGS_PENETRATION + dai * DAI_SAVINGS_PENETRATION) * SAVINGS_RATE / 12.0
         stusds_cost_m = usds * STUSDS_EXPENSE_RATE_ON_USDS / 12.0
         gp_m = gross_income_m - savings_cost_m - stusds_cost_m
         np_m = gp_m - opex / 12.0
+        monthly_gross_income[:, m] = gross_income_m
+        monthly_savings_cost[:, m] = savings_cost_m
+        monthly_stusds_cost[:, m] = stusds_cost_m
+        monthly_usds_supply[:, m] = usds
+        monthly_total_supply[:, m] = total
         monthly_gp[:, m] = gp_m
         monthly_np[:, m] = np_m
 
     y3_ttm_gp = monthly_gp[:, -12:].sum(axis=1)
     y3_ttm_np = monthly_np[:, -12:].sum(axis=1)
+    y3_ttm_gross_income = monthly_gross_income[:, -12:].sum(axis=1)
+    y3_ttm_savings_cost = monthly_savings_cost[:, -12:].sum(axis=1)
+    y3_ttm_stusds_cost = monthly_stusds_cost[:, -12:].sum(axis=1)
+    y2_ttm_gp = monthly_gp[:, 12:24].sum(axis=1)
+    y2_ttm_np = monthly_np[:, 12:24].sum(axis=1)
     y3_ttm_np_floor = np.maximum(y3_ttm_np, 0.0)
+    y2_ttm_np_floor = np.maximum(y2_ttm_np, 0.0)
     accumulated_treasury_cash = np.maximum(monthly_np, 0.0).sum(axis=1)
 
     undiscounted_gp_price = y3_ttm_gp * GP_MULTIPLE / sky_supply
     undiscounted_np_price = y3_ttm_np_floor * np_multiple / sky_supply
+    y2_undiscounted_gp_price = y2_ttm_gp * GP_MULTIPLE / sky_supply
+    y2_undiscounted_np_price = y2_ttm_np_floor * np_multiple / sky_supply
     disc = (1.0 + DISCOUNT_RATE) ** 3
     pv_gp = undiscounted_gp_price / disc
     pv_np = undiscounted_np_price / disc
@@ -195,18 +389,61 @@ def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float) -
             "p90": float(np.percentile(arr, 90)),
             "ev_mean": float(np.mean(arr)),
             "prob_spot_justified": float(np.mean(arr >= spot)),
+            "prob_up_30": float(np.mean(arr >= 1.3 * spot)),
+            "prob_down_30": float(np.mean(arr <= 0.7 * spot)),
             "prob_3x": float(np.mean(arr >= 3 * spot)),
         }
+
+    def distribution(arr):
+        return {
+            f"p{q}": float(np.percentile(arr, q))
+            for q in (5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95)
+        }
+
+    y3_money_market_tvl = denominator_path[:, -1]
+    y3_total_supply = usds + dai
+    y3_avg_money_market_tvl = denominator_path[:, -12:].mean(axis=1)
+    y3_avg_total_supply = monthly_total_supply[:, -12:].mean(axis=1)
+    y3_avg_usds_supply = monthly_usds_supply[:, -12:].mean(axis=1)
 
     return {
         "opex": opex,
         "np_multiple": np_multiple,
         "pv_gp_10x": pack(pv_gp),
         "pv_np": pack(pv_np),
+        "pv_gp_10x_distribution": distribution(pv_gp),
+        "pv_np_distribution": distribution(pv_np),
+        "undiscounted_gp_price": pack(undiscounted_gp_price),
+        "undiscounted_np_price": pack(undiscounted_np_price),
+        "y2_undiscounted_gp_price": pack(y2_undiscounted_gp_price),
+        "y2_undiscounted_np_price": pack(y2_undiscounted_np_price),
         "y3_ttm_gp": pack(y3_ttm_gp),
         "y3_ttm_net_profit": pack(y3_ttm_np),
+        "y3_ttm_gross_income": pack(y3_ttm_gross_income),
+        "y3_ttm_savings_cost": pack(y3_ttm_savings_cost),
+        "y3_ttm_stusds_cost": pack(y3_ttm_stusds_cost),
         "y3_usds_supply": pack(usds),
+        "y3_total_stable_supply": pack(y3_total_supply),
+        "y3_money_market_tvl": pack(y3_money_market_tvl),
+        "y3_avg_money_market_tvl": pack(y3_avg_money_market_tvl),
+        "y3_avg_total_stable_supply": pack(y3_avg_total_supply),
+        "y3_avg_usds_supply": pack(y3_avg_usds_supply),
         "accumulated_treasury_cash": pack(accumulated_treasury_cash),
+        "mc_path": {
+            "start_money_market_tvl_p50": float(np.percentile(start_denominator, 50)),
+            "start_money_market_tvl_p25": float(np.percentile(start_denominator, 25)),
+            "start_money_market_tvl_p75": float(np.percentile(start_denominator, 75)),
+            "start_money_market_tvl_rule": "uniform random draw from historical monthly money-market/yield-vault TVL",
+            "start_money_market_tvl_months": len(money_market_months),
+            "current_money_market_tvl": current_denominator,
+            "y3_money_market_tvl_p50": float(np.percentile(y3_money_market_tvl, 50)),
+            "y3_total_stable_supply_p50": float(np.percentile(y3_total_supply, 50)),
+            "eoy3_money_market_share": float(share_path[-1]),
+            "ms_momentum_initial": float(momentum),
+            "velocity_ensemble": velocity,
+            "share_cap": _SKY_MONEY_MARKET_SHARE_CAP,
+            "rule": "sample starting money-market/yield-vault TVL uniformly from historical monthly denominators; sample monthly denominator shocks; apply Sky MS90 share seed; 70% MS30/MS180 + 30% MS7/MS30 velocity ensemble decays over 12M; DAI stays flat and USDS fills the remainder",
+        },
     }
 
 
@@ -214,94 +451,6 @@ def _get_json(url: str):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 SKY valuation"})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)
-
-
-def _parse_stable_tokens(data: dict):
-    """Return [(date_str, usd_supply)] from a DefiLlama stablecoin detail response."""
-    rows = []
-    for item in data.get("tokens", []):
-        ts  = item.get("date")
-        val = (item.get("circulating") or {}).get("peggedUSD", 0)
-        if ts and val:
-            d = str(datetime.fromtimestamp(int(ts), tz=timezone.utc).date())
-            rows.append((d, float(val)))
-    return sorted(rows)
-
-
-def _parse_stable_total(data: list):
-    """Return [(date_str, total_usd)] from the /stablecoincharts/all response."""
-    rows = []
-    for item in data:
-        ts  = item.get("date")
-        val = (item.get("totalCirculating") or {}).get("peggedUSD", 0)
-        if ts and val:
-            d = str(datetime.fromtimestamp(int(ts), tz=timezone.utc).date())
-            rows.append((d, float(val)))
-    return sorted(rows)
-
-
-def fetch_sky_stablecoin_ms():
-    """Compute SKY stablecoin market share (USDS+DAI / total) history and snapshot."""
-    usds_data  = _get_json(f"https://stablecoins.llama.fi/stablecoin/{_USDS_ID}")
-    dai_data   = _get_json(f"https://stablecoins.llama.fi/stablecoin/{_DAI_ID}")
-    total_data = _get_json("https://stablecoins.llama.fi/stablecoincharts/all")
-
-    usds_by_d = dict(_parse_stable_tokens(usds_data))
-    dai_by_d  = dict(_parse_stable_tokens(dai_data))
-    tot_by_d  = dict(_parse_stable_total(total_data))
-
-    # Dates where we have all three (USDS launched ~Sep 2024; before that sky_supply = DAI only)
-    # Use DAI + USDS (defaulting USDS to 0 before launch)
-    common = sorted(set(dai_by_d) & set(tot_by_d))
-    if not common:
-        return None, []
-
-    sky_arr = np.array([dai_by_d.get(d, 0.0) + usds_by_d.get(d, 0.0) for d in common], dtype=float)
-    tot_arr = np.array([tot_by_d.get(d, 0.0) for d in common], dtype=float)
-    ratio   = np.where(tot_arr > 0, sky_arr / tot_arr, np.nan)
-
-    def rolling_mean(arr, w):
-        out = np.full(len(arr), np.nan)
-        for i in range(w - 1, len(arr)):
-            window = arr[i - w + 1: i + 1]
-            valid  = window[~np.isnan(window)]
-            if len(valid) > 0:
-                out[i] = float(valid.mean())
-        return out
-
-    ms30  = rolling_mean(ratio, 30)
-    ms90  = rolling_mean(ratio, 90)
-    ms180 = rolling_mean(ratio, 180)
-
-    def _f(a): return float(a[-1]) if not np.isnan(a[-1]) else None
-
-    snapshot = {
-        "ms30":            _f(ms30),
-        "ms90":            _f(ms90),
-        "ms180":           _f(ms180),
-        "sky_supply":      float(sky_arr[-1]),
-        "usds_supply":     float(usds_by_d.get(common[-1], 0.0)),
-        "dai_supply":      float(dai_by_d.get(common[-1], 0.0)),
-        "total_stablecoin_supply": float(tot_arr[-1]),
-    }
-
-    start = max(0, len(common) - 365)
-    history = []
-    ms_full = []
-    sky_by_date_full = {d: float(dai_by_d.get(d, 0.0) + usds_by_d.get(d, 0.0)) for d in common}
-    for i, d in enumerate(common[start:], start=start):
-        if np.isnan(ms30[i]):
-            continue
-        ms30_i  = float(ms30[i])
-        ms90_i  = float(ms90[i])  if not np.isnan(ms90[i])  else None
-        ms180_i = float(ms180[i]) if not np.isnan(ms180[i]) else None
-        history.append({"date": d, "ms30": round(ms30_i, 6),
-                        "ms90": round(ms90_i, 6) if ms90_i is not None else None})
-        ms_full.append({"date": d, "ms30": ms30_i, "ms90": ms90_i, "ms180": ms180_i,
-                        "sky_supply": sky_by_date_full.get(d, 0.0),
-                        "total_supply": float(tot_arr[i])})
-
-    return snapshot, history, ms_full
 
 
 def fetch_sky_price_history():
@@ -335,17 +484,23 @@ def fetch_sky_price_history():
 
 def compute_sky_hist_charts(ms_full_with_supply, price_by_date, mcap_by_date,
                              sky_supply, DR, gp_multiple, p50_pv):
-    """Build hist_charts for SKY: backtest + Mcap/GP secondary + EOY3 stablecoin share."""
-    gp_rate = GROSS_INCOME_YIELD * (1.0 - SAVINGS_RATE * USDS_SAVINGS_PENETRATION)  # rough GP/supply
+    """Build hist_charts for SKY: backtest + Mcap/GP secondary + EOY3 money-market share."""
+    stable_supply_base = max(TOTAL_STABLE_SUPPLY, 1.0)
+    stusds_cost_rate = STUSDS_EXPENSE / stable_supply_base
+    net_gp_rate = (
+        GROSS_INCOME_YIELD
+        - (SAVINGS_RATE * USDS_SAVINGS_PENETRATION)
+        - stusds_cost_rate
+    )
 
-    # ── EOY3 stablecoin MS history ────────────────────────────────────────────
+    # ── EOY3 money-market MS history ─────────────────────────────────────────
     eoy3_ms_out = []
     for row in ms_full_with_supply:
         ms30 = row["ms30"]; ms90 = row["ms90"]; ms180 = row.get("ms180")
         if ms30 is None or ms90 is None:
             continue
         anchor = ms180 if ms180 is not None else ms90
-        eoy3 = _ms_eoy3(ms90, ms30, anchor, _SKY_STABLE_CAP)
+        eoy3 = _ms_eoy3(ms90, ms30, anchor, _SKY_MONEY_MARKET_SHARE_CAP, row.get("ms7"))
         eoy3_ms_out.append({"date": row["date"], "eoy3": round(eoy3, 6),
                              "ms90": round(ms90, 6), "ms30": round(ms30, 6)})
 
@@ -354,19 +509,19 @@ def compute_sky_hist_charts(ms_full_with_supply, price_by_date, mcap_by_date,
     for row in ms_full_with_supply:
         d = row["date"]
         sky_sup_d = row.get("sky_supply", 0.0)
-        ann_gp_d = sky_sup_d * gp_rate
+        ann_gp_d = sky_sup_d * net_gp_rate
         mcap = mcap_by_date.get(d)
         if mcap and ann_gp_d > 0:
             ratio = mcap / ann_gp_d
             if 0 < ratio < 2000:
                 secondary_data.append({"date": d, "value": round(ratio, 1)})
 
-    # ── Backtest: model-shaped PV from stablecoin supply ─────────────────────
+    # ── Backtest: model-shaped PV from official supply history ───────────────
     pv_raw_list = []
     for row in ms_full_with_supply:
         d = row["date"]
         sky_sup_d = row.get("sky_supply", 0.0)
-        ann_gp_d = sky_sup_d * gp_rate
+        ann_gp_d = sky_sup_d * net_gp_rate
         pv_raw = ann_gp_d * gp_multiple / ((1 + DR) ** 3) / max(sky_supply, 1.0)
         price = price_by_date.get(d)
         if price and price > 0 and pv_raw > 0:
@@ -388,9 +543,9 @@ def compute_sky_hist_charts(ms_full_with_supply, price_by_date, mcap_by_date,
     return {
         "backtest": _backtest_signals(bt_chart),
         "secondary_chart": {
-            "label": "Historical Mcap / GP (supply-anchored proxy)",
-            "subtitle": "Market cap ÷ (USDS+DAI supply × net GP/supply rate)",
-            "note": "GP proxy = (USDS+DAI supply) × yield × (1 − savings penetration × savings rate). Fixed rates.",
+            "label": "Historical Mcap / GP (money-market-share proxy)",
+            "subtitle": "Market cap ÷ (money-market TVL × Sky share × net GP/supply rate)",
+            "note": "GP proxy = official Sky supply × (gross-income yield − savings penetration × savings rate − stUSDS cost rate). Fixed rates.",
             "unit": "x",
             "data": secondary_data,
         },
@@ -407,23 +562,48 @@ def run() -> dict:
         print(f"[SKY] CoinGecko fetch failed ({e}); using fallback market data")
         spot, mcap, fdv, sky_supply = _FALLBACK_SPOT, _FALLBACK_MCAP, _FALLBACK_FDV, _FALLBACK_SUPPLY
 
-    # ── Stablecoin market share ───────────────────────────────────────────────
+    # ── Official Sky supply + money-market share ─────────────────────────────
+    official_supply = {
+        "date": "2026-05-08",
+        "usds_supply": USDS_SUPPLY,
+        "dai_supply": DAI_SUPPLY,
+        "total_sky_stable_supply": TOTAL_STABLE_SUPPLY,
+        "source": "locked fallback",
+    }
     ms_snapshot, ms_history, ms_full_hist = None, [], []
     try:
-        ms_snapshot, ms_history, ms_full_hist = fetch_sky_stablecoin_ms()
-    except Exception:
-        pass
+        supply_snapshot_raw, supply_hist = _fetch_sky_supply_official()
+        official_supply = _official_supply_snapshot(supply_snapshot_raw)
+        ms_snapshot, ms_history, ms_full_hist = _compute_money_market_ms(supply_hist)
+    except Exception as e:
+        print(f"[SKY] Sky official supply fetch failed ({e}); using locked supply fallback")
+
+    usds_start = float(official_supply["usds_supply"])
+    dai_start = float(official_supply["dai_supply"])
+    total_start = usds_start + dai_start
 
     scenarios_raw = {}
     for name, opex in OPEX_SCENARIOS.items():
-        scenarios_raw[name] = _simulate(opex, NP_MULTIPLE, spot, sky_supply)
+        scenarios_raw[name] = _simulate(
+            opex, NP_MULTIPLE, spot, sky_supply, usds_start, dai_start, ms_snapshot
+        )
 
     current_gp = GROSS_INCOME - SAVINGS_EXPENSE - STUSDS_EXPENSE
     base_opex = OPEX_SCENARIOS["base_70m_opex"]
     current_np_base = current_gp - base_opex
+    net_gp_rate = current_gp / TOTAL_STABLE_SUPPLY
+    mcap_current_gp = mcap / current_gp if current_gp > 0 else float("nan")
+    fdv_current_gp = fdv / current_gp if current_gp > 0 else float("nan")
 
     def _make_scenario(key, label, is_primary, raw_key, value_key):
+        raw = scenarios_raw[raw_key]
         s = scenarios_raw[raw_key][value_key]
+        price_key = "undiscounted_gp_price" if value_key == "pv_gp_10x" else "undiscounted_np_price"
+        y2_price_key = "y2_undiscounted_gp_price" if value_key == "pv_gp_10x" else "y2_undiscounted_np_price"
+        dist_key = "pv_gp_10x_distribution" if value_key == "pv_gp_10x" else "pv_np_distribution"
+        y3_price_p50 = raw[price_key]["p50"]
+        y3_money_market = raw["y3_money_market_tvl"]
+        y2_price = raw[y2_price_key]
         return {
             "key": key,
             "label": label,
@@ -432,6 +612,33 @@ def run() -> dict:
             "ev": s["ev_mean"],
             "prob_above_spot": s["prob_spot_justified"],
             "prob_3x": s["prob_3x"],
+            "prob_spot_up_30_2y": y2_price["prob_up_30"],
+            "prob_spot_down_30_2y": y2_price["prob_down_30"],
+            "y3_price_p50": y3_price_p50,
+            "y3_mcap_p50": y3_price_p50 * sky_supply,
+            "y3_supply_p50": sky_supply,
+            "y3_gp_p50": raw["y3_ttm_gp"]["p50"],
+            "y3_gp_by_product_line_p50": {
+                "gross_income": raw["y3_ttm_gross_income"]["p50"],
+                "savings_cost": -raw["y3_ttm_savings_cost"]["p50"],
+                "stusds_cost": -raw["y3_ttm_stusds_cost"]["p50"],
+                "net_gp": raw["y3_ttm_gp"]["p50"],
+            },
+            "y3_daily_mean_tvl_p50": raw["y3_avg_money_market_tvl"]["p50"],
+            "y3_avg_total_stable_supply_p50": raw["y3_avg_total_stable_supply"]["p50"],
+            "y3_avg_usds_supply_p50": raw["y3_avg_usds_supply"]["p50"],
+            "ev_mcap": s["ev_mean"] * sky_supply,
+            "burn_3y_est": 0.0,
+            "y3_volume": {
+                "min": y3_money_market["p25"],
+                "avg": y3_money_market["p50"],
+                "max": y3_money_market["p75"],
+                "eoy_market_share": raw["mc_path"]["eoy3_money_market_share"],
+            },
+            "y3_total_stable_supply_p50": raw["y3_total_stable_supply"]["p50"],
+            "y3_usds_supply_p50": raw["y3_usds_supply"]["p50"],
+            "y3_money_market_tvl_p50": y3_money_market["p50"],
+            "distribution": raw[dist_key],
         }
 
     scenarios = [
@@ -459,9 +666,13 @@ def run() -> dict:
             "paths": PATHS,
             "note": (
                 "GP = gross income - savings-rate cost - stUSDS expense. "
-                "NP = GP - OPEX. USDS growth path: money-market TVL returns × 0.65 dampener, "
-                "capped ±8%/+10% monthly. DAI supply flat. Treasury = cumulative positive NP. "
-                "Protocol financials locked 2026-05-08."
+                "NP = GP - OPEX. HYPE-style path: sampled historical monthly "
+                "money-market/yield-vault TVL denominator × sampled monthly shocks × "
+                "Sky MS90 share seed; "
+                "70% MS30/MS180 + 30% MS7/MS30 velocity ensemble decays over 12M; "
+                "DAI supply flat and USDS fills the remainder. Money-market returns are "
+                "dampened 0.65 and capped -8%/+10% monthly. Treasury = cumulative positive NP. "
+                "Protocol financial rates locked 2026-05-08."
             ),
         },
         "current_gp": {
@@ -471,34 +682,80 @@ def run() -> dict:
             "current_gp": current_gp,
             "base_opex": base_opex,
             "current_np_base_opex": current_np_base,
-            "usds_supply": USDS_SUPPLY,
-            "dai_supply": DAI_SUPPLY,
+            "mcap_current_gp": mcap_current_gp,
+            "fdv_current_gp": fdv_current_gp,
+            "usds_supply": usds_start,
+            "dai_supply": dai_start,
+            "total_sky_stable_supply": total_start,
+            "official_supply_source": official_supply["source"],
+            "official_supply_date": official_supply.get("date"),
+            "locked_usds_supply": USDS_SUPPLY,
+            "locked_dai_supply": DAI_SUPPLY,
             "gross_income_yield_pct": GROSS_INCOME_YIELD * 100,
+            "net_gp_yield_pct": net_gp_rate * 100,
+            "gross_income_take_rate_bps": GROSS_INCOME_YIELD * 10000,
+            "savings_cost_rate_bps": (SAVINGS_EXPENSE / TOTAL_STABLE_SUPPLY) * 10000,
+            "stusds_cost_rate_bps": (STUSDS_EXPENSE / TOTAL_STABLE_SUPPLY) * 10000,
+            "net_gp_take_rate_bps": net_gp_rate * 10000,
             # Y3 model outputs (base $70M OPEX scenario)
             "y3_gp_p50":          scenarios_raw["base_70m_opex"]["y3_ttm_gp"]["p50"],
+            "y3_gross_income_p50": scenarios_raw["base_70m_opex"]["y3_ttm_gross_income"]["p50"],
+            "y3_savings_cost_p50": scenarios_raw["base_70m_opex"]["y3_ttm_savings_cost"]["p50"],
+            "y3_stusds_cost_p50": scenarios_raw["base_70m_opex"]["y3_ttm_stusds_cost"]["p50"],
             "y3_usds_supply_p50": scenarios_raw["base_70m_opex"]["y3_usds_supply"]["p50"],
+            "y3_total_stable_supply_p50": scenarios_raw["base_70m_opex"]["y3_total_stable_supply"]["p50"],
+            "y3_avg_money_market_tvl_p50": scenarios_raw["base_70m_opex"]["y3_avg_money_market_tvl"]["p50"],
+            "y3_avg_total_stable_supply_p50": scenarios_raw["base_70m_opex"]["y3_avg_total_stable_supply"]["p50"],
             "treasury_cash_p50":  scenarios_raw["base_70m_opex"]["accumulated_treasury_cash"]["p50"],
-            # Stablecoin market share
-            **({"ms30_vs_stables":  ms_snapshot["ms30"],
-                "ms90_vs_stables":  ms_snapshot["ms90"],
-                "ms180_vs_stables": ms_snapshot["ms180"],
+            "y3_gp_change_vs_current": (
+                scenarios_raw["base_70m_opex"]["y3_ttm_gp"]["p50"] / current_gp - 1.0
+                if current_gp > 0 else None
+            ),
+            "y3_total_stable_supply_change_vs_current": (
+                scenarios_raw["base_70m_opex"]["y3_total_stable_supply"]["p50"] / total_start - 1.0
+                if total_start > 0 else None
+            ),
+            "y3_usds_supply_change_vs_current": (
+                scenarios_raw["base_70m_opex"]["y3_usds_supply"]["p50"] / usds_start - 1.0
+                if usds_start > 0 else None
+            ),
+            "y3_money_market_tvl_change_vs_current": (
+                scenarios_raw["base_70m_opex"]["y3_money_market_tvl"]["p50"] /
+                scenarios_raw["base_70m_opex"]["mc_path"]["current_money_market_tvl"] - 1.0
+                if scenarios_raw["base_70m_opex"]["mc_path"]["current_money_market_tvl"] > 0 else None
+            ),
+            "mc_path": scenarios_raw["base_70m_opex"]["mc_path"],
+            # Money-market / yield-vault market share
+            **({"ms7_vs_money_market":   ms_snapshot["ms7"],
+                "ms30_vs_money_market":  ms_snapshot["ms30"],
+                "ms90_vs_money_market":  ms_snapshot["ms90"],
+                "ms180_vs_money_market": ms_snapshot["ms180"],
                 "ms30_ms180_trend": (ms_snapshot["ms30"] / ms_snapshot["ms180"])
                                     if ms_snapshot and ms_snapshot["ms30"] and ms_snapshot["ms180"] else None,
-                "total_stablecoin_supply": ms_snapshot["total_stablecoin_supply"],
+                "ms7_ms30_trend": (ms_snapshot["ms7"] / ms_snapshot["ms30"])
+                                  if ms_snapshot and ms_snapshot["ms7"] and ms_snapshot["ms30"] else None,
+                "velocity_ensemble_monthly": scenarios_raw["base_70m_opex"]["mc_path"]["velocity_ensemble"]["monthly_log_velocity"],
+                "velocity_long_component_monthly": scenarios_raw["base_70m_opex"]["mc_path"]["velocity_ensemble"]["long_monthly"],
+                "velocity_short_component_monthly": scenarios_raw["base_70m_opex"]["mc_path"]["velocity_ensemble"]["short_monthly"],
+                "velocity_long_weight": scenarios_raw["base_70m_opex"]["mc_path"]["velocity_ensemble"]["long_weight"],
+                "velocity_short_weight": scenarios_raw["base_70m_opex"]["mc_path"]["velocity_ensemble"]["short_weight"],
+                "money_market_tvl": ms_snapshot["money_market_tvl"],
+                "eoy3_money_market_share": scenarios_raw["base_70m_opex"]["mc_path"]["eoy3_money_market_share"],
                } if ms_snapshot else {}),
         },
         "scenarios": scenarios,
         "ms_history": ms_history,
         "caveats": [
-            "Protocol financials (gross income, savings rate, USDS/DAI supply) locked at 2026-05-08; re-run sky_data_collection to refresh.",
-            "USDS growth is modeled on broad money-market TVL returns dampened by 0.65 — Sky may diverge from sector.",
+            "USDS/DAI supply is sourced from Sky's official supply page API; financial rates and savings/stUSDS assumptions remain locked at the prior run.",
+            "USDS path now follows broad money-market/yield-vault TVL denominator × Sky share, not DefiLlama stablecoin market share.",
             "No buybacks or SKY supply reduction modeled; treasury accumulates cash only.",
+            "Take-rate assumptions are stablecoin economics rates on modeled Sky supply: gross income yield, savings cost, stUSDS cost, and net GP spread.",
             "Savings rate (3.65%) and USDS savings penetration (81.2%) are point-in-time inputs.",
         ],
         "data_freshness": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }
 
-    # ── Historical charts (backtest / secondary / EOY3 stablecoin MS) ────────
+    # ── Historical charts (backtest / secondary / EOY3 money-market MS) ──────
     try:
         price_hist, mcap_hist = fetch_sky_price_history()
         p50_pv_sky = scenarios_raw["base_70m_opex"]["pv_np"]["p50"]
