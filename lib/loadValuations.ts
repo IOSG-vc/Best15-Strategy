@@ -49,6 +49,11 @@ export interface ValuationScenario {
   ev_mcap?: number;
   burn_3y_est?: number;
   y3_volume?: Y3Volume;
+  y3_daily_mean_volume_p50?: number;
+  prob_spot_up_30_2y?: number;
+  prob_spot_down_30_2y?: number;
+  y3_perp_gp_p50?: number;
+  y3_stable_yield_gp_p50?: number;
 }
 
 export interface BacktestSignal {
