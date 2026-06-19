@@ -1485,6 +1485,54 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
     );
   }
 
+  // ── JUP: current snapshot + model architecture ──────────────────────────
+  if (tokenKey === "jup") {
+    const mcap        = data.market.market_cap;
+    const totalGpAnn  = (gp["total_30d"] as number) * 12;
+    const pgRatio     = totalGpAnn > 0 ? (mcap / totalGpAnn).toFixed(1) + "x" : "—";
+    const caveats     = data.caveats ?? [];
+
+    const sRow = (label: string, value: string) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-4">{label}</td>
+        <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
+      </tr>
+    );
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left: Current snapshot */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Current snapshot</h3>
+          <table className="w-full"><tbody>
+            {sRow("Perps GP 30D",                   fmtLarge(gp["perps_30d"] as number))}
+            {sRow("Perps 30D volume",               fmtLarge(gp["perps_30d_volume"] as number))}
+            {sRow("Spot 30D volume",                fmtLarge(gp["spot_30d_volume"] as number))}
+            {sRow("P/S: mcap / current GP proxy",   pgRatio)}
+            {sRow("P/GP: mcap / current GP proxy",  pgRatio)}
+            {sRow("Perps MS90 vs Binance Futures",  pct(gp["perps_ms90_vs_binance_futures"] as number))}
+            {sRow("Spot MS90 vs Binance spot",      pct(gp["spot_ms90_vs_binance_spot"] as number))}
+            {sRow("Perps share velocity",           `${((gp["perps_share_velocity_capped"] as number) ?? 0).toFixed(2)}×`)}
+            {sRow("Spot share velocity",            `${((gp["spot_share_velocity_capped"] as number) ?? 0).toFixed(2)}×`)}
+            {sRow("Sampled Binance Futures seed P50", `${fmtLarge(gp["start_binance_futures_monthly_p50"] as number)}/mo`)}
+            {sRow("Sampled Binance spot seed P50",  `${fmtLarge(gp["start_binance_spot_monthly_p50"] as number)}/mo`)}
+          </tbody></table>
+          {caveats.length > 0 && (
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Binance denominators use BTCUSDT quote-volume histories scaled to Blockworks annual exchange totals. {caveats[0]}
+            </p>
+          )}
+        </div>
+        {/* Right: Model architecture (dark) */}
+        <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-6 flex flex-col">
+          <div className="text-xs font-mono text-gray-500 mb-2 tracking-wide">Model architecture</div>
+          <div className="text-xl font-bold text-white mb-4">Perps like HYPE; spot like UNI</div>
+          <p className="text-sm text-gray-400 leading-relaxed">{data.model.note}</p>
+        </div>
+      </div>
+    );
+  }
+
   // ── ETHFI: two-column layout ─────────────────────────────────────────────
   if (tokenKey === "ethfi") {
     const vel = gp["card_velocity_ensemble"] as unknown as {
