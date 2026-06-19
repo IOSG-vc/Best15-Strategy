@@ -2667,6 +2667,95 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
             </div>
           ))}
         </div>
+
+        {/* Row 2: Y3 GP split + backtest */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Y3 GP product-line split */}
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Y3 GP product-line split</h3>
+            <table className="w-full"><tbody>
+              {[
+                ["Gross income",  fmtLarge(gp["y3_gross_income_p50"])],
+                ["Savings cost",  `$-${fmtLarge(gp["y3_savings_cost_p50"]).replace("$","")}`],
+                ["stUSDS cost",   `$-${fmtLarge(gp["y3_stusds_cost_p50"]).replace("$","")}`],
+                ["Net GP",        fmtLarge(gp["y3_gp_p50"])],
+              ].map(([label, value]) => (
+                <tr key={label} className="border-b border-gray-100 last:border-0">
+                  <td className="py-3 text-sm text-gray-600 pr-4">{label}</td>
+                  <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{value}</td>
+                </tr>
+              ))}
+            </tbody></table>
+            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+              Stablecoin economics split, not separate app revenue lines.
+            </p>
+          </div>
+          {/* Historical diagnostic / backtest */}
+          {(() => {
+            const bt      = data.hist_charts?.backtest;
+            const signals = bt?.signals ?? {};
+            const fmtRet  = (v: number | null) => v == null ? "n/a" : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+            const sigColor: Record<string, string> = { GOOD: "#16a34a", NEUTRAL: "#ca8a04", BAD: "#dc2626" };
+            return (
+              <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-5">Historical diagnostic / backtest</h3>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      {["SIGNAL","OBS","AVG +30D","AVG +90D","RECENT DATES"].map(h => (
+                        <th key={h} className="pb-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pr-4 last:pr-0">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {["GOOD","NEUTRAL","BAD"].map(sig => {
+                      const s = signals[sig];
+                      return (
+                        <tr key={sig} className="border-b border-gray-100 last:border-0">
+                          <td className="py-3 font-semibold text-xs pr-4" style={{ color: sigColor[sig] }}>{sig}</td>
+                          <td className="py-3 font-mono text-gray-700 pr-4">{s?.obs ?? 0}</td>
+                          <td className="py-3 font-mono text-gray-700 pr-4">{fmtRet(s?.avg_30d ?? null)}</td>
+                          <td className="py-3 font-mono text-gray-700 pr-4">{fmtRet(s?.avg_90d ?? null)}</td>
+                          <td className="py-3 text-xs text-gray-500">{s?.recent_dates?.slice(0,3).join(", ") || "n/a"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="text-xs text-gray-500 mt-4 leading-relaxed">
+                  Latest signal: <span className="font-semibold" style={{ color: sigColor[bt?.latest_signal ?? ""] }}>{bt?.latest_signal}</span>; last realized-return row: {bt?.last_realized_row}. Historical model-shaped diagnostic, not a full MC replay.
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Row 3: Historical Mcap/GP + Caveats */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Historical Mcap / GP */}
+          {(() => {
+            const sc      = data.hist_charts?.secondary_chart;
+            const latest  = sc?.data?.[sc.data.length - 1];
+            const val     = latest?.value;
+            return (
+              <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Historical Mcap / GP</h3>
+                <div className="text-4xl font-bold text-gray-900 mb-3">{val != null ? `${val.toFixed(1)}×` : "—"}</div>
+                <p className="text-sm text-gray-500 mb-2 leading-relaxed">{sc?.subtitle}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{sc?.note}</p>
+              </div>
+            );
+          })()}
+          {/* Caveats */}
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Caveats</h3>
+            <ul className="space-y-2 list-disc list-outside pl-4">
+              {(data.caveats ?? []).map((c, i) => (
+                <li key={i} className="text-sm text-gray-600 leading-relaxed">{c}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }
