@@ -6,7 +6,7 @@ import {
   BarChart, Bar, Cell, LabelList,
 } from "recharts";
 import type { ValuationsFile, TokenResult, ValuationScenario, McapPoint, MsPoint, ValuationData, Y3Volume, HistCharts, BacktestRow, SecondaryChart } from "@/lib/loadValuations";
-import { LineChart, Line, ReferenceLine } from "recharts";
+import { LineChart, Line, ReferenceLine, ComposedChart } from "recharts";
 import Nav from "./Nav";
 
 interface Props {
@@ -1509,7 +1509,22 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
       </tr>
     );
 
+    const revHistory = data.hist_charts?.revenue_history ?? [];
+    const runRateRaw = data.hist_charts?.run_rate_chart ?? [];
+    // Downsample run-rate chart to monthly (last entry per month)
+    const runRateMonthly: { date: string; ann_30d_rev: number }[] = [];
+    {
+      const seen = new Set<string>();
+      for (let i = runRateRaw.length - 1; i >= 0; i--) {
+        const ym = runRateRaw[i].date.slice(0, 7);
+        if (!seen.has(ym)) { seen.add(ym); runRateMonthly.unshift(runRateRaw[i]); }
+      }
+    }
+    const fmtDailyRev = (v: number) => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(0)}K` : `$${v.toFixed(0)}`;
+    const latestDate  = revHistory.length > 0 ? revHistory[revHistory.length - 1].date : "";
+
     return (
+      <div className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left: Operating Bridge */}
         <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
@@ -1541,6 +1556,54 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
             {sRow("Missing unit-econ data",       "COGS/OPEX", false)}
           </tbody></table>
         </div>
+      </div>
+
+      {/* Row 2: Net revenue history + Run-rate chart */}
+      {revHistory.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Left: Net revenue history table */}
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Net revenue history</h3>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["DATE","DAILY REV","30D ANN. REV","FDV / REV"].map((h) => (
+                    <th key={h} className={`pb-2 text-xs font-medium text-gray-400 uppercase tracking-wider ${h === "DATE" ? "text-left" : "text-right"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {revHistory.map((r) => (
+                  <tr key={r.date} className="border-b border-gray-100 last:border-0">
+                    <td className="py-3 text-sm text-gray-600">{r.date}</td>
+                    <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right">{fmtDailyRev(r.daily_rev)}</td>
+                    <td className="py-3 text-sm font-mono font-semibold text-gray-900 text-right">{fmtLarge(r.ann_30d_rev)}</td>
+                    <td className="py-3 text-sm font-mono text-gray-700 text-right">{r.fdv_rev > 0 ? `${r.fdv_rev.toFixed(2)}x` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Right: Run-rate chart */}
+          <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-5">Run-rate chart</h3>
+            <p className="text-xs text-gray-400 mb-2 text-center">30D annualized DefiLlama net revenue</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <ComposedChart data={runRateMonthly} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis dataKey="date" tickFormatter={(d: string) => new Date(d + "T00:00:00Z").toLocaleString("en-US", { month: "short", timeZone: "UTC" })} tick={{ fontSize: 11 }} />
+                <YAxis tickFormatter={(v: number) => `$${(v/1e6).toFixed(0)}M`} tick={{ fontSize: 11 }} width={48} />
+                <Tooltip formatter={(v: number) => [`$${(v/1e6).toFixed(1)}M`, "30D ann. rev"]} labelFormatter={(d: string) => d} />
+                <Bar dataKey="ann_30d_rev" fill="#bfdbfe" radius={[2,2,0,0]} />
+                <Line dataKey="ann_30d_rev" stroke="#ef4444" strokeWidth={2} dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+              Bars show selected month-end 30D annualized revenue. The {new Date(latestDate + "T00:00:00Z").toLocaleString("en-US", { month: "long", timeZone: "UTC" })} point is through {latestDate}.
+            </p>
+          </div>
+        </div>
+      )}
       </div>
     );
   }

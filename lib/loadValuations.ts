@@ -95,6 +95,8 @@ export interface HistCharts {
     latest_signal: string;
     last_realized_row: string | null;
   };
+  revenue_history?: { date: string; daily_rev: number; ann_30d_rev: number; fdv_rev: number }[];
+  run_rate_chart?: { date: string; ann_30d_rev: number }[];
 }
 
 export interface ValuationData {

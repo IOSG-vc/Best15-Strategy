@@ -78,8 +78,8 @@ def _get(url: str, timeout: int = 30) -> dict | list:
         return json.load(r)
 
 
-def _fetch_defillama_revenue_30d() -> tuple[float, float]:
-    """Return (30D net revenue, 7D daily avg revenue) from DefiLlama; fallback to Q1 run-rate."""
+def _fetch_defillama_revenue_30d() -> tuple[float, float, list]:
+    """Return (30D net revenue, 7D daily avg revenue, full chart) from DefiLlama."""
     try:
         url = f"https://api.llama.fi/summary/fees/{DEFILLAMA_SLUG}?dataType=dailyFees"
         d = _get(url, timeout=20)
@@ -88,11 +88,11 @@ def _fetch_defillama_revenue_30d() -> tuple[float, float]:
         last7 = chart[-7:] if len(chart) >= 7 else chart
         avg7d = sum(float(v) for _, v in last7) / len(last7) if last7 else 0.0
         if total30d > 0:
-            return total30d, avg7d
+            return total30d, avg7d, chart
     except Exception as e:
         print(f"[CARDS] DefiLlama revenue fetch failed ({e}); using Q1 fallback")
     fallback_daily = GP_ANN_RUN_RATE / 12 / 30
-    return GP_ANN_RUN_RATE / 12, fallback_daily
+    return GP_ANN_RUN_RATE / 12, fallback_daily, []
 
 
 def _compute_y3_gmv(gmv_30d: float, velocity: float, decay_months: int = 12) -> float:
@@ -102,6 +102,91 @@ def _compute_y3_gmv(gmv_30d: float, velocity: float, decay_months: int = 12) -> 
         alpha = velocity * max(0.0, (decay_months - (m - 1)) / decay_months) if m <= decay_months else 0.0
         monthly_gmv *= (1.0 + alpha)
     return monthly_gmv * 12
+
+
+def _fetch_cg_price_history() -> dict[str, float]:
+    """Return {date_str: price} for the past 365 days from CoinGecko."""
+    try:
+        hdrs = {"User-Agent": UA, "Accept": "application/json"}
+        if _CG_KEY:
+            hdrs["x-cg-pro-api-key"] = _CG_KEY
+        url = f"{_CG_BASE}/coins/{CG_ID}/market_chart?vs_currency=usd&days=365&interval=daily"
+        req = urllib.request.Request(url, headers=hdrs)
+        with urllib.request.urlopen(req, timeout=30) as r:
+            d = json.load(r)
+        prices = d.get("prices", [])
+        result: dict[str, float] = {}
+        for ts, price in prices:
+            date_str = datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+            result[date_str] = float(price)
+        return result
+    except Exception as e:
+        print(f"[CARDS] CoinGecko price history failed ({e})")
+        return {}
+
+
+def _build_revenue_history(chart: list, price_hist: dict[str, float]) -> tuple[list, list]:
+    """Build month-end snapshot table and full run-rate chart from daily DefiLlama chart."""
+    from collections import defaultdict
+    import calendar
+
+    if not chart:
+        return [], []
+
+    # Convert to sorted (date_str, daily_rev) list
+    rows: list[tuple[str, float]] = []
+    for ts, rev in chart:
+        date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+        rows.append((date_str, float(rev)))
+    rows.sort(key=lambda x: x[0])
+
+    # Build rolling 30D average at each date
+    def rolling_30d(idx: int) -> float:
+        start = max(0, idx - 29)
+        vals = [rows[i][1] for i in range(start, idx + 1)]
+        return sum(vals) / len(vals) if vals else 0.0
+
+    date_to_idx = {r[0]: i for i, r in enumerate(rows)}
+
+    # Select month-end snapshots + latest
+    months_seen: set[str] = set()
+    snapshot_dates: list[str] = []
+    for date_str, _ in rows:
+        ym = date_str[:7]  # "YYYY-MM"
+        if ym not in months_seen:
+            months_seen.add(ym)
+        # Check if this is last day of month
+        y, m, d_ = map(int, date_str.split("-"))
+        last_day = calendar.monthrange(y, m)[1]
+        if d_ == last_day:
+            snapshot_dates.append(date_str)
+    # Always include latest date
+    if rows and rows[-1][0] not in snapshot_dates:
+        snapshot_dates.append(rows[-1][0])
+
+    history = []
+    for date_str in snapshot_dates:
+        if date_str not in date_to_idx:
+            continue
+        idx = date_to_idx[date_str]
+        daily_rev = rows[idx][1]
+        avg_30d   = rolling_30d(idx)
+        ann_rev   = avg_30d * 365
+        price     = price_hist.get(date_str, 0.0)
+        fdv       = price * MAX_SUPPLY if price > 0 else 0.0
+        fdv_rev   = fdv / ann_rev if ann_rev > 0 and fdv > 0 else 0.0
+        history.append({
+            "date": date_str, "daily_rev": daily_rev,
+            "ann_30d_rev": ann_rev, "fdv_rev": fdv_rev,
+        })
+
+    # Run-rate chart: all rows with 30D rolling avg (for chart display)
+    run_rate = []
+    for i, (date_str, _) in enumerate(rows):
+        avg = rolling_30d(i)
+        run_rate.append({"date": date_str, "ann_30d_rev": avg * 365})
+
+    return history, run_rate
 
 
 def _fetch_cg_market() -> tuple[float, float, float, float]:
@@ -157,12 +242,16 @@ def run() -> dict:
         print(f"[CARDS] CoinGecko failed ({e}); using fallback")
         spot, mcap, fdv, circ = _FB_SPOT, _FB_MCAP, _FB_FDV, _FB_CIRC
 
+    # ── Historical price data ─────────────────────────────────────────────────
+    price_hist = _fetch_cg_price_history()
+
     # ── Live DefiLlama 30D revenue → implied GMV ─────────────────────────────
-    revenue_30d, revenue_7d_daily_avg = _fetch_defillama_revenue_30d()
+    revenue_30d, revenue_7d_daily_avg, rev_chart = _fetch_defillama_revenue_30d()
     gmv_30d          = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
     gmv_30d_ann      = gmv_30d * 12
     gmv_7d_daily_avg = revenue_7d_daily_avg / NET_SPREAD if NET_SPREAD > 0 else 0.0
     gmv_30d_daily    = gmv_30d / 30.0
+    revenue_history, run_rate_chart = _build_revenue_history(rev_chart, price_hist)
 
     # ── Velocity-decay scenario table (A=6M, B=12M, C=24M) ───────────────────
     disc3 = (1.0 + DISCOUNT_RATE) ** 3
@@ -282,6 +371,10 @@ def run() -> dict:
             "Distributions approximate log-normal σ=1.0; no Monte Carlo simulation.",
         ],
         "data_freshness": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "hist_charts": {
+            "revenue_history": revenue_history,
+            "run_rate_chart":  run_rate_chart,
+        },
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
