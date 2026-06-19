@@ -2639,6 +2639,103 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── JUP: scenario comparison table + GP/volume/supply cards ─────────────
+  if (tokenKey === "jup") {
+    const gp      = data.current_gp as Record<string, unknown>;
+    const fmtChg  = (v: number) => `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+    const y3pcts  = gp["y3_vs_current_pct"] as {
+      entity_gp_pct: number; perps_gp_pct: number; spot_gp_pct: number;
+      perps_daily_volume_pct: number; spot_daily_volume_pct: number; effective_supply_pct: number;
+    } | undefined;
+    const y3gp       = gp["y3_gp_p50"]                    as number ?? 0;
+    const y3perpsGp  = gp["y3_perps_gp_p50"]              as number ?? 0;
+    const y3spotGp   = gp["y3_spot_gp_p50"]               as number ?? 0;
+    const y3perpVol  = gp["y3_perps_daily_mean_volume_p50"] as number ?? 0;
+    const y3spotVol  = gp["y3_spot_daily_mean_volume_p50"] as number ?? 0;
+    const y3supply   = gp["y3_supply_p50"]                 as number ?? 0;
+
+    const SmCard = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-1 leading-snug">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-xs text-gray-500 leading-snug">{sub}</div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Scenario comparison</h2>
+        {/* Table */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","P25","P50","P75","P90","EV","P(SPOT)","2Y +30%","2Y -30%"].map((h) => (
+                    <th key={h} className={`py-4 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h === "CASE" ? "text-left px-5" : "text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.scenarios.map((s) => {
+                  const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary ? "bg-white" : ""}`}>
+                      <td className={`px-5 py-4 text-sm ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                      {(["p25","p50","p75","p90"] as const).map((p) => (
+                        <td key={p} className={`px-4 py-4 text-right font-mono text-sm whitespace-nowrap ${p === "p50" ? "font-semibold text-gray-900" : "text-gray-700"}`}>{fmtPrice(s.pv[p])}</td>
+                      ))}
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>{pct(s.prob_above_spot)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_up_30_2y   != null ? pct(s.prob_spot_up_30_2y)   : "—"}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Cards row 1: 5 GP/volume cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <SmCard
+            label="Y3 TTM entity GP P50"
+            value={fmtLarge(y3gp)}
+            sub={`${y3pcts ? fmtChg(y3pcts.entity_gp_pct) : "—"} vs current annualized GP.`}
+          />
+          <SmCard
+            label="Y3 Perps GP P50"
+            value={fmtLarge(y3perpsGp)}
+            sub={`${y3pcts ? fmtChg(y3pcts.perps_gp_pct) : "—"} vs current annualized perps GP.`}
+          />
+          <SmCard
+            label="Y3 Spot GP P50"
+            value={fmtLarge(y3spotGp)}
+            sub={`${y3pcts ? fmtChg(y3pcts.spot_gp_pct) : "—"} vs current annualized spot GP.`}
+          />
+          <SmCard
+            label="Y3 perps daily volume"
+            value={fmtLarge(y3perpVol)}
+            sub={`${y3pcts ? fmtChg(y3pcts.perps_daily_volume_pct) : "—"} vs current daily perps volume.`}
+          />
+          <SmCard
+            label="Y3 spot daily volume"
+            value={fmtLarge(y3spotVol)}
+            sub={`${y3pcts ? fmtChg(y3pcts.spot_daily_volume_pct) : "—"} vs current daily spot volume.`}
+          />
+        </div>
+        {/* Cards row 2: supply */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <SmCard
+            label="Effective supply P50"
+            value={`${(y3supply / 1e9).toFixed(2)}B`}
+            sub={`${y3pcts ? fmtChg(y3pcts.effective_supply_pct) : "—"} vs current circulating supply.`}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // ── SKY: scenario comparison table + 5 cards ────────────────────────────
   if (tokenKey === "sky") {
     const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
