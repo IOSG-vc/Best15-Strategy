@@ -45,6 +45,13 @@ OPTIONALITY      = 1.10          # 10% optionality kicker in the Y3 price formul
 DISCOUNT_RATE    = 0.30
 LOG_NORMAL_SIGMA = 1.0
 
+# Float-friendly Y3 supply (released non-Foundation supply by Nov 2027)
+FLOAT_SUPPLY_Y3  = 1_265_000_000
+
+# Velocity-decay scenario decay periods (months)
+DECAY_PERIODS = [6, 12, 24]  # A, B, C
+DECAY_WEIGHTS = [0.4, 0.4, 0.2]  # weighted 40/40/20
+
 # Scenarios: (key, label, y3_gp, y3_supply, is_primary)
 SCENARIOS = [
     ("bear", "Bear: $20M GP, 1.5B supply",  20_000_000,  1_500_000_000, False),
@@ -88,11 +95,11 @@ def _fetch_defillama_revenue_30d() -> tuple[float, float]:
     return GP_ANN_RUN_RATE / 12, fallback_daily
 
 
-def _compute_y3_gmv(gmv_30d: float, velocity: float) -> float:
-    """Project Y3 annual GMV via velocity decaying linearly to 0 by month 12."""
+def _compute_y3_gmv(gmv_30d: float, velocity: float, decay_months: int = 12) -> float:
+    """Project Y3 annual GMV via velocity decaying linearly to 0 by decay_months."""
     monthly_gmv = gmv_30d
     for m in range(1, 37):
-        alpha = velocity * max(0.0, (12 - (m - 1)) / 12) if m <= 12 else 0.0
+        alpha = velocity * max(0.0, (decay_months - (m - 1)) / decay_months) if m <= decay_months else 0.0
         monthly_gmv *= (1.0 + alpha)
     return monthly_gmv * 12
 
@@ -156,7 +163,25 @@ def run() -> dict:
     gmv_30d_ann      = gmv_30d * 12
     gmv_7d_daily_avg = revenue_7d_daily_avg / NET_SPREAD if NET_SPREAD > 0 else 0.0
     gmv_30d_daily    = gmv_30d / 30.0
-    y3_gmv_base      = _compute_y3_gmv(gmv_30d, GMV_VELOCITY_INPUT)
+
+    # ── Velocity-decay scenario table (A=6M, B=12M, C=24M) ───────────────────
+    disc3 = (1.0 + DISCOUNT_RATE) ** 3
+    vel_scenarios = []
+    for dp in DECAY_PERIODS:
+        y3_gmv_dp  = _compute_y3_gmv(gmv_30d, GMV_VELOCITY_INPUT, dp)
+        y3_gp_dp   = y3_gmv_dp * NET_SPREAD * TRUE_GP_CONVERSION
+        pv_dp      = y3_gp_dp * MULTIPLE / max(FLOAT_SUPPLY_Y3, 1) / disc3
+        vel_scenarios.append({
+            "decay_months": dp, "y3_gmv": y3_gmv_dp, "y3_gp": y3_gp_dp, "pv": pv_dp,
+        })
+    # Weighted
+    y3_gmv_wtd = sum(DECAY_WEIGHTS[i] * vel_scenarios[i]["y3_gmv"] for i in range(3))
+    y3_gp_wtd  = sum(DECAY_WEIGHTS[i] * vel_scenarios[i]["y3_gp"]  for i in range(3))
+    pv_wtd     = sum(DECAY_WEIGHTS[i] * vel_scenarios[i]["pv"]      for i in range(3))
+    # Full FDV supply row (use 12M GMV, full 2B supply)
+    pv_fdv = vel_scenarios[1]["y3_gp"] * MULTIPLE / max(MAX_SUPPLY, 1) / disc3
+
+    y3_gmv_base = vel_scenarios[1]["y3_gmv"]  # 12M = base
 
     disc         = (1.0 + DISCOUNT_RATE) ** 3
     scenario_list = []
@@ -231,7 +256,17 @@ def run() -> dict:
             "gmv_30d_daily_avg": float(gmv_30d_daily),
             "y3_gmv_base": float(y3_gmv_base),
             "true_gp_conversion": float(TRUE_GP_CONVERSION),
+            "float_supply_y3": float(FLOAT_SUPPLY_Y3),
             "weighted_pv": float(weighted_pv),
+            "velocity_scenarios": [
+                {"label": "A: 6M velocity decay",  **{k: float(v) for k, v in vel_scenarios[0].items()}},
+                {"label": "B: 12M velocity decay", **{k: float(v) for k, v in vel_scenarios[1].items()}},
+                {"label": "C: 24M velocity decay", **{k: float(v) for k, v in vel_scenarios[2].items()}},
+                {"label": "Weighted 40/40/20",     "decay_months": 0,  "y3_gmv": float(y3_gmv_wtd), "y3_gp": float(y3_gp_wtd), "pv": float(pv_wtd)},
+                {"label": "Base, full FDV supply",  "decay_months": 12, "y3_gmv": float(vel_scenarios[1]["y3_gmv"]), "y3_gp": float(vel_scenarios[1]["y3_gp"]), "pv": float(pv_fdv)},
+            ],
+            "y3_gp_base": float(vel_scenarios[1]["y3_gp"]),
+            "y3_supply_float": float(FLOAT_SUPPLY_Y3),
             "locked_supply": float(LOCKED_SUPPLY_EST),
             "treasury_assets": float(TREASURY_ASSETS),
             "treasury_card_pct": float(TREASURY_CARD_PCT),

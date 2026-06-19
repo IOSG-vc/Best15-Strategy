@@ -2699,6 +2699,92 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── CARDS: velocity-decay scenario table + 4 output cards ───────────────
+  if (tokenKey === "cards") {
+    const gp      = data.current_gp as Record<string, unknown>;
+    const spot    = data.market.spot;
+    const fdvSup  = data.market.max_supply;
+    const velScens = (gp["velocity_scenarios"] as Array<{
+      label: string; decay_months: number; y3_gmv: number; y3_gp: number; pv: number;
+    }>) ?? [];
+    const netSpread = gp["net_spread"]        as number ?? 0;
+    const gpConv    = gp["true_gp_conversion"] as number ?? 0;
+    const multiple  = data.model.multiple;
+    const y3GpBase  = gp["y3_gp_base"]        as number ?? 0;
+    const floatSup  = gp["y3_supply_float"]    as number ?? gp["float_supply_y3"] as number ?? 0;
+
+    const SmCard = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-1 leading-snug">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-xs text-gray-500 leading-snug">{sub}</div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
+        {/* Scenario table */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","Y3 GMV","NET SPREAD","GP CONV.","Y3 GP","GP MULT.","PV / CARDS","VS SPOT"].map((h) => (
+                    <th key={h} className={`py-4 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h === "CASE" ? "text-left px-5" : "text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {velScens.map((s) => {
+                  const vsSpot = spot > 0 ? (s.pv / spot - 1) * 100 : 0;
+                  const isWeighted = s.label.startsWith("Weighted");
+                  return (
+                    <tr key={s.label} className={`border-b border-gray-100 last:border-0 ${isWeighted ? "bg-white" : ""}`}>
+                      <td className={`px-5 py-4 text-sm ${isWeighted ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_gmv)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(netSpread * 100).toFixed(2)}%`}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(gpConv * 100).toFixed(0)}%`}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_gp)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${multiple}x`}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtPrice(s.pv)}</td>
+                      <td className={`px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap ${vsSpot >= 0 ? "text-green-700" : "text-red-700"}`}>
+                        {`${vsSpot >= 0 ? "+" : ""}${vsSpot.toLocaleString("en-US", { maximumFractionDigits: 0 })}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* 4 bottom cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SmCard
+            label="Y3 aggregate GP"
+            value={fmtLarge(y3GpBase)}
+            sub={`Base 12M-decay GP after capped 7D/30D GMV velocity and ${(gpConv * 100).toFixed(0)}% conversion.`}
+          />
+          <SmCard
+            label="Y3 product split"
+            value={fmtLarge(y3GpBase)}
+            sub="Gacha/marketplace only; no separate staking, yield, or card-financing line modeled."
+          />
+          <SmCard
+            label="Y3 effective supply"
+            value={`${(floatSup / 1e9).toFixed(3)}B`}
+            sub="Float-friendly released non-Foundation supply by Nov 2027."
+          />
+          <SmCard
+            label="Treasury cash / buyback"
+            value="$0"
+            sub="Excluded until holders revenue or confirmed buyback wallet data appears."
+          />
+        </div>
+      </div>
+    );
+  }
+
   // ── JUP: scenario comparison table + GP/volume/supply cards ─────────────
   if (tokenKey === "jup") {
     const gp      = data.current_gp as Record<string, unknown>;
