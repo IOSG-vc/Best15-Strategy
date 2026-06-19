@@ -2958,6 +2958,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const isEthfiLayout = tokenKey === "ethfi";
   const isUniLayout = tokenKey === "uni";
   const isSkyLayout = tokenKey === "sky";
+  const isJupLayout = tokenKey === "jup";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -3269,6 +3270,68 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               value={`${(d.model.discount_rate * 100).toFixed(0)}% · ${d.model.multiple}×`}
               sub={`Primary uses NP multiple; 10x GP sensitivity also shown. P(3x) ${primary.prob_3x != null ? pct(primary.prob_3x) : "—"} right-tail.`}
               termKey="dr"
+            />
+          </div>
+        </div>
+      ) : isJupLayout ? (
+        /* JUP 5+4 card layout */
+        <div className="space-y-3">
+          {/* Row 1: 5 cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <MetricCard
+              label="Spot / mcap / circ"
+              value={fmtPrice(spot)}
+              sub={`Mcap ${fmtLarge(d.market.market_cap)} · circ ${(d.market.circulating_supply / 1e9).toFixed(2)}B ${d.token}.`}
+            />
+            <MetricCard
+              label="Perps MS30 vs Binance Futures"
+              value={pct(gp["perps_ms30_vs_binance_futures"] as number)}
+              sub="Clean-GP-implied JUP perps volume / scaled Binance Futures."
+              accent={(gp["perps_ms30_ms180_binance_futures_trend"] as number) >= 1.0 ? "green" : "default"}
+            />
+            <MetricCard
+              label="Spot MS30 vs Binance spot"
+              value={pct(gp["spot_ms30_vs_binance_spot"] as number)}
+              sub="Aggregator + Jupiterz volume / scaled Binance spot."
+              accent={(gp["spot_ms30_ms180_binance_spot_trend"] as number) >= 1.0 ? "green" : "default"}
+            />
+            <MetricCard
+              label="Perps take / spot rake"
+              value={`${((gp["perps_clean_take_rate_bps"] as number) ?? 0).toFixed(2)} / ${((gp["spot_take_rate_bps"] as number) ?? 0).toFixed(2)} bps`}
+              sub="Clean GP take-rate and observed spot rake."
+            />
+            <MetricCard
+              label="Velocity ensemble"
+              value={`${((gp["perps_share_velocity_capped"] as number) ?? 0).toFixed(2)}× / ${((gp["spot_share_velocity_capped"] as number) ?? 0).toFixed(2)}×`}
+              sub="Perps / spot share velocity; 70% MS30/MS180 + 30% MS7/MS30."
+              accent={(gp["perps_share_velocity_capped"] as number) >= 1.0 ? "green" : "default"}
+            />
+          </div>
+          {/* Row 2: 4 cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MetricCard
+              label={`P50 PV + opt + Jupnet`}
+              value={fmtPrice(primary.pv.p50)}
+              sub={`Primary locked-report case; ${primary.pv.p50 > spot ? "+" : ""}${((primary.pv.p50 / spot - 1) * 100).toFixed(0)}% vs spot.`}
+              highlighted
+              termKey="p50"
+            />
+            <MetricCard
+              label="P(above spot)"
+              value={pct(primary.prob_above_spot)}
+              sub={`2Y +30% ${primary.prob_spot_up_30_2y != null ? pct(primary.prob_spot_up_30_2y) : "—"} · 2Y -30% ${primary.prob_spot_down_30_2y != null ? pct(primary.prob_spot_down_30_2y) : "—"}.`}
+              accent={primary.prob_above_spot >= 0.5 ? "green" : primary.prob_above_spot >= 0.35 ? "yellow" : "red"}
+            />
+            <MetricCard
+              label="Discount / multiple"
+              value={`${(d.model.discount_rate * 100).toFixed(1)}% · ${d.model.multiple}×`}
+              sub="Discounted 3Y TTM entity GP multiple."
+              termKey="dr"
+            />
+            <MetricCard
+              label="Buyback share"
+              value="50%"
+              sub="Modeled entity GP used for JUP buybacks via Litterbox Trust."
             />
           </div>
         </div>
