@@ -3516,9 +3516,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
                   sub="DefiLlama net revenue / Gacha GMV; already net of pack buyback spends."
                 />
                 <MetricCard
-                  label="Q1 GP annualized"
-                  value={fmtLarge(gpAnn)}
-                  sub="Q1 2026 gross profit × 4; base model input."
+                  label="GMV velocity input"
+                  value={`${(((gp["gmv_velocity_input"] as number) ?? 0.20) * 100).toFixed(1)}%`}
+                  sub="Capped 7D/30D GMV velocity; used until 30D/180D history exists."
                 />
                 <MetricCard
                   label={`Base PV at ${d.model.multiple}x GP`}
@@ -3531,9 +3531,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               {/* Row 2: 3 cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <MetricCard
-                  label="Base EV (expected value)"
-                  value={fmtPrice(primarySc.ev)}
-                  sub={`P(above spot) ${pct(primarySc.prob_above_spot)}; bear/base/bull weighted.`}
+                  label="Weighted PV"
+                  value={fmtPrice((gp["weighted_pv"] as number) ?? primarySc.ev)}
+                  sub="40% 6M decay, 40% 12M decay, 20% 24M decay."
                 />
                 <MetricCard
                   label="Discount rate"
@@ -3542,9 +3542,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
                   termKey="dr"
                 />
                 <MetricCard
-                  label="Locked supply"
-                  value={`${(lockedSup / 1e9).toFixed(2)}B`}
-                  sub="Total locked unvested token supply; dominant model headwind."
+                  label="True GP conversion"
+                  value={`${(((gp["true_gp_conversion"] as number) ?? 0.60) * 100).toFixed(0)}%`}
+                  sub="Base conversion from DefiLlama net revenue to stricter GP after off-chain costs."
                 />
               </div>
             </div>

@@ -30,13 +30,19 @@ TREASURY_CARD_PCT = 0.80         # ~80% in physical trading cards
 # Net spread assumption (DefiLlama net revenue / Gacha GMV, already net of pack buyback spends)
 NET_SPREAD = 0.1235              # 12.35% — research estimate
 
+# True GP conversion (DefiLlama net revenue → stricter GP after off-chain costs)
+TRUE_GP_CONVERSION = 0.60       # 60% base conversion
+
+# GMV velocity input (capped 7D/30D velocity; used until 30D/180D history exists)
+GMV_VELOCITY_INPUT = 0.20       # 20.0% cap
+
 # DefiLlama
 DEFILLAMA_SLUG = "collector-crypt"
 
 # Valuation parameters
 MULTIPLE         = 15.0
 OPTIONALITY      = 1.10          # 10% optionality kicker in the Y3 price formula
-DISCOUNT_RATE    = 0.25
+DISCOUNT_RATE    = 0.30
 LOG_NORMAL_SIGMA = 1.0
 
 # Scenarios: (key, label, y3_gp, y3_supply, is_primary)
@@ -167,6 +173,12 @@ def run() -> dict:
         if is_primary:
             y3_gp_p50     = float(y3_gp)
             y3_supply_p50 = float(y3_supply)
+            # Weighted PV: 40% 6M decay, 40% 12M decay, 20% 24M decay
+            y3_price_primary = y3_gp * MULTIPLE * OPTIONALITY / max(y3_supply, 1.0)
+            pv_6m  = y3_price_primary / (1 + DISCOUNT_RATE) ** 0.5
+            pv_12m = y3_price_primary / (1 + DISCOUNT_RATE) ** 1.0
+            pv_24m = y3_price_primary / (1 + DISCOUNT_RATE) ** 2.0
+            weighted_pv = 0.4 * pv_6m + 0.4 * pv_12m + 0.2 * pv_24m
 
     result = {
         "token": "CARDS",
@@ -198,6 +210,9 @@ def run() -> dict:
             "gmv_30d": float(gmv_30d),
             "gmv_30d_ann": float(gmv_30d_ann),
             "net_spread": float(NET_SPREAD),
+            "gmv_velocity_input": float(GMV_VELOCITY_INPUT),
+            "true_gp_conversion": float(TRUE_GP_CONVERSION),
+            "weighted_pv": float(weighted_pv),
             "locked_supply": float(LOCKED_SUPPLY_EST),
             "treasury_assets": float(TREASURY_ASSETS),
             "treasury_card_pct": float(TREASURY_CARD_PCT),
