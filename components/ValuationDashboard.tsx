@@ -3104,6 +3104,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
   const isUniLayout = tokenKey === "uni";
   const isSkyLayout = tokenKey === "sky";
   const isJupLayout = tokenKey === "jup";
+  const isCardsLayout = tokenKey === "cards";
   const velocity = gp["growth_velocity_pp"] as number | undefined;
 
   return (
@@ -3480,6 +3481,71 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             />
           </div>
         </div>
+      ) : isCardsLayout ? (
+        /* CARDS 5+3 card layout */
+        (() => {
+          const fdv       = d.market.fdv;
+          const gmvQ1     = gp["gmv_q1_2026"] as number ?? 0;
+          const netSpread = gp["gross_margin"] as number ?? 0;
+          const gpAnn     = gp["gross_profit_ann"] as number ?? 0;
+          const lockedSup = gp["locked_supply"] as number ?? 0;
+          const primarySc = d.scenarios.find((s) => s.is_primary) ?? d.scenarios[0];
+          const floatVal  = (primarySc.y3_supply_p50 ?? 0) * spot;
+          const y3SupB    = ((primarySc.y3_supply_p50 ?? 0) / 1e9).toFixed(2);
+          return (
+            <div className="space-y-3">
+              {/* Row 1: 5 cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <MetricCard
+                  label="Spot / FDV / float value"
+                  value={fmtPrice(spot)}
+                  sub={`FDV ${fmtLarge(fdv)} · float-friendly value ${fmtLarge(floatVal)} using ${y3SupB}B Y3 supply.`}
+                />
+                <MetricCard
+                  label="Gacha GMV 30D ann."
+                  value={fmtLarge(gmvQ1 * 4)}
+                  sub={`Q1 2026 Gacha volume of ${fmtLarge(gmvQ1)} annualized.`}
+                />
+                <MetricCard
+                  label="Net spread"
+                  value={`${(netSpread * 100).toFixed(2)}%`}
+                  sub="GP / Gacha GMV; net of pack buyback spends."
+                />
+                <MetricCard
+                  label="Q1 GP annualized"
+                  value={fmtLarge(gpAnn)}
+                  sub="Q1 2026 gross profit × 4; base model input."
+                />
+                <MetricCard
+                  label={`Base PV at ${d.model.multiple}x GP`}
+                  value={fmtPrice(primarySc.pv.p50)}
+                  sub={`${fmtLarge(primarySc.y3_gp_p50 ?? 0)} modeled GP × ${d.model.multiple}x, discounted 3Y at ${(d.model.discount_rate * 100).toFixed(0)}%.`}
+                  highlighted
+                  termKey="p50"
+                />
+              </div>
+              {/* Row 2: 3 cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <MetricCard
+                  label="Base EV (expected value)"
+                  value={fmtPrice(primarySc.ev)}
+                  sub={`P(above spot) ${pct(primarySc.prob_above_spot)}; bear/base/bull weighted.`}
+                />
+                <MetricCard
+                  label="Discount rate"
+                  value={`${(d.model.discount_rate * 100).toFixed(1)}%`}
+                  sub="Applied to Year-3 valuation."
+                  termKey="dr"
+                />
+                <MetricCard
+                  label="Locked supply"
+                  value={`${(lockedSup / 1e9).toFixed(2)}B`}
+                  sub="Total locked unvested token supply; dominant model headwind."
+                />
+              </div>
+            </div>
+          );
+        })()
       ) : (
         /* Per-token cards matching HYPE style */
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
