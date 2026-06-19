@@ -27,6 +27,12 @@ LOCKED_SUPPLY_EST = 1_743_000_000 # ~87.1% locked (foundation 36.76%, community 
 TREASURY_ASSETS  = 10_000_000.0  # estimated physical Pokémon/TCG treasury (not publicly disclosed)
 TREASURY_CARD_PCT = 0.80         # ~80% in physical trading cards
 
+# Net spread assumption (DefiLlama net revenue / Gacha GMV, already net of pack buyback spends)
+NET_SPREAD = 0.1235              # 12.35% — research estimate
+
+# DefiLlama
+DEFILLAMA_SLUG = "collector-crypt"
+
 # Valuation parameters
 MULTIPLE         = 15.0
 OPTIONALITY      = 1.10          # 10% optionality kicker in the Y3 price formula
@@ -57,6 +63,19 @@ def _get(url: str, timeout: int = 30) -> dict | list:
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)
+
+
+def _fetch_defillama_revenue_30d() -> float:
+    """Return 30D net revenue from DefiLlama fees endpoint; fallback to Q1 run-rate."""
+    try:
+        url = f"https://api.llama.fi/summary/fees/{DEFILLAMA_SLUG}?dataType=dailyFees"
+        d = _get(url, timeout=20)
+        val = float(d.get("total30d") or 0)
+        if val > 0:
+            return val
+    except Exception as e:
+        print(f"[CARDS] DefiLlama revenue fetch failed ({e}); using Q1 fallback")
+    return GP_ANN_RUN_RATE / 12  # monthly run-rate fallback
 
 
 def _fetch_cg_market() -> tuple[float, float, float, float]:
@@ -111,6 +130,11 @@ def run() -> dict:
     except Exception as e:
         print(f"[CARDS] CoinGecko failed ({e}); using fallback")
         spot, mcap, fdv, circ = _FB_SPOT, _FB_MCAP, _FB_FDV, _FB_CIRC
+
+    # ── Live DefiLlama 30D revenue → implied GMV ─────────────────────────────
+    revenue_30d    = _fetch_defillama_revenue_30d()
+    gmv_30d        = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_30d_ann    = gmv_30d * 12
 
     disc         = (1.0 + DISCOUNT_RATE) ** 3
     scenario_list = []
@@ -170,6 +194,10 @@ def run() -> dict:
             "gross_margin": float(GROSS_MARGIN_Q1),
             "gross_profit_q1": float(GP_Q1_2026),
             "gross_profit_ann": float(GP_ANN_RUN_RATE),
+            "revenue_30d": float(revenue_30d),
+            "gmv_30d": float(gmv_30d),
+            "gmv_30d_ann": float(gmv_30d_ann),
+            "net_spread": float(NET_SPREAD),
             "locked_supply": float(LOCKED_SUPPLY_EST),
             "treasury_assets": float(TREASURY_ASSETS),
             "treasury_card_pct": float(TREASURY_CARD_PCT),

@@ -3485,13 +3485,15 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
         /* CARDS 5+3 card layout */
         (() => {
           const fdv       = d.market.fdv;
-          const gmvQ1     = gp["gmv_q1_2026"] as number ?? 0;
-          const netSpread = gp["gross_margin"] as number ?? 0;
+          const gmv30d    = gp["gmv_30d"]     as number ?? 0;
+          const gmv30dAnn = gp["gmv_30d_ann"] as number ?? 0;
+          const netSpread = (gp["net_spread"]  as number) || (gp["gross_margin"] as number) || 0;
           const gpAnn     = gp["gross_profit_ann"] as number ?? 0;
           const lockedSup = gp["locked_supply"] as number ?? 0;
           const primarySc = d.scenarios.find((s) => s.is_primary) ?? d.scenarios[0];
           const floatVal  = (primarySc.y3_supply_p50 ?? 0) * spot;
           const y3SupB    = ((primarySc.y3_supply_p50 ?? 0) / 1e9).toFixed(2);
+          const useLive   = gmv30d > 0;
           return (
             <div className="space-y-3">
               {/* Row 1: 5 cards */}
@@ -3503,13 +3505,15 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
                 />
                 <MetricCard
                   label="Gacha GMV 30D ann."
-                  value={fmtLarge(gmvQ1 * 4)}
-                  sub={`Q1 2026 Gacha volume of ${fmtLarge(gmvQ1)} annualized.`}
+                  value={useLive ? fmtLarge(gmv30dAnn) : fmtLarge((gp["gmv_q1_2026"] as number ?? 0) * 4)}
+                  sub={useLive
+                    ? `30D DefiLlama Gacha volume of ${fmtLarge(gmv30d)} annualized.`
+                    : `Q1 2026 Gacha volume of ${fmtLarge(gp["gmv_q1_2026"] as number ?? 0)} annualized.`}
                 />
                 <MetricCard
                   label="Net spread"
                   value={`${(netSpread * 100).toFixed(2)}%`}
-                  sub="GP / Gacha GMV; net of pack buyback spends."
+                  sub="DefiLlama net revenue / Gacha GMV; already net of pack buyback spends."
                 />
                 <MetricCard
                   label="Q1 GP annualized"
