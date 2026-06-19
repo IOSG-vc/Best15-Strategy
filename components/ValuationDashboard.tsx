@@ -1494,7 +1494,8 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
     const rev30d      = gp["revenue_30d"]      as number ?? 0;
     const netSpread   = gp["net_spread"]        as number ?? 0;
     const gpConv      = gp["true_gp_conversion"] as number ?? 0;
-    const gpProxyAnn  = rev30d * 12 * gpConv;
+    const revAnn      = rev30d * 365 / 30;
+    const gpProxyAnn  = revAnn * gpConv;
     const gmv30d      = gp["gmv_30d"]           as number ?? 0;
     const gmv30dAnn   = gp["gmv_30d_ann"]       as number ?? 0;
     const gmv7dDaily  = gp["gmv_7d_daily_avg"]  as number ?? 0;
@@ -1527,13 +1528,13 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
       <div className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Left: Operating Bridge */}
-        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-5">Operating Bridge</h3>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <h3 className="text-3xl font-bold text-gray-900 mb-6">Operating Bridge</h3>
           <table className="w-full"><tbody>
             {sRow("30D Gacha GMV",              fmtLarge(gmv30d))}
             {sRow("Annualized Gacha GMV",       fmtLarge(gmv30dAnn))}
             {sRow("DefiLlama 30D net revenue",  fmtLarge(rev30d))}
-            {sRow("Annualized net revenue",     fmtLarge(rev30d * 12))}
+            {sRow("Annualized net revenue",     fmtLarge(revAnn))}
             {sRow("Net revenue spread",         `${(netSpread * 100).toFixed(2)}%`)}
             {sRow("Base GP conversion",         `${(gpConv * 100).toFixed(1)}%`)}
             {sRow("Base current GP proxy",      fmtLarge(gpProxyAnn))}
@@ -1542,8 +1543,8 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
           </tbody></table>
         </div>
         {/* Right: Velocity Treatment */}
-        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-5">Velocity Treatment</h3>
+        <div className="bg-white rounded-xl border border-gray-200 p-8">
+          <h3 className="text-3xl font-bold text-gray-900 mb-6">Velocity Treatment</h3>
           <table className="w-full"><tbody>
             {sRow("Reported inventory velocity",  "n/a")}
             {sRow("Latest 7D avg GMV",            `${fmtLarge(gmv7dDaily)}/day`)}
