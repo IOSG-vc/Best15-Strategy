@@ -1148,12 +1148,7 @@ const MS_CONFIG: Record<string, MsConfig> = {
 };
 
 function MarketShareSection({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
-  const cfg = MS_CONFIG[tokenKey];
-  if (!cfg) return null;
-
   const gp = data.current_gp;
-  const tableRows = cfg.tableRows(gp, data);
-  if (!tableRows.length) return null;
 
   // ── UNI: share history + snapshot layout ─────────────────────────────────
   if (tokenKey === "uni") {
@@ -1701,6 +1696,12 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
       </div>
     );
   }
+
+  // ── Generic path (HYPE / LIGHTER / UNI / JUP / SKY / ETHFI) ─────────────
+  const cfg = MS_CONFIG[tokenKey];
+  if (!cfg) return null;
+  const tableRows = cfg.tableRows(gp, data);
+  if (!tableRows.length) return null;
 
   return (
     <div className="space-y-5">
