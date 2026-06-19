@@ -2591,6 +2591,86 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── SKY: scenario comparison table + 5 cards ────────────────────────────
+  if (tokenKey === "sky") {
+    const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+    const gp      = data.current_gp as Record<string, number>;
+    const fmtChg  = (v: number) => `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`;
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Scenario comparison</h2>
+        {/* Table */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","P25","P50","P75","P90","EV","P(SPOT)","2Y +30%","2Y -30%","P(3X)"].map((h) => (
+                    <th key={h} className={`py-4 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h === "CASE" ? "text-left px-5" : "text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.scenarios.map((s) => {
+                  const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary ? "bg-white" : ""}`}>
+                      <td className={`px-5 py-4 text-sm ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                      {(["p25","p50","p75","p90"] as const).map((p) => (
+                        <td key={p} className={`px-4 py-4 text-right font-mono text-sm whitespace-nowrap ${p === "p50" ? "font-semibold text-gray-900" : "text-gray-700"}`}>{fmtPrice(s.pv[p])}</td>
+                      ))}
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>{pct(s.prob_above_spot)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_up_30_2y   != null ? pct(s.prob_spot_up_30_2y)   : "—"}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_3x              != null ? pct(s.prob_3x)              : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* 5 bottom cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {[
+            {
+              label: "Y3 total Sky\nstable P50",
+              value: fmtLarge(gp["y3_total_stable_supply_p50"]),
+              sub: `${fmtChg(gp["y3_total_stable_supply_change_vs_current"])} vs current official USDS + DAI.`,
+            },
+            {
+              label: "Y3 USDS supply P50",
+              value: fmtLarge(gp["y3_usds_supply_p50"]),
+              sub: `${fmtChg(gp["y3_usds_supply_change_vs_current"])} vs current USDS.`,
+            },
+            {
+              label: "Y3 TTM GP P50",
+              value: fmtLarge(gp["y3_gp_p50"]),
+              sub: `${fmtChg(gp["y3_gp_change_vs_current"])} vs current annualized GP.`,
+            },
+            {
+              label: "Y3 avg money-\nmarket TVL",
+              value: fmtLarge(gp["y3_avg_money_market_tvl_p50"]),
+              sub: `${fmtChg(gp["y3_money_market_tvl_change_vs_current"])} vs current denominator.`,
+            },
+            {
+              label: "Treasury cash P50",
+              value: fmtLarge(gp["treasury_cash_p50"]),
+              sub: "Cumulative positive net profit over 3 years.",
+            },
+          ].map((c) => (
+            <div key={c.label} className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+              <div className="text-xs text-gray-500 font-mono mb-1 whitespace-pre-line">{c.label}</div>
+              <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{c.value}</div>
+              <div className="text-xs text-gray-500 mt-1 leading-relaxed">{c.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // ── UNI: custom wide table + 4 cards ────────────────────────────────────
   if (tokenKey === "uni") {
     const primary  = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
