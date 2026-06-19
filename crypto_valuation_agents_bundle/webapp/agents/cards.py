@@ -71,17 +71,30 @@ def _get(url: str, timeout: int = 30) -> dict | list:
         return json.load(r)
 
 
-def _fetch_defillama_revenue_30d() -> float:
-    """Return 30D net revenue from DefiLlama fees endpoint; fallback to Q1 run-rate."""
+def _fetch_defillama_revenue_30d() -> tuple[float, float]:
+    """Return (30D net revenue, 7D daily avg revenue) from DefiLlama; fallback to Q1 run-rate."""
     try:
         url = f"https://api.llama.fi/summary/fees/{DEFILLAMA_SLUG}?dataType=dailyFees"
         d = _get(url, timeout=20)
-        val = float(d.get("total30d") or 0)
-        if val > 0:
-            return val
+        total30d = float(d.get("total30d") or 0)
+        chart = d.get("totalDataChart") or []
+        last7 = chart[-7:] if len(chart) >= 7 else chart
+        avg7d = sum(float(v) for _, v in last7) / len(last7) if last7 else 0.0
+        if total30d > 0:
+            return total30d, avg7d
     except Exception as e:
         print(f"[CARDS] DefiLlama revenue fetch failed ({e}); using Q1 fallback")
-    return GP_ANN_RUN_RATE / 12  # monthly run-rate fallback
+    fallback_daily = GP_ANN_RUN_RATE / 12 / 30
+    return GP_ANN_RUN_RATE / 12, fallback_daily
+
+
+def _compute_y3_gmv(gmv_30d: float, velocity: float) -> float:
+    """Project Y3 annual GMV via velocity decaying linearly to 0 by month 12."""
+    monthly_gmv = gmv_30d
+    for m in range(1, 37):
+        alpha = velocity * max(0.0, (12 - (m - 1)) / 12) if m <= 12 else 0.0
+        monthly_gmv *= (1.0 + alpha)
+    return monthly_gmv * 12
 
 
 def _fetch_cg_market() -> tuple[float, float, float, float]:
@@ -138,9 +151,12 @@ def run() -> dict:
         spot, mcap, fdv, circ = _FB_SPOT, _FB_MCAP, _FB_FDV, _FB_CIRC
 
     # ── Live DefiLlama 30D revenue → implied GMV ─────────────────────────────
-    revenue_30d    = _fetch_defillama_revenue_30d()
-    gmv_30d        = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
-    gmv_30d_ann    = gmv_30d * 12
+    revenue_30d, revenue_7d_daily_avg = _fetch_defillama_revenue_30d()
+    gmv_30d          = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_30d_ann      = gmv_30d * 12
+    gmv_7d_daily_avg = revenue_7d_daily_avg / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_30d_daily    = gmv_30d / 30.0
+    y3_gmv_base      = _compute_y3_gmv(gmv_30d, GMV_VELOCITY_INPUT)
 
     disc         = (1.0 + DISCOUNT_RATE) ** 3
     scenario_list = []
@@ -211,6 +227,9 @@ def run() -> dict:
             "gmv_30d_ann": float(gmv_30d_ann),
             "net_spread": float(NET_SPREAD),
             "gmv_velocity_input": float(GMV_VELOCITY_INPUT),
+            "gmv_7d_daily_avg": float(gmv_7d_daily_avg),
+            "gmv_30d_daily_avg": float(gmv_30d_daily),
+            "y3_gmv_base": float(y3_gmv_base),
             "true_gp_conversion": float(TRUE_GP_CONVERSION),
             "weighted_pv": float(weighted_pv),
             "locked_supply": float(LOCKED_SUPPLY_EST),

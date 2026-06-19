@@ -1485,6 +1485,66 @@ PV/token = Year-3 TTM NP × ${mult}x / SKY supply / (1 + ${dr}%)^3`}</pre>
     );
   }
 
+  // ── CARDS: operating bridge + velocity treatment ────────────────────────
+  if (tokenKey === "cards") {
+    const primarySc   = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+    const fdv         = data.market.fdv;
+    const spot        = data.market.spot;
+    const floatVal    = (primarySc.y3_supply_p50 ?? 0) * spot;
+    const rev30d      = gp["revenue_30d"]      as number ?? 0;
+    const netSpread   = gp["net_spread"]        as number ?? 0;
+    const gpConv      = gp["true_gp_conversion"] as number ?? 0;
+    const gpProxyAnn  = rev30d * 12 * gpConv;
+    const gmv30d      = gp["gmv_30d"]           as number ?? 0;
+    const gmv30dAnn   = gp["gmv_30d_ann"]       as number ?? 0;
+    const gmv7dDaily  = gp["gmv_7d_daily_avg"]  as number ?? 0;
+    const gmv30dDaily = gp["gmv_30d_daily_avg"] as number ?? gmv30d / 30;
+    const velocity    = gp["gmv_velocity_input"] as number ?? 0;
+    const y3Gmv       = gp["y3_gmv_base"]        as number ?? 0;
+
+    const sRow = (label: string, value: string, mono = true) => (
+      <tr key={label} className="border-b border-gray-100 last:border-0">
+        <td className="py-3 text-sm text-gray-600 pr-4">{label}</td>
+        <td className={`py-3 text-sm text-gray-900 text-right whitespace-nowrap ${mono ? "font-mono font-semibold" : ""}`}>{value}</td>
+      </tr>
+    );
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left: Operating Bridge */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Operating Bridge</h3>
+          <table className="w-full"><tbody>
+            {sRow("30D Gacha GMV",              fmtLarge(gmv30d))}
+            {sRow("Annualized Gacha GMV",       fmtLarge(gmv30dAnn))}
+            {sRow("DefiLlama 30D net revenue",  fmtLarge(rev30d))}
+            {sRow("Annualized net revenue",     fmtLarge(rev30d * 12))}
+            {sRow("Net revenue spread",         `${(netSpread * 100).toFixed(2)}%`)}
+            {sRow("Base GP conversion",         `${(gpConv * 100).toFixed(1)}%`)}
+            {sRow("Base current GP proxy",      fmtLarge(gpProxyAnn))}
+            {sRow("P/GP: float value / GP proxy", gpProxyAnn > 0 ? `${(floatVal / gpProxyAnn).toFixed(1)}x` : "—")}
+            {sRow("P/GP: FDV / GP proxy",       gpProxyAnn > 0 ? `${(fdv / gpProxyAnn).toFixed(1)}x` : "—")}
+          </tbody></table>
+        </div>
+        {/* Right: Velocity Treatment */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-5">Velocity Treatment</h3>
+          <table className="w-full"><tbody>
+            {sRow("Reported inventory velocity",  "n/a")}
+            {sRow("Latest 7D avg GMV",            `${fmtLarge(gmv7dDaily)}/day`)}
+            {sRow("Prior 30D avg GMV",            `${fmtLarge(gmv30dDaily)}/day`)}
+            {sRow("Capped 7D/30D GMV signal",     `${(velocity * 100).toFixed(1)}%/mo`)}
+            {sRow("Modeled GMV velocity alpha",   `${(velocity * 100).toFixed(1)}%/mo`)}
+            {sRow("Decay schedule",               "Linear to 0 by M12", false)}
+            {sRow("Scenario weights",             "40% / 40% / 20%")}
+            {sRow("Y3 GMV base case",             fmtLarge(y3Gmv))}
+            {sRow("Missing unit-econ data",       "COGS/OPEX", false)}
+          </tbody></table>
+        </div>
+      </div>
+    );
+  }
+
   // ── JUP: current snapshot + model architecture ──────────────────────────
   if (tokenKey === "jup") {
     const mcap        = data.market.market_cap;
@@ -3650,7 +3710,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       )}
 
       {/* ── Market share trend ───────────────────────────────────────── */}
-      {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky") && <MarketShareSection data={d} tokenKey={tokenKey} />}
+      {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky" || tokenKey === "cards") && <MarketShareSection data={d} tokenKey={tokenKey} />}
 
       {/* ── Model outputs ────────────────────────────────────────────── */}
       {tokenKey === "hype" && primary.y3_price_p50 && (
