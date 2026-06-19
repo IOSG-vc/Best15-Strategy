@@ -2844,6 +2844,26 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
             sub="Excluded until holders revenue or confirmed buyback wallet data appears."
           />
         </div>
+
+        {/* Revenue Semantics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Revenue Semantics</h2>
+            <p className="text-gray-500 text-base leading-relaxed">
+              Observed data, inferred GP conversion, and missing velocity reporting are separated so the model is easier to audit.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
+              <li><span className="font-bold text-gray-900">Primary model:</span> GMV × GMV velocity path × net revenue spread × true GP conversion × GP multiple, discounted back 3 years.</li>
+              <li><span className="font-bold text-gray-900">Velocity:</span> daily sales/volume is used for GMV growth velocity. Until the 30D/180D window exists, the model uses capped 7D/30D velocity only, then tests linear decay to zero over 6, 12, and 24 months; true inventory turnover velocity is still unavailable because reporting does not expose card turns, inventory base, or repeat-sale cohort data.</li>
+              <li><span className="font-bold text-gray-900">Net revenue:</span> DefiLlama revenue equals Gacha sales plus fiat pack sales plus royalty fees minus pack buyback spends.</li>
+              <li><span className="font-bold text-gray-900">Unit economics:</span> 60% base GP conversion is a placeholder for grading, shipping, custody, payment fees, rewards, support, and marketing.</li>
+              <li><span className="font-bold text-gray-900">Supply:</span> primary denominator is 1.265B released non-Foundation supply; the 735.1M Foundation bucket remains a full-FDV sensitivity.</li>
+              <li><span className="font-bold text-gray-900">Value capture:</span> CARDS buybacks are not modeled until the buyback wallet is confirmed and holders revenue is non-zero.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }
