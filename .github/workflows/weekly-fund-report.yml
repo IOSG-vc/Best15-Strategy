@@ -1,25 +1,45 @@
 name: Weekly Fund Report
 
 on:
-  schedule:
-    # Every Monday at 09:00 Belgrade time (CEST = UTC+2 in summer, CET = UTC+1 in winter)
-    - cron: "0 7 * * 1"
+  workflow_run:
+    workflows: ["Update Performance Data"]
+    types:
+      - completed
   workflow_dispatch: # Allow manual trigger from GitHub UI
 
 jobs:
   report:
+    # On automatic trigger: only run on Mondays and only if performance update succeeded
+    # On manual trigger: always run
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.created_at != '' &&
+       toJSON(github.event.workflow_run.created_at) != 'null')
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check if Monday (skip on other days)
+        id: day_check
+        run: |
+          DAY=$(date +%u)  # 1=Monday ... 7=Sunday
+          if [ "$DAY" = "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "send=true" >> $GITHUB_OUTPUT
+          else
+            echo "send=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout repository
+        if: steps.day_check.outputs.send == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12
+        if: steps.day_check.outputs.send == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Send weekly Slack report
+        if: steps.day_check.outputs.send == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
