@@ -24,7 +24,7 @@ DL_FEES_SLUG           = "lighter-exchange"   # DefiLlama fees endpoint slug
 DL_DERIV_SLUG          = "binance-futures"    # DefiLlama derivatives for Binance denominator
 MAX_SUPPLY             = 1_000_000_000
 POST_CLIFF_DAILY_UNLOCK = 456_286             # tokens/day from locked unlock schedule
-CLIFF_MONTHS           = 0                    # cliff already passed at model date
+CLIFF_MONTHS           = 6                    # cliff is Dec 2026 (~6 months from model date)
 GROSS_3Y_UNLOCK        = 403_813_110          # fixed 3Y supply unlock budget (tokens)
 NET_TAKE_RATE          = 0.0000633            # observed net revenue / perp notional
 HOLDER_CAPTURE         = 0.976                # fraction of revenue to token holders
@@ -368,8 +368,8 @@ def run() -> dict:
     rev_paths  = vol_paths * NET_TAKE_RATE                        # (N_PATHS, 36)
     hold_paths = rev_paths * HOLDER_CAPTURE                       # (N_PATHS, 36) monthly holder revenue
 
-    # Supply: circ + fixed unlocks over 36 months − buyback tokens
-    monthly_unlock = gross_3y_unlock / MONTHS
+    # Supply: circ + fixed unlocks over post-cliff months − buyback tokens
+    monthly_unlock = gross_3y_unlock / max(MONTHS - CLIFF_MONTHS, 1)
     # Buyback tokens per month: holder_rev / spot (using current spot as proxy)
     bb_tokens  = hold_paths / max(spot, 0.01)                     # (N_PATHS, 36)
     cum_bb     = bb_tokens.cumsum(axis=1)                         # cumulative buybacks
@@ -408,7 +408,7 @@ def run() -> dict:
     # Year 2 intermediate values (months 13-24, indices 12-23)
     y2_rev_paths    = rev_paths[:, 12:24].sum(axis=1)               # Y2 TTM perps revenue
     y2_supply_paths = np.maximum(
-        circ + (24 / 36) * gross_3y_unlock - cum_bb[:, 23],
+        circ + max(0, 24 - CLIFF_MONTHS) / max(MONTHS - CLIFF_MONTHS, 1) * gross_3y_unlock - cum_bb[:, 23],
         circ * 0.5
     )
     disc2 = (1.0 + DISCOUNT_RATE) ** 2

@@ -28,7 +28,8 @@ TREASURY_ASSETS  = 10_000_000.0  # estimated physical Pokémon/TCG treasury (not
 TREASURY_CARD_PCT = 0.80         # ~80% in physical trading cards
 
 # Net spread assumption (DefiLlama net revenue / Gacha GMV, already net of pack buyback spends)
-NET_SPREAD = 0.1235              # 12.35% — research estimate
+NET_SPREAD = 0.084               # 8.4% — DefiLlama blended margin (was 12.35%; reset to match observed ~8–9%)
+MARGIN_FLOOR = 0.05              # ~5% floor — house edge on high-price packs drives most volume
 
 # True GP conversion (DefiLlama net revenue → stricter GP after off-chain costs)
 TRUE_GP_CONVERSION = 0.60       # 60% base conversion
@@ -45,8 +46,24 @@ OPTIONALITY      = 1.10          # 10% optionality kicker in the Y3 price formul
 DISCOUNT_RATE    = 0.30
 LOG_NORMAL_SIGMA = 1.0
 
-# Float-friendly Y3 supply (released non-Foundation supply by Nov 2027)
-FLOAT_SUPPLY_Y3  = 1_265_000_000
+# Supply: rules-based from Foundation unlock schedule
+# Foundation (36.5% × 2B = 730M) has no need to sell → stays out of float in base/bull;
+# only enters bear supply. Bull also assumes incremental buyback.
+FOUNDATION_SUPPLY       = 730_000_000  # 36.5% × 2B — locked
+NON_FOUNDATION_Y3_FLOAT = 770_000_000  # team + community + ecosystem float by Y3
+BUYBACK_BULL_TOKENS     = 100_000_000  # incremental buyback in bull case
+FLOAT_SUPPLY_Y3         = NON_FOUNDATION_Y3_FLOAT  # alias for velocity-scenario denominator
+
+_SUPPLY_Y3 = {
+    "bear": NON_FOUNDATION_Y3_FLOAT + FOUNDATION_SUPPLY,  # 1.5B — Foundation releases in bear
+    "base": NON_FOUNDATION_Y3_FLOAT,                       # 770M — Foundation locked
+    "bull": NON_FOUNDATION_Y3_FLOAT - BUYBACK_BULL_TOKENS, # 670M — locked + buybacks
+}
+
+# Per-scenario GMV + margin lever (GP = GMV × margin; supply is rules-based above)
+Y3_GMV_BEAR, MARGIN_BEAR = 400_000_000, MARGIN_FLOOR  # → $20M GP (margin at floor)
+Y3_GMV_BASE, MARGIN_BASE = 535_000_000, NET_SPREAD     # → ~$45M GP (current blend)
+Y3_GMV_BULL, MARGIN_BULL = 710_000_000, 0.120          # → ~$85M GP (margin recovery)
 
 # Velocity-decay scenario decay periods (months)
 DECAY_PERIODS = [6, 12, 24]  # A, B, C
@@ -54,9 +71,9 @@ DECAY_WEIGHTS = [0.4, 0.4, 0.2]  # weighted 40/40/20
 
 # Scenarios: (key, label, y3_gp, y3_supply, is_primary)
 SCENARIOS = [
-    ("bear", "Bear: $20M GP, 1.5B supply",  20_000_000,  1_500_000_000, False),
-    ("base", "Base: $45M GP, 1.0B supply",  45_000_000,  1_000_000_000, True),
-    ("bull", "Bull: $85M GP, 0.8B supply",  85_000_000,    800_000_000, False),
+    ("bear", "Bear: $400M GMV × 5% margin",   int(Y3_GMV_BEAR * MARGIN_BEAR),  _SUPPLY_Y3["bear"], False),
+    ("base", "Base: $535M GMV × 8.4% margin", int(Y3_GMV_BASE * MARGIN_BASE),  _SUPPLY_Y3["base"], True),
+    ("bull", "Bull: $710M GMV × 12% margin",  int(Y3_GMV_BULL * MARGIN_BULL),  _SUPPLY_Y3["bull"], False),
 ]
 
 CG_ID    = "collector-crypt"
@@ -203,9 +220,9 @@ def _fetch_cg_market() -> tuple[float, float, float, float]:
                 raise ValueError("empty response")
             m = d[0]
             spot   = float(m["current_price"])
-            mcap   = float(m["market_cap"])
-            fdv    = float(m.get("fully_diluted_valuation") or mcap)
-            supply = float(m.get("circulating_supply") or mcap / spot)
+            supply = float(m.get("circulating_supply") or 0)
+            mcap   = spot * supply if supply > 0 else float(m.get("market_cap") or 0)
+            fdv    = float(m.get("fully_diluted_valuation") or spot * MAX_SUPPLY)
             return spot, mcap, fdv, supply
         except Exception as e:
             if attempt < 2:
@@ -325,10 +342,10 @@ def run() -> dict:
             "paths": 1,
             "note": (
                 "Y3_price = Y3_GP × 15 × 1.10 / Y3_supply. "
-                "GP = Gacha pack sales GP + marketplace fees. "
+                "GP = Y3_GMV × margin (margin is the scenario lever: bear=5% floor, base=8.4% blend, bull=12%). "
                 "Q1 2026: $146.9M GMV at 5.9% margin = $8.6M GP ($34.4M annualized). "
-                "Y3 supply risk is the dominant headwind (team + foundation + community unlocks). "
-                "Distributions approximate log-normal σ=1.0."
+                "Supply is rules-based: Foundation (730M, 36.5%) stays locked in base/bull; only releases in bear. "
+                "Bull assumes ~100M additional buyback. Distributions approximate log-normal σ=1.0."
             ),
         },
         "current_gp": {
@@ -367,7 +384,7 @@ def run() -> dict:
             "Gacha revenue is highly seasonal and tied to Pokémon/TCG hype cycles; Q1 2026 peak may not be representative.",
             "Supply expansion (team, foundation, community unlocks) is the dominant model headwind; vesting schedules not fully public.",
             "No formal buyback % is publicly committed; full GP→buyback assumption may overstate token demand.",
-            "Gross margin (5.9% Q1 2026) is highly compressed; recovery to 8%+ is assumed in base/bull but not guaranteed.",
+            "Gross margin floor set at ~5% (high-price pack house edge); base assumes 8.4% blend, bull 12% — none guaranteed.",
             "Distributions approximate log-normal σ=1.0; no Monte Carlo simulation.",
         ],
         "data_freshness": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
