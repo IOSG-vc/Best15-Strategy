@@ -405,6 +405,13 @@ function pct(n: number, decimals = 1): string {
 
 // ── MetricCard ───────────────────────────────────────────────────────────────
 
+function valueTextClass(v: string): string {
+  if (v.length > 15) return "text-lg";
+  if (v.length > 12) return "text-xl";
+  if (v.length > 8)  return "text-2xl";
+  return "text-3xl";
+}
+
 function MetricCard({
   label,
   value,
@@ -434,7 +441,7 @@ function MetricCard({
           {label}
           {termKey && <InfoTooltip termKey={termKey} />}
         </div>
-        <div className="text-3xl font-bold text-white font-mono leading-tight">
+        <div className={`${valueTextClass(value)} font-bold text-white font-mono leading-tight`}>
           {value}
         </div>
         {sub && <div className="text-xs text-gray-400 leading-relaxed mt-0.5">{sub}</div>}
@@ -456,7 +463,7 @@ function MetricCard({
         {label}
         {termKey && <InfoTooltip termKey={termKey} />}
       </div>
-      <div className="text-3xl font-bold font-mono leading-tight" style={{ color: accentColor }}>
+      <div className={`${valueTextClass(value)} font-bold font-mono leading-tight`} style={{ color: accentColor }}>
         {value}
       </div>
       {sub && <div className="text-xs text-gray-500 leading-relaxed mt-0.5">{sub}</div>}
