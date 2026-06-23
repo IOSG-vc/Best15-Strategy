@@ -1,0 +1,3 @@
+rebalance_date,train_years,regime,n_active,ranked_pair_count,target_k,selected_pairs,candidate_count,filtered_due_corr,fill_count,used_fallback,avg_abs_corr,max_abs_corr,corr_pairs_evaluated
+2021-01-01,2,NORMAL,132,8001,10,10,10,0,0,False,0.2486,0.9069,45
+2021-01-01,3,NORMAL,133,8128,10,10,10,0,0,False,0.3888,0.9464,45

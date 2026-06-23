@@ -6,6 +6,10 @@ on:
     - cron: "0 9 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: update-cycle-signals
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -26,27 +30,27 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Cache V3 API data
+      - name: Restore V4 base-parts cache
         uses: actions/cache@v4
         with:
-          path: scripts/v3_production_0428/v3_experiment_v2/cache
-          key: v3-cache-${{ runner.os }}-${{ github.run_id }}
+          path: cache/base_parts
+          key: v4-base-parts-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            v3-cache-${{ runner.os }}-
+            v4-base-parts-${{ runner.os }}-
 
-      - name: Cache K3 selected motifs
+      - name: Restore V4 K3 candidates cache
         uses: actions/cache@v4
         with:
-          path: scripts/cache
-          key: k3-cache-${{ runner.os }}-${{ github.run_id }}
+          path: cache/k3_mined_candidates.csv
+          key: v4-k3-candidates-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            k3-cache-${{ runner.os }}-
+            v4-k3-candidates-${{ runner.os }}-
 
-      - name: Run cycle signals report
+      - name: Run V4 production runner
         env:
-          CRYPTOQUANT_KEY: ${{ secrets.CRYPTOQUANT_KEY }}
+          CRYPTOQUANT_API_KEY: ${{ secrets.CRYPTOQUANT_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        run: python scripts/Production_v3_k3_one_step_10_90_add20_138.py
+        run: python scripts/production_v4.py
 
       - name: Commit updated cycle data
         run: |

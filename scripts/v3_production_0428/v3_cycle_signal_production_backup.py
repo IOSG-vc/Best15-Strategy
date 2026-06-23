@@ -117,8 +117,8 @@ HORIZON_WEIGHTS      = {3: 1/6, 7: 1/6, 14: 1/6, 30: 1/6, 90: 1/6, 180: 1/6}
 TX_COST_BPS          = 10
 GATE_THRESHOLD_LOOKBACK = 3
 
-CQ_KEY               = os.environ.get("CRYPTOQUANT_KEY", "")
-FRED_KEY             = os.environ.get("FRED_API_KEY", "")
+CQ_KEY               = os.environ.get("CRYPTOQUANT_API_KEY") or os.environ.get("CQ_KEY")
+FRED_KEY             = os.environ.get("FRED_API_KEY") or os.environ.get("FRED_KEY")
 RETRY_MAX            = 300
 RETRY_WAIT           = 3
 RETRY_WAIT_JITTER    = 2
@@ -403,7 +403,9 @@ def _fetch_macro_all(ref_index):
 
 def _fetch_cquant_retry(cq_key, start):
     last_error = None
-    for attempt in range(1, RETRY_MAX + 1):
+    if not cq_key:
+        print("  [CryptoQuant] API key missing; trying cache fallback")
+    for attempt in range(1, RETRY_MAX + 1) if cq_key else range(0):
         _mod._session = requests.Session()
         result = _mod.fetch_cquant_signals(cq_key, start=start)
         if result is not None and len(result) > 0:
@@ -427,8 +429,11 @@ def _fetch_cquant_retry(cq_key, start):
     return {}
 
 def _fetch_fred_retry(fred_api_key, sid, lag_days=0, close_index=None):
-    from fredapi import Fred
-    for attempt in range(1, RETRY_MAX + 1):
+    if not fred_api_key:
+        print(f"  [FRED {sid}] API key missing; trying cache fallback")
+    else:
+        from fredapi import Fred
+    for attempt in range(1, RETRY_MAX + 1) if fred_api_key else range(0):
         try:
             s = Fred(api_key=fred_api_key).get_series(sid, observation_start=TRAIN_START)
         except Exception:

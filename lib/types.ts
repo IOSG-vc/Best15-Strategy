@@ -61,26 +61,31 @@ export interface PerformanceData {
 export interface CycleSignalState {
   date: string;
   btc_price: number;
+  base_exposure: number;
   exposure: number;
-  v3_exposure: number;
   overlay_delta: number;
-  direction: "BULLISH" | "BEARISH" | "NEUTRAL";
+  direction: "UP" | "DOWN" | "NEUTRAL";
   k3_rank: number;
   k3_E: number;
   k3_score: number;
+  base_sharpe: number;
   strategy_sharpe: number;
-  v3_sharpe: number;
   sharpe_delta: number;
   annual_return: number;
   max_drawdown: number;
   avg_exposure: number;
-  cache_warnings: string[];
+  k3_mode: string;
+  k3_low: number;
+  k3_high: number;
+  n_universe: number;
+  selected_motifs: number;
+  generated_at: string;
 }
 
 export interface CycleHistoryPoint {
   date: string;
   exposure: number | null;
-  v3_exposure?: number | null;
+  base_exposure?: number | null;
   btc_price?: number | null;
   k3_rank?: number | null;
 }

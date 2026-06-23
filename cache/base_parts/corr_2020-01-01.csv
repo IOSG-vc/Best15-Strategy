@@ -1,0 +1,3 @@
+rebalance_date,train_years,regime,n_active,ranked_pair_count,target_k,selected_pairs,candidate_count,filtered_due_corr,fill_count,used_fallback,avg_abs_corr,max_abs_corr,corr_pairs_evaluated
+2020-01-01,2,LOW,129,8256,10,10,10,0,0,False,0.1671,0.7015,45
+2020-01-01,3,LOW,130,8385,10,10,10,3,0,False,0.3864,0.9162,45

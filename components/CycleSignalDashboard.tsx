@@ -8,8 +8,8 @@ const ExposureHistoryChart = dynamic(() => import("./ExposureHistoryChart"), { s
 const Btc90ExposureChart = dynamic(() => import("./Btc90ExposureChart"), { ssr: false });
 
 function dirColor(d: string) {
-  if (d === "BULLISH") return "#00b894";
-  if (d === "BEARISH") return "#e17055";
+  if (d === "UP") return "#00b894";
+  if (d === "DOWN") return "#e17055";
   return "#9ca3af";
 }
 
@@ -68,7 +68,7 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Cycle Signal</h1>
             <p className="text-gray-400 text-sm mt-0.5">
-              V3 + K3 · one-step 10/90 +20% / -20% · universe 138
+              V4 · K10/sqrtN base + K3 cbrtM overlay · one-step 10/high-dynamic +20% / -20% · universe 138
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -98,20 +98,6 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           </div>
         ) : (
           <>
-            {/* Cache / data warnings */}
-            {state.cache_warnings.length > 0 && (
-              <div className="bg-yellow-900/20 border border-yellow-700/40 rounded-lg px-4 py-3">
-                <div className="text-yellow-400 text-xs font-semibold mb-1">
-                  Data Source Warnings
-                </div>
-                {state.cache_warnings.map((w, i) => (
-                  <div key={i} className="text-yellow-300/80 text-xs">
-                    {w}
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* Status cards */}
             <section>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -151,23 +137,23 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
                   </div>
                 </div>
 
-                {/* V3 Exposure */}
+                {/* Base Exposure */}
                 <div
                   className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
                   style={{
                     borderLeftWidth: 3,
-                    borderLeftColor: expColor(state.v3_exposure),
+                    borderLeftColor: expColor(state.base_exposure),
                   }}
                 >
-                  <div className="text-xs text-gray-400 mb-1">V3 Exposure</div>
+                  <div className="text-xs text-gray-400 mb-1">Base Exposure</div>
                   <div
                     className="text-2xl font-bold font-mono"
-                    style={{ color: expColor(state.v3_exposure) }}
+                    style={{ color: expColor(state.base_exposure) }}
                   >
-                    {(state.v3_exposure * 100).toFixed(0)}%
+                    {(state.base_exposure * 100).toFixed(0)}%
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Base signal
+                    K10/sqrtN
                   </div>
                 </div>
 
@@ -236,17 +222,17 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
                     Sharpe Ratio
                   </div>
                   <MetricRow
-                    label="Strategy (V3 + K3)"
+                    label="Strategy (V4)"
                     value={state.strategy_sharpe.toFixed(4)}
                     color="#a78bfa"
                   />
                   <MetricRow
-                    label="V3 Original"
-                    value={state.v3_sharpe.toFixed(4)}
+                    label="Base K10/sqrtN"
+                    value={state.base_sharpe.toFixed(4)}
                     color="#9ca3af"
                   />
                   <MetricRow
-                    label="Delta vs V3"
+                    label="Delta vs Base"
                     value={`${state.sharpe_delta >= 0 ? "+" : ""}${state.sharpe_delta.toFixed(4)}`}
                     color={state.sharpe_delta >= 0 ? "#00b894" : "#e17055"}
                   />
@@ -280,7 +266,7 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
               <section>
                 <SectionHeader
                   title="Historical Exposure"
-                  subtitle="strategy vs V3 base"
+                  subtitle="strategy vs K10/sqrtN base"
                 />
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                   <ExposureHistoryChart history={history} />

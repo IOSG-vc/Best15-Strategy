@@ -42,7 +42,7 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
       .map((p) => ({
         ...p,
         Strategy: p.exposure,
-        V3: p.v3_exposure ?? null,
+        Base: p.base_exposure ?? null,
       }));
   }, [history, range]);
 
@@ -94,7 +94,7 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
               dot={false} strokeWidth={2} connectNulls
             />
             <Line
-              type="stepAfter" dataKey="V3"
+              type="stepAfter" dataKey="Base"
               stroke="#f59e0b" dot={false} strokeWidth={1.5}
               connectNulls activeDot={{ r: 3, strokeWidth: 0 }}
             />
@@ -104,10 +104,10 @@ export default function ExposureHistoryChart({ history }: { history: CycleHistor
 
       <div className="flex gap-5 mt-3 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-[#6c5ce7] inline-block rounded" /> Strategy exposure (V3 + K3)
+          <span className="w-3 h-0.5 bg-[#6c5ce7] inline-block rounded" /> Strategy exposure (V4)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-[#f59e0b] inline-block rounded" /> V3 base exposure
+          <span className="w-3 h-0.5 bg-[#f59e0b] inline-block rounded" /> Base exposure (K10/sqrtN)
         </span>
       </div>
     </div>
