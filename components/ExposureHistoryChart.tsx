@@ -32,7 +32,7 @@ function CustomTooltip({ active, label, payload }: {
 }
 
 export default function ExposureHistoryChart({ history }: { history: CycleHistoryPoint[] }) {
-  const [range, setRange] = useState<Range>("ALL");
+  const [range, setRange] = useState<Range>("1Y");
 
   const data = useMemo(() => {
     const days = RANGE_DAYS[range];
