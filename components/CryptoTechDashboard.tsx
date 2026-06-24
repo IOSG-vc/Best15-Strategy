@@ -14,7 +14,7 @@ export default function CryptoTechDashboard() {
         </div>
       </header>
       <iframe
-        src="https://crypto-tech-dashboard-2nd-try-v2-0.vercel.app/#token=bitcoin"
+        src="https://crypto-tech-dashboard-2nd-try-v2-0.vercel.app/?auth=IOSG#token=bitcoin"
         className="w-full flex-1 border-0"
         allow="fullscreen"
         title="IOSG Crypto Tech Dashboard"
