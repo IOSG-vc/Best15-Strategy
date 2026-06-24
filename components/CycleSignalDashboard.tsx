@@ -19,11 +19,6 @@ function expColor(e: number) {
   return "#fdcb6e";
 }
 
-function deltaColor(d: number) {
-  if (d > 0.005) return "#00b894";
-  if (d < -0.005) return "#e17055";
-  return "#9ca3af";
-}
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -68,7 +63,7 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Cycle Signal</h1>
             <p className="text-gray-400 text-sm mt-0.5">
-              V4 · K10/sqrtN base + K3 cbrtM overlay · one-step 10/high-dynamic +20% / -20% · universe 138
+              V4 · K10/sqrtN · one-step 10/high-dynamic +20% / -20% · universe 138
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -100,7 +95,7 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
           <>
             {/* Status cards */}
             <section>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* BTC Price */}
                 <div
                   className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
@@ -157,42 +152,6 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
                   </div>
                 </div>
 
-                {/* K3 Overlay Delta */}
-                <div
-                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{
-                    borderLeftWidth: 3,
-                    borderLeftColor: deltaColor(state.overlay_delta),
-                  }}
-                >
-                  <div className="text-xs text-gray-400 mb-1">
-                    K3 Overlay Δ
-                  </div>
-                  <div
-                    className="text-2xl font-bold font-mono"
-                    style={{ color: deltaColor(state.overlay_delta) }}
-                  >
-                    {state.overlay_delta >= 0 ? "+" : ""}
-                    {(state.overlay_delta * 100).toFixed(0)}%
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-mono">
-                    rank {state.k3_rank.toFixed(3)}
-                  </div>
-                </div>
-
-                {/* K3 Score */}
-                <div
-                  className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
-                  style={{ borderLeftWidth: 3, borderLeftColor: "#6c5ce7" }}
-                >
-                  <div className="text-xs text-gray-400 mb-1">K3 Score</div>
-                  <div className="text-2xl font-bold font-mono text-[#a78bfa]">
-                    {state.k3_score.toFixed(3)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-mono">
-                    E = {state.k3_E.toFixed(3)}
-                  </div>
-                </div>
               </div>
             </section>
 
