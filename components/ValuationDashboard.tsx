@@ -3931,6 +3931,160 @@ function HypeMcpWeekly({ bullets, asOf }: { bullets: string[]; asOf?: string }) 
   );
 }
 
+// ── Landing summary stats ─────────────────────────────────────────────────────
+
+interface SummaryStats {
+  p50spot: number | null;
+  vel7_30: number | null;
+  vel30_180: number | null;
+  signal: string | null;
+}
+
+function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
+  const data = token.data;
+  if (!data) return { p50spot: null, vel7_30: null, vel30_180: null, signal: null };
+
+  const spot    = data.market.spot;
+  const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+  const p50     = primary?.pv.p50;
+  const p50spot = p50 && spot ? p50 / spot : null;
+
+  const gp = data.current_gp as Record<string, unknown>;
+
+  const num = (v: unknown): number | null =>
+    typeof v === "number" && isFinite(v) ? v : null;
+
+  // velocity 30/180 — try common field names across models
+  const vel30_180 =
+    num(gp.ms30_ms180_trend) ??
+    num(gp.perps_ms30_ms180_binance_futures_trend) ??
+    num(gp.ms30_ms180_binance_spot_trend);
+
+  // velocity 7/30 — direct field or computed from underlying ms data
+  let vel7_30: number | null = num(gp.ms7_ms30_trend);
+  if (vel7_30 === null && key === "jup") {
+    const ms7 = num(gp.perps_ms7_vs_binance_futures);
+    const ms30 = num(gp.perps_ms30_vs_binance_futures);
+    if (ms7 !== null && ms30 !== null && ms30 > 0) vel7_30 = ms7 / ms30;
+  }
+  if (vel7_30 === null && key === "ethfi") {
+    const ens = gp.card_velocity_ensemble as Record<string, number> | undefined;
+    if (ens?.gdv_7 && ens?.gdv_30) vel7_30 = (ens.gdv_7 / 7) / (ens.gdv_30 / 30);
+  }
+
+  const signal = (data.hist_charts as { backtest?: { latest_signal?: string } } | undefined)
+    ?.backtest?.latest_signal ?? null;
+
+  return { p50spot, vel7_30, vel30_180, signal };
+}
+
+function velColor(v: number): string {
+  if (v > 1.05) return "#4ade80";
+  if (v < 0.95) return "#f87171";
+  return "#9ca3af";
+}
+
+function LandingSummary({
+  tokens,
+  selected,
+  onSelect,
+}: {
+  tokens: [string, TokenResult][];
+  selected: string;
+  onSelect: (key: string) => void;
+}) {
+  const rows = tokens.map(([key, token]) => ({
+    key,
+    token,
+    stats: extractSummaryStats(key, token),
+  }));
+
+  const signalStyle: Record<string, { color: string; bg: string; border: string }> = {
+    GOOD:    { color: "#4ade80", bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.35)" },
+    NEUTRAL: { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.35)" },
+    BAD:     { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.35)" },
+  };
+
+  return (
+    <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] overflow-hidden mb-8">
+      <div className="px-5 py-3 border-b border-[#2d3144]">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Portfolio snapshot</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-[#2d3144]">
+              <th className="text-left px-5 py-2.5 font-medium text-gray-500 whitespace-nowrap">Token</th>
+              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">P50 / spot</th>
+              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">Vel 7/30</th>
+              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">Vel 30/180</th>
+              <th className="text-right px-5 py-2.5 font-medium text-gray-500 whitespace-nowrap">Signal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ key, token, stats }) => {
+              const ring    = TOKEN_RING[key] ?? "#60a5fa";
+              const active  = key === selected;
+              const { p50spot, vel7_30, vel30_180, signal } = stats;
+              const p50Color = p50spot === null ? "#9ca3af" : p50spot >= 1.1 ? "#4ade80" : p50spot < 0.9 ? "#f87171" : "#fbbf24";
+              const ss = signal ? signalStyle[signal] : null;
+
+              return (
+                <tr
+                  key={key}
+                  onClick={() => onSelect(key)}
+                  className="border-b border-[#2d3144] last:border-0 cursor-pointer transition-colors hover:bg-[#1e2130]"
+                  style={active ? { background: `${ring}12` } : undefined}
+                >
+                  <td className="px-5 py-2.5 whitespace-nowrap">
+                    <span className="font-bold font-mono" style={{ color: active ? ring : "#e5e7eb" }}>
+                      {token.symbol}
+                    </span>
+                    <span className="ml-2 text-gray-600">{token.name}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {p50spot !== null ? (
+                      <span style={{ color: p50Color }}>{p50spot.toFixed(2)}×</span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {vel7_30 !== null ? (
+                      <span style={{ color: velColor(vel7_30) }}>{vel7_30.toFixed(2)}×</span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {vel30_180 !== null ? (
+                      <span style={{ color: velColor(vel30_180) }}>{vel30_180.toFixed(2)}×</span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                    {ss ? (
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-md font-semibold text-xs"
+                        style={{ color: ss.color, background: ss.bg, border: `1px solid ${ss.border}` }}
+                      >
+                        {signal}
+                      </span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Token picker ─────────────────────────────────────────────────────────────
 
 const TOKEN_RING: Record<string, string> = {
@@ -4015,6 +4169,9 @@ export default function ValuationDashboard({ data }: Props) {
                 );
               })}
             </div>
+
+            {/* Portfolio snapshot */}
+            <LandingSummary tokens={tokens} selected={selected} onSelect={setSelected} />
 
             {/* Active token */}
             {activeToken && (
