@@ -153,23 +153,27 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
     sections: [
       {
         heading: "Core revenue model",
-        text: "GP = Backpack exchange revenue (spot + perpetuals trading fees). Model values BP via its equity conversion right: stakers who lock BP for 1+ year receive 20% of Backpack company equity at IPO, shared pro-rata. PV = Y3_revenue × P/S_multiple × 20% / Y3_staking_supply / (1.25)³. P/S benchmarked against regulated crypto exchanges (Coinbase ~9×, Kraken ~7×).",
+        text: "Revenue = Spot (Binance spot denominator × BP market share × 9.5 bps) + Perps (Binance futures denominator × BP market share × 1.5 bps) + Securities (manual bear/base/bull). Company valuation = total Y3 revenue × P/S multiple. Equity pool = company valuation × 20% equity stake. PV per BP = equity pool / Y3 staking supply / (1.25)³. P/S benchmarked vs Coinbase (~9×) and Kraken (~7×).",
       },
       {
         heading: "Supply / dilution path",
-        text: "Phase 1 (250M, TGE): immediately eligible to stake. Phase 2 (375M): unlocks on business milestones (new regulatory licenses, product launches, geographic expansion) — each unlock dilutes per-BP equity value. Phase 3 (375M): post-IPO treasury, excluded from staking. Scenarios use Phase-2-unlock assumptions proportional to business success.",
+        text: "Phase 1 (250M, TGE): immediately eligible to stake — current effective supply. Phase 2 (375M): unlocks on business milestones (new regulatory licenses, product launches, geographic expansion); scenarios tie Phase-2 unlock to scenario success: bear=0 unlocks, base=~1/3, bull=majority. Phase 3 (375M): post-IPO treasury, excluded from staking model. Higher business success → more Phase-2 supply but also more revenue, so per-BP equity still improves in good scenarios.",
       },
       {
-        heading: "Revenue uncertainty",
-        text: "Backpack reported $100M+ in 2025 revenue but has not disclosed 2026 figures. June 2026 futures 24h volume is ~$247M; 30-day rolling from January 2026 was $22.4B. Fee rates are not publicly listed for perps; spot taker fee is ~0.095%. Year-3 revenue scenarios ($150M–$500M) assume continued growth from the $1B+ annual volume run rate.",
+        heading: "Revenue drivers",
+        text: "Perps: Binance Futures annual volume (Blockworks $25.2T/yr 2025) × current BP perps market share × scenario share multiplier × 1.5 bps clean take-rate. Spot: Binance Spot annual volume (Blockworks $7.3T/yr 2025) × current BP spot market share × scenario share multiplier × 9.5 bps blended taker take-rate. Denominator growth 1.0×–1.6× across scenarios. Perps take-rate derived live from DefiLlama fee / volume ratio when available.",
+      },
+      {
+        heading: "Securities (tokenized equities)",
+        text: "Manual scenarios: Bear $5M, Base $40M, Bull $120M Y3 annual revenue. Backpack holds regulatory licenses to offer tokenized equities in select jurisdictions (EU/MiCA). No reliable volume series exists to drive a Monte Carlo simulation; scenarios assume moderate adoption in base (comparable to early Robinhood crypto revenue run-rate) and material adoption in bull. Data reference: Blockworks tokenized securities market sizing.",
       },
       {
         heading: "Key risks",
-        text: "IPO contingency: if Backpack does not IPO, equity conversion does not occur and BP loses its primary value driver. Phase 2 dilution: all milestone unlocks flow directly into staking eligibility, compressing per-BP equity. Legal/regulatory risk: equity-for-token swaps may face regulatory challenges in certain jurisdictions. No buyback or revenue-share mechanism currently exists.",
+        text: "IPO contingency: if Backpack does not IPO, equity conversion does not occur and BP loses its primary value driver. Phase 2 dilution: milestone unlocks compress per-BP equity value. Legal/regulatory risk: equity-for-token swaps may face regulatory challenges. Securities revenue is speculative — no reported figures. No buyback or revenue-share mechanism currently exists.",
       },
       {
         heading: "Model limitations",
-        text: "Scenarios are manually constructed with no Monte Carlo simulation. Distributions approximate log-normal σ=1.0. IPO probability is treated as given (not modeled separately). Company valuation at IPO is highly uncertain; P/S range 4–10× captures most plausible outcomes for a regulated mid-tier crypto exchange.",
+        text: "No Monte Carlo simulation — distributions approximate log-normal σ=1.0. Spot volume estimated via CoinGecko exchange endpoint; Backpack does not disclose spot volume directly. Market share multipliers are scenario assumptions, not derived from a velocity MC path. IPO probability treated as given. P/S range 4–10× captures most plausible outcomes for a regulated mid-tier crypto exchange.",
       },
     ],
   },
@@ -2759,9 +2763,10 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Effective supply P50",     value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,     sub: "Supply after emissions and buyback burns at Year 3" },
   ],
   bp: [
-    { label: "Y3 Revenue P50",           value: (gp) => fmtLarge(gp["y3_revenue_p50"]),          sub: "Estimated Backpack exchange revenue (base scenario)" },
-    { label: "Y3 Equity pool P50",       value: (gp) => fmtLarge((gp["y3_revenue_p50"] as number) * 7 * 0.20), sub: "Y3 revenue × 7× P/S × 20% equity stake" },
-    { label: "Y3 Staking supply P50",    value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M BP`, sub: "Phase 1 + partial Phase 2 eligible stakers (base)" },
+    { label: "Y3 total revenue (base)",  value: (gp) => fmtLarge(gp["y3_revenue_p50"]),              sub: (gp) => `Perps ${fmtLarge(gp["y3_perps_revenue_p50"] as number)} · spot ${fmtLarge(gp["y3_spot_revenue_p50"] as number)} · sec ${fmtLarge(gp["y3_securities_revenue_base"] as number)}` },
+    { label: "Y3 company val (base)",    value: (gp) => fmtLarge(gp["y3_company_val_p50"] as number),   sub: "Revenue × 7× P/S multiple" },
+    { label: "Y3 equity pool (base)",    value: (gp) => fmtLarge(gp["y3_equity_pool_p50"] as number),   sub: "20% of company valuation shared pro-rata by stakers" },
+    { label: "Y3 staking supply (base)", value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M BP`, sub: "Phase 1 (250M) + partial Phase 2 milestone unlocks" },
   ],
   cards: [
     { label: "Y3 Gross profit P50",      value: (gp) => fmtLarge(gp["y3_gp_p50"]),               sub: "Annual platform GP (base scenario, sustained from Q1 2026)" },
@@ -2771,6 +2776,228 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── BP: driver-based product-line output ────────────────────────────────
+  if (tokenKey === "bp") {
+    const gp   = data.current_gp as Record<string, unknown>;
+    const spot = data.market.spot;
+
+    type BpScenario = {
+      key: string; label: string; is_primary: boolean;
+      pv: { p25: number; p50: number; p75: number; p90: number };
+      ev: number; prob_above_spot: number; prob_3x: number;
+      y3_perps_volume_ann: number; y3_spot_volume_ann: number;
+      y3_perps_ms: number; y3_spot_ms: number;
+      y3_perps_revenue: number; y3_spot_revenue: number; y3_securities_revenue: number;
+      y3_total_revenue: number; y3_company_val: number; y3_equity_pool: number;
+      y3_supply_p50: number; ps_multiple: number;
+      perps_take_rate_bps: number; spot_take_rate_bps: number; denom_growth: number;
+    };
+
+    const scenarios = data.scenarios as unknown as BpScenario[];
+    const perpsMs   = (gp["perp_ms30_vs_binance_futures"] as number) ?? 0;
+    const spotMs    = (gp["spot_ms30_vs_binance_spot"]    as number) ?? 0;
+    const perpsTake = (gp["perp_take_rate_bps"]           as number) ?? 1.5;
+    const spotTake  = (gp["spot_take_rate_bps"]           as number) ?? 9.5;
+    const perpsAnn  = (gp["perp_volume_30d_ann"]          as number) ?? 0;
+    const spotAnn   = (gp["spot_volume_30d_ann"]          as number) ?? 0;
+    const perpsRev  = (gp["perp_revenue_ann"]             as number) ?? 0;
+    const spotRev   = (gp["spot_revenue_ann"]             as number) ?? 0;
+    const totalRev  = (gp["total_revenue_ann"]            as number) ?? 0;
+    const bnFutAnn  = (gp["binance_futures_annual"]       as number) ?? 25.241e12;
+    const bnSptAnn  = (gp["binance_spot_annual"]          as number) ?? 7.307e12;
+
+    const pct  = (v: number) => `${(v * 100).toFixed(2)}%`;
+    const pctMs = (v: number) => `${(v * 100).toFixed(3)}%`;
+    const bps  = (v: number) => `${v.toFixed(2)} bps`;
+
+    const SmCard = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-1 leading-snug">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-xs text-gray-500 leading-snug">{sub}</div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
+
+        {/* ── Current snapshot ─────────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-4">Current Snapshot</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "30D Perps volume (ann.)", val: fmtLarge(perpsAnn),  sub: `MS ${pctMs(perpsMs)} vs Binance futures` },
+              { label: "30D Spot volume (ann.)",  val: fmtLarge(spotAnn),   sub: `MS ${pctMs(spotMs)} vs Binance spot` },
+              { label: "Take rate: perps / spot", val: `${bps(perpsTake)} / ${bps(spotTake)}`, sub: "Perps derived from DL fees; spot taker blended" },
+              { label: "Ann. revenue proxy",      val: fmtLarge(totalRev),  sub: `Perps ${fmtLarge(perpsRev)} · spot ${fmtLarge(spotRev)}` },
+            ].map(c => (
+              <div key={c.label} className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <div className="text-xs text-gray-400 font-mono mb-1">{c.label}</div>
+                <div className="text-xl font-bold text-gray-900 font-mono">{c.val}</div>
+                <div className="text-xs text-gray-400 mt-1">{c.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Scenario assumptions table ──────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Scenario Assumptions</h3>
+            <p className="text-xs text-gray-400 mt-1">Market share multiplier applied to current 30D MS; supply linked to Phase-2 milestone achievements.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","PERPS MS MULT","SPOT MS MULT","DENOM GROWTH","P/S","SECURITIES Y3","SUPPLY"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const perpsMsMult = perpsMs > 0 ? s.y3_perps_ms / perpsMs : 0;
+                  const spotMsMult  = spotMs > 0  ? s.y3_spot_ms  / spotMs  : 0;
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{perpsMsMult.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{spotMsMult.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.denom_growth.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.ps_multiple}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_securities_revenue)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.y3_supply_p50 / 1e6).toFixed(0)}M`}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Product-line detail table ────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Product-Line Outputs</h3>
+            <p className="text-xs text-gray-400 mt-1">Y3 volume, market share, and revenue by product. Perps/spot use Binance denominator × Y3 MS × take-rate.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","Y3 PERPS VOL","PERPS MS","Y3 SPOT VOL","SPOT MS","PERPS REV","SPOT REV","SECURITIES REV","TOTAL REV"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => (
+                  <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                    <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_perps_volume_ann)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_perps_ms)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_spot_volume_ann)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_spot_ms)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_perps_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_spot_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_securities_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Valuation chain table ────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Valuation Chain</h3>
+            <p className="text-xs text-gray-400 mt-1">Total revenue → company valuation → 20% equity pool → discounted PV per BP. P(Spot) uses log-normal σ=1.0.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","TOTAL REV","CO. VAL","EQUITY POOL","SUPPLY","PV / BP","VS SPOT","P(SPOT)"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const vsSpot  = spot > 0 ? (s.pv.p50 / spot - 1) * 100 : 0;
+                  const pColor  = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_company_val)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_equity_pool)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.y3_supply_p50/1e6).toFixed(0)}M`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtPrice(s.pv.p50)}</td>
+                      <td className={`px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap ${vsSpot>=0?"text-green-700":"text-red-700"}`}>
+                        {`${vsSpot>=0?"+":""}${vsSpot.toFixed(0)}%`}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: pColor }}>
+                        {pct(s.prob_above_spot)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── 4 summary cards ─────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SmCard
+            label="Y3 total revenue (base)"
+            value={fmtLarge((gp["y3_revenue_p50"] as number) ?? 0)}
+            sub={`Perps ${fmtLarge((gp["y3_perps_revenue_p50"] as number) ?? 0)} · spot ${fmtLarge((gp["y3_spot_revenue_p50"] as number) ?? 0)} · sec ${fmtLarge((gp["y3_securities_revenue_base"] as number) ?? 0)}`}
+          />
+          <SmCard
+            label="Y3 company valuation (base)"
+            value={fmtLarge((gp["y3_company_val_p50"] as number) ?? 0)}
+            sub={`At 7× P/S on base Y3 total revenue`}
+          />
+          <SmCard
+            label="Y3 equity pool (base)"
+            value={fmtLarge((gp["y3_equity_pool_p50"] as number) ?? 0)}
+            sub={`20% of company valuation; shared pro-rata by stakers`}
+          />
+          <SmCard
+            label="Y3 staking supply (base)"
+            value={`${(((gp["y3_supply_p50"] as number) ?? 0) / 1e6).toFixed(0)}M BP`}
+            sub={`Phase 1 (250M) + partial Phase 2 unlocks on milestones`}
+          />
+        </div>
+
+        {/* ── Revenue Semantics ─────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Revenue Semantics</h2>
+            <p className="text-gray-500 text-base leading-relaxed">
+              Driver-based model replaces fixed revenue narratives with observable volume × market-share × take-rate mechanics for spot and perps. Securities use manual scenarios.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
+              <li><span className="font-bold text-gray-900">Spot:</span> Binance spot denominator (Blockworks {`$${(bnSptAnn/1e12).toFixed(1)}T`}/yr 2025) × BP spot MS × {spotTake.toFixed(1)} bps taker-blended take-rate.</li>
+              <li><span className="font-bold text-gray-900">Perps:</span> Binance futures denominator (Blockworks {`$${(bnFutAnn/1e12).toFixed(1)}T`}/yr 2025) × BP perps MS × {perpsTake.toFixed(1)} bps clean take-rate.</li>
+              <li><span className="font-bold text-gray-900">Securities:</span> Manual bear/base/bull assumptions ($5M / $40M / $120M Y3 annual revenue); Backpack holds regulatory licenses to offer tokenized equities in select jurisdictions.</li>
+              <li><span className="font-bold text-gray-900">Supply:</span> 250M Phase 1 always eligible. Phase 2 (375M) unlocks on KPI milestones — bear assumes none unlock, base assumes ~1/3, bull assumes majority.</li>
+              <li><span className="font-bold text-gray-900">Equity claim:</span> Stakers locking BP for 1+ year receive 20% of Backpack company equity at IPO. No buyback or revenue-share exists; IPO non-occurrence is the primary tail risk.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── CARDS: velocity-decay scenario table + 4 output cards ───────────────
   if (tokenKey === "cards") {
     const gp      = data.current_gp as Record<string, unknown>;
@@ -3878,14 +4105,14 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           </>}
           {tokenKey === "bp" && <>
             <MetricCard
-              label="2025 revenue (reported)"
-              value={fmtLarge(gp["revenue_2025_ann"] as number)}
-              sub="Backpack has not disclosed 2026 figures"
+              label="30D perps MS vs Binance"
+              value={`${((gp["perp_ms30_vs_binance_futures"] as number ?? 0) * 100).toFixed(3)}%`}
+              sub={`${fmtLarge(gp["perp_volume_30d_ann"] as number)} ann. · ${(gp["perp_take_rate_bps"] as number ?? 1.5).toFixed(2)} bps take`}
             />
             <MetricCard
-              label="Equity pool at $1B co. val."
-              value={fmtLarge(gp["equity_pool_at_1b_val"] as number)}
-              sub={`$${(gp["equity_per_bp_phase1_only"] as number).toFixed(2)}/BP if only Phase 1 (250M) stakes`}
+              label="30D spot MS vs Binance"
+              value={`${((gp["spot_ms30_vs_binance_spot"] as number ?? 0) * 100).toFixed(3)}%`}
+              sub={`${fmtLarge(gp["spot_volume_30d_ann"] as number)} ann. · ${(gp["spot_take_rate_bps"] as number ?? 9.5).toFixed(1)} bps take`}
             />
             <MetricCard
               label="FDV-implied company val."
