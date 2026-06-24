@@ -2854,6 +2854,53 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           />
         </div>
 
+        {/* GP Conversion Sensitivity */}
+        {(() => {
+          const weightedScen = velScens.find((s) => s.label.startsWith("Weighted"));
+          if (!weightedScen || gpConv === 0) return null;
+          const gpRates = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60];
+          return (
+            <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200">
+                <h3 className="text-base font-semibold text-gray-800">Gross Profit Estimate Sensitivity</h3>
+                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on weighted-average Y3 GMV; all other model inputs held constant.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      {["GP CONV.", "Y3 GP", "PV / CARDS", "VS SPOT"].map((h) => (
+                        <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h === "GP CONV." ? "text-left px-5" : "text-right px-4"}`}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gpRates.map((rate) => {
+                      const scaleRatio = rate / gpConv;
+                      const sensGp = weightedScen.y3_gp * scaleRatio;
+                      const sensPv = weightedScen.pv * scaleRatio;
+                      const vsSpot = spot > 0 ? (sensPv / spot - 1) * 100 : 0;
+                      const isBase = Math.abs(rate - gpConv) < 0.005;
+                      return (
+                        <tr key={rate} className={`border-b border-gray-100 last:border-0 ${isBase ? "bg-blue-50" : ""}`}>
+                          <td className={`px-5 py-3 text-sm ${isBase ? "font-semibold text-blue-700" : "text-gray-600"}`}>
+                            {`${(rate * 100).toFixed(0)}%${isBase ? "  ← base" : ""}`}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(sensGp)}</td>
+                          <td className={`px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap ${isBase ? "text-blue-700" : "text-gray-900"}`}>{fmtPrice(sensPv)}</td>
+                          <td className={`px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap ${vsSpot >= 0 ? "text-green-700" : "text-red-700"}`}>
+                            {`${vsSpot >= 0 ? "+" : ""}${vsSpot.toLocaleString("en-US", { maximumFractionDigits: 0 })}%`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Revenue Semantics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
           <div className="flex flex-col justify-center">
