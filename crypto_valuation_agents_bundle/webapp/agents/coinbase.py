@@ -224,6 +224,29 @@ def _fetch_coinbase_spot_30d() -> tuple[float, float]:
     return _FB_SPOT_30D, SPOT_TAKE_RATE_BPS_FALLBACK
 
 
+def _fetch_coinbase_volume_velocities() -> tuple[float | None, float | None]:
+    """Return (ms7_ms30_trend, ms30_ms180_trend) from CoinGecko exchange volume_chart.
+
+    CoinGecko returns daily BTC volume. Since we compute ratios, BTC→USD conversion cancels out.
+    """
+    for ex_id in ("gdax", "coinbase-exchange"):
+        try:
+            url = f"https://api.coingecko.com/api/v3/exchanges/{ex_id}/volume_chart?days=180"
+            rows = _get(url)  # [[timestamp_ms, btc_volume], ...]
+            if not rows or len(rows) < 30:
+                continue
+            vols = [float(v) for _, v in rows]
+            avg7   = sum(vols[-7:])   / 7
+            avg30  = sum(vols[-30:])  / 30
+            avg180 = sum(vols[-180:]) / len(vols)  # use actual length if < 180
+            vel7_30   = avg7  / avg30  if avg30  > 0 else None
+            vel30_180 = avg30 / avg180 if avg180 > 0 else None
+            return vel7_30, vel30_180
+        except Exception:
+            continue
+    return None, None
+
+
 def _fetch_deribit_volume_30d() -> float:
     """Sum last 30 daily Deribit total derivatives volume from DefiLlama."""
     try:
@@ -308,6 +331,7 @@ def run() -> dict:
     # ── Volume data ───────────────────────────────────────────────────────────
     spot_30d, spot_take_bps = _fetch_coinbase_spot_30d()
     deribit_30d             = _fetch_deribit_volume_30d()
+    coin_vel7_30, coin_vel30_180 = _fetch_coinbase_volume_velocities()
     usdc_supply             = _fetch_usdc_supply()
 
     # Coinbase derivatives volume estimated as ratio of spot
@@ -454,6 +478,9 @@ def run() -> dict:
             ),
         },
         "current_gp": {
+            # Velocity (7D/30D and 30D/180D daily avg BTC volume ratios)
+            "ms7_ms30_trend":             coin_vel7_30,
+            "ms30_ms180_trend":           coin_vel30_180,
             # Live volume / MS
             "spot_volume_30d":            float(spot_30d),
             "deriv_volume_30d":           float(deriv_30d),
