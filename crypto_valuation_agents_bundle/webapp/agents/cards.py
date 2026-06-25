@@ -95,21 +95,23 @@ def _get(url: str, timeout: int = 30) -> dict | list:
         return json.load(r)
 
 
-def _fetch_defillama_revenue_30d() -> tuple[float, float, list]:
-    """Return (30D net revenue, 7D daily avg revenue, full chart) from DefiLlama."""
+def _fetch_defillama_revenue_30d() -> tuple[float, float, float, list]:
+    """Return (30D net revenue, 7D daily avg revenue, 180D daily avg revenue, full chart) from DefiLlama."""
     try:
         url = f"https://api.llama.fi/summary/fees/{DEFILLAMA_SLUG}?dataType=dailyFees"
         d = _get(url, timeout=20)
         total30d = float(d.get("total30d") or 0)
         chart = d.get("totalDataChart") or []
-        last7 = chart[-7:] if len(chart) >= 7 else chart
-        avg7d = sum(float(v) for _, v in last7) / len(last7) if last7 else 0.0
+        last7   = chart[-7:]   if len(chart) >= 7   else chart
+        last180 = chart[-180:] if len(chart) >= 180 else chart
+        avg7d   = sum(float(v) for _, v in last7)   / len(last7)   if last7   else 0.0
+        avg180d = sum(float(v) for _, v in last180) / len(last180) if last180 else 0.0
         if total30d > 0:
-            return total30d, avg7d, chart
+            return total30d, avg7d, avg180d, chart
     except Exception as e:
         print(f"[CARDS] DefiLlama revenue fetch failed ({e}); using Q1 fallback")
     fallback_daily = GP_ANN_RUN_RATE / 12 / 30
-    return GP_ANN_RUN_RATE / 12, fallback_daily, []
+    return GP_ANN_RUN_RATE / 12, fallback_daily, fallback_daily, []
 
 
 def _compute_y3_gmv(gmv_30d: float, velocity: float, decay_months: int = 12) -> float:
@@ -263,11 +265,12 @@ def run() -> dict:
     price_hist = _fetch_cg_price_history()
 
     # ── Live DefiLlama 30D revenue → implied GMV ─────────────────────────────
-    revenue_30d, revenue_7d_daily_avg, rev_chart = _fetch_defillama_revenue_30d()
-    gmv_30d          = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
-    gmv_30d_ann      = gmv_30d * 12
-    gmv_7d_daily_avg = revenue_7d_daily_avg / NET_SPREAD if NET_SPREAD > 0 else 0.0
-    gmv_30d_daily    = gmv_30d / 30.0
+    revenue_30d, revenue_7d_daily_avg, revenue_180d_daily_avg, rev_chart = _fetch_defillama_revenue_30d()
+    gmv_30d           = revenue_30d / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_30d_ann       = gmv_30d * 12
+    gmv_7d_daily_avg  = revenue_7d_daily_avg  / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_180d_daily_avg = revenue_180d_daily_avg / NET_SPREAD if NET_SPREAD > 0 else 0.0
+    gmv_30d_daily     = gmv_30d / 30.0
     revenue_history, run_rate_chart = _build_revenue_history(rev_chart, price_hist)
 
     # ── Velocity-decay scenario table (A=6M, B=12M, C=24M) ───────────────────
@@ -358,8 +361,9 @@ def run() -> dict:
             "gmv_30d_ann": float(gmv_30d_ann),
             "net_spread": float(NET_SPREAD),
             "gmv_velocity_input": float(GMV_VELOCITY_INPUT),
-            "gmv_7d_daily_avg": float(gmv_7d_daily_avg),
-            "gmv_30d_daily_avg": float(gmv_30d_daily),
+            "gmv_7d_daily_avg":   float(gmv_7d_daily_avg),
+            "gmv_30d_daily_avg":  float(gmv_30d_daily),
+            "gmv_180d_daily_avg": float(gmv_180d_daily_avg),
             "y3_gmv_base": float(y3_gmv_base),
             "true_gp_conversion": float(TRUE_GP_CONVERSION),
             "float_supply_y3": float(FLOAT_SUPPLY_Y3),

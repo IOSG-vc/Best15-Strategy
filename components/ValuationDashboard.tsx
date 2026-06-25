@@ -4520,13 +4520,14 @@ interface SummaryStats {
   p50spot: number | null;
   vel7_30: number | null;
   vel30_180: number | null;
-  gmv_vel: number | null;
+  gmv_vel7_30: number | null;
+  gmv_vel30_180: number | null;
   signal: string | null;
 }
 
 function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
   const data = token.data;
-  if (!data) return { p50spot: null, vel7_30: null, vel30_180: null, gmv_vel: null, signal: null };
+  if (!data) return { p50spot: null, vel7_30: null, vel30_180: null, gmv_vel7_30: null, gmv_vel30_180: null, signal: null };
 
   const spot    = data.market.spot;
   const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
@@ -4559,18 +4560,21 @@ function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
     vel7_30 = num(gp.ms7_ms30_binance_spot_trend);
   }
 
-  // GMV velocity — 7D vs 30D daily average ratio (CARDS)
-  let gmv_vel: number | null = null;
+  // GMV velocity — 7D/30D and 30D/180D daily average ratios (CARDS)
+  let gmv_vel7_30: number | null = null;
+  let gmv_vel30_180: number | null = null;
   if (key === "cards") {
-    const avg7 = num(gp.gmv_7d_daily_avg);
-    const avg30 = num(gp.gmv_30d_daily_avg);
-    if (avg7 !== null && avg30 !== null && avg30 > 0) gmv_vel = avg7 / avg30;
+    const avg7   = num(gp.gmv_7d_daily_avg);
+    const avg30  = num(gp.gmv_30d_daily_avg);
+    const avg180 = num(gp.gmv_180d_daily_avg);
+    if (avg7  !== null && avg30  !== null && avg30  > 0) gmv_vel7_30   = avg7  / avg30;
+    if (avg30 !== null && avg180 !== null && avg180 > 0) gmv_vel30_180 = avg30 / avg180;
   }
 
   const signal = (data.hist_charts as { backtest?: { latest_signal?: string } } | undefined)
     ?.backtest?.latest_signal ?? null;
 
-  return { p50spot, vel7_30, vel30_180, gmv_vel, signal };
+  return { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, signal };
 }
 
 function velColor(v: number): string {
@@ -4613,7 +4617,8 @@ function LandingSummary({
               <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">P50 / spot</th>
               <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">MS Vel 7/30</th>
               <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">MS Vel 30/180</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">GMV Vel</th>
+              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">GMV Vel 7/30</th>
+              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">GMV Vel 30/180</th>
               <th className="text-right px-5 py-2.5 font-medium text-gray-500 whitespace-nowrap">Signal</th>
             </tr>
           </thead>
@@ -4621,7 +4626,7 @@ function LandingSummary({
             {rows.map(({ key, token, stats }) => {
               const ring    = TOKEN_RING[key] ?? "#60a5fa";
               const active  = key === selected;
-              const { p50spot, vel7_30, vel30_180, gmv_vel, signal } = stats;
+              const { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, signal } = stats;
               const p50Color = p50spot === null ? "#9ca3af" : p50spot >= 1.1 ? "#4ade80" : p50spot < 0.9 ? "#f87171" : "#fbbf24";
               const ss = signal ? signalStyle[signal] : null;
 
@@ -4660,8 +4665,15 @@ function LandingSummary({
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
-                    {gmv_vel !== null ? (
-                      <span style={{ color: velColor(gmv_vel) }}>{gmv_vel.toFixed(2)}×</span>
+                    {gmv_vel7_30 !== null ? (
+                      <span style={{ color: velColor(gmv_vel7_30) }}>{gmv_vel7_30.toFixed(2)}×</span>
+                    ) : (
+                      <span className="text-gray-600">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {gmv_vel30_180 !== null ? (
+                      <span style={{ color: velColor(gmv_vel30_180) }}>{gmv_vel30_180.toFixed(2)}×</span>
                     ) : (
                       <span className="text-gray-600">—</span>
                     )}
