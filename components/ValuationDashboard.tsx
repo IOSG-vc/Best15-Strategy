@@ -3053,6 +3053,27 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
             </ul>
           </div>
         </div>
+
+        {/* ── Data coverage note ────────────────────────────── */}
+        <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+          <span className="mt-0.5 text-amber-500 shrink-0">⚠</span>
+          <div className="text-xs text-amber-800 leading-relaxed space-y-1">
+            <p className="font-semibold">Derivatives data coverage is partial</p>
+            <p>
+              The derivatives engine uses <span className="font-medium">real volume history from Coinbase&apos;s public API</span> (no key required)
+              — but only for <span className="font-medium">CDE (Coinbase Derivatives Exchange)</span>, the CFTC-regulated US venue (formerly FairX),
+              which trades BTC/ETH futures. Data source this run:{" "}
+              <span className="font-mono font-medium">{(gp["deriv_data_source"] as string) ?? "proxy_spot"}</span>
+              {" "}· {(gp["cde_deriv_history_days"] as number) ?? 0} days of history fetched.
+            </p>
+            <p>
+              <span className="font-medium">CIE (Coinbase International Exchange)</span> — the offshore perpetuals venue for non-US users,
+              which is likely the larger of the two — has <span className="font-medium">no public API</span> and is therefore excluded.
+              As a result, the model understates Coinbase&apos;s true derivatives market share and revenue.
+              If CDE fetch returns fewer than 30 days, the model automatically falls back to a 4.2% spot-volume proxy.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
