@@ -20,7 +20,7 @@ import numpy as np
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 CG_ID                  = "lighter"            # CoinGecko ID for LIT
-DL_FEES_SLUG           = "lighter-exchange"   # DefiLlama fees endpoint slug
+DL_FEES_SLUG           = "lighter"            # DefiLlama fees endpoint slug
 DL_DERIV_SLUG          = "binance-futures"    # DefiLlama derivatives for Binance denominator
 MAX_SUPPLY             = 1_000_000_000
 POST_CLIFF_DAILY_UNLOCK = 456_286             # tokens/day from locked unlock schedule
@@ -153,22 +153,35 @@ def _rolling_sum(rows: list[tuple[date, float]], n: int) -> float:
     return float(sum(vals))
 
 
-def _compute_ms(lighter_rev: list, binance_vol: list) -> dict:
-    """Compute MS30/MS90/MS180 using revenue-implied Lighter volume vs Binance."""
-    if not lighter_rev or not binance_vol:
+def _compute_ms(lighter_rev: list, binance_vol: list, binance_monthly_fallback: float = 0.0) -> dict:
+    """Compute MS7/MS30/MS90/MS180 using revenue-implied Lighter volume vs Binance.
+
+    When daily Binance series is unavailable, falls back to scalar monthly volume
+    to derive per-window denominators using a flat daily-average assumption.
+    """
+    if not lighter_rev:
         return {"ms7": None, "ms30": None, "ms90": 0.031, "ms180": None,
                 "ms30_ms180_trend": None, "ms7_ms30_trend": None, "model_momentum_floor": 1.0}
 
-    bn_by_date = {d: v for d, v in binance_vol}
     last_date = lighter_rev[-1][0]
 
     def _vol_sum(n: int) -> float:
         cutoff = last_date - timedelta(days=n - 1)
         return sum(v / NET_TAKE_RATE for d, v in lighter_rev if d >= cutoff)
 
-    def _bn_sum(n: int) -> float:
-        cutoff = last_date - timedelta(days=n - 1)
-        return sum(v for d, v in bn_by_date.items() if d >= cutoff and d <= last_date)
+    if binance_vol:
+        bn_by_date = {d: v for d, v in binance_vol}
+        def _bn_sum(n: int) -> float:
+            cutoff = last_date - timedelta(days=n - 1)
+            return sum(v for d, v in bn_by_date.items() if d >= cutoff and d <= last_date)
+    elif binance_monthly_fallback > 0:
+        # Derive per-window denominator from scalar monthly volume via flat daily average
+        daily_avg = binance_monthly_fallback / 30.0
+        def _bn_sum(n: int) -> float:
+            return daily_avg * n
+    else:
+        return {"ms7": None, "ms30": None, "ms90": 0.031, "ms180": None,
+                "ms30_ms180_trend": None, "ms7_ms30_trend": None, "model_momentum_floor": 1.0}
 
     lt7   = _vol_sum(7);   bn7   = _bn_sum(7)
     lt30  = _vol_sum(30);  bn30  = _bn_sum(30)
@@ -317,7 +330,7 @@ def run() -> dict:
     tvl_proxy           = _fetch_lighter_tvl()
 
     # ── Market share ──────────────────────────────────────────────────────────
-    ms_data = _compute_ms(lighter_rev, binance_vol)
+    ms_data = _compute_ms(lighter_rev, binance_vol, binance_monthly_fallback=binance_monthly_30d)
     ms90    = ms_data["ms90"] or 0.031
     floor   = ms_data["model_momentum_floor"]
 
