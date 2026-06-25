@@ -112,18 +112,18 @@ def _fetch_cg_market() -> tuple[float, float, float, float, float]:
                 raise
 
 
-def _fetch_dl_perps_volumes() -> tuple[float, float, float]:
-    """Return (7D, 30D, 180D) perps volume sums from DefiLlama derivatives."""
+def _fetch_dl_perps_volumes() -> tuple[float, float, float, int]:
+    """Return (7D, 30D, 180D volume sums, total row count) from DefiLlama derivatives."""
     try:
         url = f"https://api.llama.fi/summary/derivatives/{DL_PERPS_SLUG}?dataType=dailyVolume"
         d = _get(url)
         rows = sorted(d.get("totalDataChart", []), key=lambda x: x[0])
-        vol7  = float(sum(v for _, v in rows[-7:]))
-        vol30 = float(sum(v for _, v in rows[-30:]))
-        vol180 = float(sum(v for _, v in rows[-180:])) if len(rows) >= 180 else 0.0
-        return vol7, vol30, vol180
+        vol7   = float(sum(v for _, v in rows[-7:]))
+        vol30  = float(sum(v for _, v in rows[-30:]))
+        vol180 = float(sum(v for _, v in rows[-180:]))
+        return vol7, vol30, vol180, len(rows)
     except Exception:
-        return _FB_PERPS_30D / 30 * 7, _FB_PERPS_30D, 0.0
+        return _FB_PERPS_30D / 30 * 7, _FB_PERPS_30D, 0.0, 0
 
 
 def _fetch_dl_perps_fees_30d() -> float:
@@ -221,7 +221,7 @@ def run() -> dict:
         spot, mcap, fdv, circ, max_supply = _FB_SPOT, _FB_MCAP, _FB_FDV, _FB_CIRC, _FB_MAX
 
     # ── Volume / fee data ────────────────────────────────────────────────────
-    perps_7d, perps_30d, perps_180d = _fetch_dl_perps_volumes()
+    perps_7d, perps_30d, perps_180d, perps_history_days = _fetch_dl_perps_volumes()
     perps_fees_30d = _fetch_dl_perps_fees_30d()
 
     # Spot volume: try CoinGecko exchange endpoint, fall back to ratio of perps
@@ -254,9 +254,11 @@ def run() -> dict:
     spot_ms_current  = spot_vol_30d / max(bn_spot_ann / 12.0, 1.0)
 
     # Velocity ratios (daily-avg basis: 7D/30D and 30D/180D)
-    perps_avg7  = perps_7d  / 7.0
-    perps_avg30 = perps_30d / 30.0
-    perps_avg180 = perps_180d / 180.0 if perps_180d > 0 else 0.0
+    # For 30/180, use actual history length as denominator if < 180 days available (min 60D for reliability)
+    long_window = min(perps_history_days, 180)
+    perps_avg7   = perps_7d   / 7.0
+    perps_avg30  = perps_30d  / 30.0
+    perps_avg180 = perps_180d / long_window if long_window >= 60 and perps_180d > 0 else 0.0
     perps_ms7_ms30_trend   = perps_avg7  / perps_avg30  if perps_avg30  > 0 else None
     perps_ms30_ms180_trend = perps_avg30 / perps_avg180 if perps_avg180 > 0 else None
 
