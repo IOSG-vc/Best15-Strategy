@@ -3385,14 +3385,15 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
 
         {/* GP Conversion Sensitivity */}
         {(() => {
-          const weightedScen = velScens.find((s) => s.label.startsWith("Weighted"));
-          if (!weightedScen || gpConv === 0) return null;
+          const baseGp  = gp["y3_gp_p50"]    as number ?? 0;
+          const basePv  = gp["weighted_pv"]   as number ?? 0;
+          if (gpConv === 0 || baseGp === 0 || basePv === 0) return null;
           const gpRates = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60];
           return (
             <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200">
                 <h3 className="text-base font-semibold text-gray-800">Gross Profit Estimate Sensitivity</h3>
-                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on weighted-average Y3 GMV; all other model inputs held constant.</p>
+                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on conservative-scenario Y3 GP ($535M GMV × 8.4% margin); PV uses weighted 6/12/24M discount. All other model inputs held constant.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -3406,8 +3407,8 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
                   <tbody>
                     {gpRates.map((rate) => {
                       const scaleRatio = rate / gpConv;
-                      const sensGp = weightedScen.y3_gp * scaleRatio;
-                      const sensPv = weightedScen.pv * scaleRatio;
+                      const sensGp = baseGp * scaleRatio;
+                      const sensPv = basePv * scaleRatio;
                       const vsSpot = spot > 0 ? (sensPv / spot - 1) * 100 : 0;
                       const isBase = Math.abs(rate - gpConv) < 0.005;
                       return (
