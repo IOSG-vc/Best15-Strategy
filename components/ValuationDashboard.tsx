@@ -2803,9 +2803,9 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "GP margin (Q1 2026)",      value: (gp) => `${((gp["gross_margin"] as number) * 100).toFixed(1)}%`,    sub: "Compressed from 10–12% at launch; key downside risk" },
   ],
   coinbase: [
-    { label: "Y3 total revenue (base)",  value: (gp) => fmtLarge(gp["y3_revenue_p50"]),              sub: (gp) => `Spot ${fmtLarge(gp["y3_spot_revenue_p50"] as number)} · USDC ${fmtLarge(gp["y3_usdc_revenue_p50"] as number)} · deriv+other ${fmtLarge((gp["y3_deriv_revenue_p50"] as number ?? 0) + (gp["y3_other_revenue_p50"] as number ?? 0))}` },
-    { label: "Y3 company val (base)",    value: (gp) => fmtLarge(gp["y3_company_val_p50"] as number),  sub: "Revenue × 7× P/S × 1.05 optionality" },
-    { label: "Y3 diluted shares (base)", value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,       sub: "Current shares × 1.15 SBC dilution (base)" },
+    { label: "Y3 total revenue (base P50)", value: (gp) => fmtLarge(gp["y3_revenue_p50"]), sub: (gp) => `Spot ${fmtLarge(gp["y3_spot_revenue_p50"] as number)} · USDC ${fmtLarge(gp["y3_usdc_revenue_p50"] as number)} · deriv+other ${fmtLarge(((gp["y3_deriv_revenue_p50"] as number) ?? 0) + ((gp["y3_other_revenue_p50"] as number) ?? 0))}` },
+    { label: "Spot MS (30D vs Binance)",    value: (gp) => `${(((gp["spot_ms30_vs_binance"] as number) ?? 0)*100).toFixed(2)}%`, sub: (gp) => `Vel ${(((gp["spot_vel_monthly"] as number) ?? 0)*100).toFixed(2)}%/mo · deriv MS ${(((gp["deriv_ms30_vs_deribit"] as number) ?? 0)*100).toFixed(2)}%` },
+    { label: "Y3 diluted shares (base)",    value: (gp) => `${(((gp["y3_supply_p50"] as number) ?? 0) / 1e6).toFixed(0)}M`, sub: "Current shares × 1.15 SBC dilution (base)" },
   ],
 };
 
@@ -2819,38 +2819,36 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
       key: string; label: string; is_primary: boolean;
       pv: { p25: number; p50: number; p75: number; p90: number };
       ev: number; prob_above_spot: number; prob_3x: number;
-      y3_spot_volume_ann: number; y3_deriv_volume_ann: number;
-      y3_spot_ms: number; y3_deriv_ms: number;
-      y3_spot_revenue: number; y3_deriv_revenue: number;
-      y3_usdc_supply: number; y3_usdc_revenue: number;
-      y3_other_revenue: number; y3_total_revenue: number;
-      y3_company_val: number; y3_shares: number;
-      ps_multiple: number; optionality_mult: number;
-      spot_take_rate_bps: number; deriv_take_rate_bps: number;
-      usdc_cagr: number; sofr_y3: number; denom_growth: number;
+      prob_y2_undiscounted_up_30: number; prob_y2_undiscounted_down_30: number;
+      y3_revenue_p50: number; y3_supply_p50: number; y3_mcap_p50: number;
+      y3_gp_p50: number;
+      y3_revenue_by_product_line_p50: {
+        spot: number; derivatives: number; stablecoin_gp: number; other_services: number;
+      };
+      decay_months: number; ps_center: number; sbc_dilution: number;
     };
 
     const scenarios  = data.scenarios as unknown as CoinScenario[];
-    const DR         = (gp["derived_discount_rate"] as number) ?? 0.22;
-    const beta       = (gp["capm_beta"]             as number) ?? 0;
-    const rf         = (gp["risk_free_rate"]         as number) ?? 0;
-    const coinVol    = (gp["coin_daily_vol"]         as number) ?? 0;
-    const spVol      = (gp["sp500_daily_vol"]        as number) ?? 0;
-    const sofr       = (gp["sofr_rate"]              as number) ?? 0;
-    const spotMs     = (gp["spot_ms_vs_binance"]     as number) ?? 0;
-    const derivMs    = (gp["deriv_ms_vs_deribit"]    as number) ?? 0;
-    const spotTake   = (gp["spot_take_rate_bps"]     as number) ?? 32;
-    const derivTake  = (gp["deriv_take_rate_bps"]    as number) ?? 35;
-    const spotAnn    = (gp["spot_volume_30d_ann"]    as number) ?? 0;
-    const derivAnn   = (gp["deriv_volume_30d_ann"]   as number) ?? 0;
+    const DR         = (gp["derived_discount_rate"]  as number) ?? 0.22;
+    const beta       = (gp["capm_beta"]              as number) ?? 0;
+    const rf         = (gp["risk_free_rate"]          as number) ?? 0;
+    const coinVol    = (gp["coin_daily_vol"]          as number) ?? 0;
+    const spVol      = (gp["sp500_daily_vol"]         as number) ?? 0;
+    const sofr       = (gp["sofr_rate"]               as number) ?? 0;
+    const spotMs     = (gp["spot_ms30_vs_binance"]    as number) ?? 0;
+    const derivMs    = (gp["deriv_ms30_vs_deribit"]   as number) ?? 0;
+    const spotTake   = 32;
+    const derivTake  = 35;
+    const spotAnn    = ((gp["spot_volume_30d"]  as number) ?? 0) * 12;
+    const derivAnn   = ((gp["deriv_volume_30d"] as number) ?? 0) * 12;
     const usdcSupply = (gp["usdc_supply"]            as number) ?? 0;
-    const spotRev    = (gp["spot_revenue_ann"]       as number) ?? 0;
-    const derivRev   = (gp["deriv_revenue_ann"]      as number) ?? 0;
-    const usdcRev    = (gp["usdc_revenue_ann"]       as number) ?? 0;
-    const otherRev   = (gp["other_revenue_ann"]      as number) ?? 0;
-    const totalRev   = (gp["total_revenue_ann"]      as number) ?? 0;
-    const shares     = (gp["shares_outstanding"]     as number) ?? 0;
-    const bnAnn      = (gp["binance_spot_annual"]    as number) ?? 7.307e12;
+    const spotRev    = (gp["spot_revenue_ann"]        as number) ?? 0;
+    const derivRev   = (gp["deriv_revenue_ann"]       as number) ?? 0;
+    const usdcRev    = (gp["usdc_revenue_ann"]        as number) ?? 0;
+    const otherRev   = (gp["other_revenue_ann"]       as number) ?? 0;
+    const totalRev   = (gp["total_revenue_ann"]       as number) ?? 0;
+    const shares     = (gp["shares_outstanding"]      as number) ?? 0;
+    const bnAnn      = (gp["binance_spot_annual"]     as number) ?? 7.307e12;
 
     const pct    = (v: number) => `${(v * 100).toFixed(2)}%`;
     const pctMs  = (v: number) => `${(v * 100).toFixed(2)}%`;
@@ -2910,53 +2908,14 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
         {/* ── Scenario assumptions ─────────────────────────── */}
         <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-800">Scenario Assumptions</h3>
-            <p className="text-xs text-gray-400 mt-1">MS multiplier applied to current 30D market share. USDC CAGR: 3Y compound growth of USDC supply. SOFR retention: fraction of current SOFR applied at Y3.</p>
+            <h3 className="text-base font-semibold text-gray-800">Scenario Assumptions — 50k MC paths each</h3>
+            <p className="text-xs text-gray-400 mt-1">Velocity decays linearly to 0 over decay window. P/S: log-normal σ=0.30 around center. Exit price = Y3 revenue × sampled P/S ÷ diluted shares, discounted at {(DR*100).toFixed(1)}% DR.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  {["CASE","SPOT MS MULT","DERIV MS MULT","DENOM GROWTH","USDC CAGR","SOFR RET.","P/S","OPTIONALITY","SHARES DILU."].map(h => (
-                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {scenarios.map(s => {
-                  const sMult = spotMs > 0 ? s.y3_spot_ms / spotMs : 0;
-                  const dMult = derivMs > 0 ? s.y3_deriv_ms / derivMs : 0;
-                  const shrDilu = shares > 0 ? s.y3_shares / shares : 0;
-                  return (
-                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
-                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{sMult.toFixed(2)}×</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{dMult.toFixed(2)}×</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.denom_growth.toFixed(2)}×</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.usdc_cagr*100).toFixed(0)}%`}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.sofr_y3/sofr*100).toFixed(0)}%`}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.ps_multiple}×</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.optionality_mult.toFixed(2)}×</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{shrDilu.toFixed(2)}×</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* ── Product-line outputs ──────────────────────────── */}
-        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-800">Product-Line Outputs</h3>
-            <p className="text-xs text-gray-400 mt-1">Y3 volumes and revenue by product. Spot/derivatives use Binance/Deribit denominator × Y3 MS × take-rate. USDC uses supply × SOFR × 50%.</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  {["CASE","Y3 SPOT VOL","SPOT MS","Y3 DERIV VOL","DERIV MS","SPOT REV","DERIV REV","USDC REV","OTHER REV","TOTAL REV"].map(h => (
+                  {["CASE","VEL. DECAY WINDOW","EXIT P/S CENTER","SBC DILUTION (3Y)","Y3 DILUTED SHARES","P(ABOVE SPOT)","P(3×)"].map(h => (
                     <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
                   ))}
                 </tr>
@@ -2965,17 +2924,48 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
                 {scenarios.map(s => (
                   <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
                     <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_spot_volume_ann)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_spot_ms)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_deriv_volume_ann)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_deriv_ms)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_spot_revenue)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_deriv_revenue)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_usdc_revenue)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_other_revenue)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.decay_months}M</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.ps_center.toFixed(0)}×</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.sbc_dilution.toFixed(2)}×</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${((s.y3_supply_p50 ?? 0)/1e6).toFixed(0)}M`}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-700 whitespace-nowrap">{`${(s.prob_above_spot*100).toFixed(1)}%`}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-700 whitespace-nowrap">{`${(s.prob_3x*100).toFixed(1)}%`}</td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Product-line outputs ──────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Product-Line Outputs — Y3 P50</h3>
+            <p className="text-xs text-gray-400 mt-1">P50 of Y3 TTM (months 25–36). Spot: Binance regime MC × CB MS velocity-decay × 32bps. Deriv: Deribit regime MC × proxy MS × 35bps. USDC: velocity-decay supply × SOFR path × 50% × 62% net.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","SPOT REV P50","DERIV REV P50","USDC GP P50","OTHER REV P50","TOTAL REV P50"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const pl = s.y3_revenue_by_product_line_p50 ?? {} as Record<string, number>;
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.spot ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.derivatives ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.stablecoin_gp ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.other_services ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_revenue_p50 ?? 0)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -2984,32 +2974,31 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
         {/* ── Valuation chain ───────────────────────────────── */}
         <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-800">Valuation Chain</h3>
-            <p className="text-xs text-gray-400 mt-1">Revenue → co. val (P/S × optionality) → PV/COIN (discounted at {(DR*100).toFixed(1)}% CAPM DR). P(Spot) uses log-normal σ=1.0.</p>
+            <h3 className="text-base font-semibold text-gray-800">Valuation Chain — Real MC Percentiles</h3>
+            <p className="text-xs text-gray-400 mt-1">Y3 revenue × sampled P/S (log-normal σ=0.30) ÷ diluted shares → discounted at {(DR*100).toFixed(1)}% CAPM DR. P25/P50/P75/P90 from 50k paths. EV = arithmetic mean (fat-tail boosted).</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  {["CASE","TOTAL REV","CO. VAL","DILUTED SHARES","PV / COIN","VS SPOT","P(SPOT)","EV"].map(h => (
+                  {["CASE","Y3 REV P50","MCAP P50","DILUTED SHARES","P25","P50","P75","P90","P(SPOT)","EV"].map(h => (
                     <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {scenarios.map(s => {
-                  const vsSpot = spot > 0 ? (s.pv.p50 / spot - 1) * 100 : 0;
                   const pColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
                   return (
                     <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
                       <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_company_val)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.y3_shares/1e6).toFixed(0)}M`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_revenue_p50 ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_mcap_p50 ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${((s.y3_supply_p50 ?? 0)/1e6).toFixed(0)}M`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-500 whitespace-nowrap">{fmtPrice(s.pv.p25)}</td>
                       <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtPrice(s.pv.p50)}</td>
-                      <td className={`px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap ${vsSpot>=0?"text-green-700":"text-red-700"}`}>
-                        {`${vsSpot>=0?"+":""}${vsSpot.toFixed(0)}%`}
-                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-500 whitespace-nowrap">{fmtPrice(s.pv.p75)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-400 whitespace-nowrap">{fmtPrice(s.pv.p90)}</td>
                       <td className="px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: pColor }}>
                         {pct(s.prob_above_spot)}
                       </td>
@@ -3025,14 +3014,14 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
         {/* ── 4 summary cards ───────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <SmCard
-            label="Y3 total revenue (base)"
+            label="Y3 total revenue — base P50"
             value={fmtLarge((gp["y3_revenue_p50"] as number) ?? 0)}
-            sub={`Spot ${fmtLarge((gp["y3_spot_revenue_p50"] as number) ?? 0)} · USDC ${fmtLarge((gp["y3_usdc_revenue_p50"] as number) ?? 0)} · other ${fmtLarge(((gp["y3_deriv_revenue_p50"] as number) ?? 0) + ((gp["y3_other_revenue_p50"] as number) ?? 0))}`}
+            sub={`Spot ${fmtLarge((gp["y3_spot_revenue_p50"] as number) ?? 0)} · USDC ${fmtLarge((gp["y3_usdc_revenue_p50"] as number) ?? 0)} · deriv+other ${fmtLarge(((gp["y3_deriv_revenue_p50"] as number) ?? 0) + ((gp["y3_other_revenue_p50"] as number) ?? 0))}`}
           />
           <SmCard
-            label="Y3 company valuation (base)"
-            value={fmtLarge((gp["y3_company_val_p50"] as number) ?? 0)}
-            sub="Revenue × 7× P/S × 1.05 optionality"
+            label="Base P50 PV / COIN"
+            value={fmtPrice(scenarios.find(s => s.is_primary)?.pv.p50 ?? 0)}
+            sub={`P25 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p25 ?? 0)} · P75 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p75 ?? 0)} · P90 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p90 ?? 0)}`}
           />
           <SmCard
             label="Derived discount rate"
@@ -3057,8 +3046,8 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
               <li><span className="font-bold text-gray-900">Spot:</span> Binance spot ({`$${(bnAnn/1e12).toFixed(1)}T`}/yr 2025) × current MS {pctMs(spotMs)} × {bpsStr(spotTake)} blended. Take calibrated from Q1-2025: $1.26B / $396B = 31.8 bps.</li>
-              <li><span className="font-bold text-gray-900">Derivatives:</span> Deribit total ({fmtLarge((gp["deribit_volume_30d"] as number ?? 0) * 12)}/yr) × current MS {pctMs(derivMs)} × {bpsStr(derivTake)} est. Coinbase Advanced Trade + International Exchange; volumes not separately disclosed.</li>
-              <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 50% Coinbase share = {fmtLarge(usdcRev)}/yr. Bear/base/bull apply USDC CAGR + SOFR retention for Y3.</li>
+              <li><span className="font-bold text-gray-900">Derivatives:</span> Deribit total ({fmtLarge(((gp["deribit_volume_30d"] as number) ?? 0) * 12)}/yr) × current MS {pctMs(derivMs)} × {bpsStr(derivTake)} est. Coinbase Advanced Trade + International Exchange; volumes not separately disclosed.</li>
+              <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 50% Coinbase share = {fmtLarge(usdcRev)}/yr. Velocity decays linearly to 0 by decay window; SOFR mean-reverts to 2.5% long-run.</li>
               <li><span className="font-bold text-gray-900">Other services:</span> Staking (cbETH), custody, subscriptions, Base L2 = ~17% of spot+derivatives revenue (Q4-2024 empirical ratio).</li>
               <li><span className="font-bold text-gray-900">Discount rate:</span> CAPM from live market data — not fixed. High COIN beta (~{beta.toFixed(1)}×) drives the {(DR*100).toFixed(1)}% DR; this re-prices automatically each run.</li>
             </ul>
