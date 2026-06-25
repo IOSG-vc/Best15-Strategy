@@ -156,8 +156,8 @@ def _rolling_sum(rows: list[tuple[date, float]], n: int) -> float:
 def _compute_ms(lighter_rev: list, binance_vol: list) -> dict:
     """Compute MS30/MS90/MS180 using revenue-implied Lighter volume vs Binance."""
     if not lighter_rev or not binance_vol:
-        return {"ms30": None, "ms90": 0.031, "ms180": None,
-                "ms30_ms180_trend": 1.0, "model_momentum_floor": 1.0}
+        return {"ms7": None, "ms30": None, "ms90": 0.031, "ms180": None,
+                "ms30_ms180_trend": None, "ms7_ms30_trend": None, "model_momentum_floor": 1.0}
 
     bn_by_date = {d: v for d, v in binance_vol}
     last_date = lighter_rev[-1][0]
