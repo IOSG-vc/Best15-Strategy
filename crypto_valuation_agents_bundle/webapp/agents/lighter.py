@@ -180,7 +180,7 @@ def _compute_ms(lighter_rev: list, binance_vol: list) -> dict:
     ms90  = float(np.clip(lt90  / bn90,  0, MS_SHARE_CAP)) if bn90  > 0 else 0.031
     ms180 = float(np.clip(lt180 / bn180, 0, MS_SHARE_CAP)) if bn180 > 0 else None
 
-    trend = (ms30 / ms180) if (ms30 and ms180 and ms180 > 0) else 1.0
+    trend = (ms30 / ms180) if (ms30 and ms180 and ms180 > 0) else None
     floor = max(1.0, min(trend, MS_AMPLIFIER_CAP)) if trend else 1.0
 
     return {
@@ -557,7 +557,7 @@ def run() -> dict:
             "ms90_vs_binance": ms90,
             "ms180_vs_binance": ms_data.get("ms180"),
             "ms7_ms30_trend":   ms_data.get("ms7_ms30_trend"),
-            "ms30_ms180_trend": ms_data.get("ms30_ms180_trend", 1.0),
+            "ms30_ms180_trend": ms_data.get("ms30_ms180_trend"),
             "model_momentum_floor": ms_data.get("model_momentum_floor", 1.0),
             "terminal_share_month_36": float(terminal_share),
             "tvl_proxy": float(tvl_proxy),
