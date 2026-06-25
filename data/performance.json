@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-24",
+  "lastUpdated": "2026-06-25",
   "latestRebalanceDate": "2026-06-01",
   "rebalanceDates": [
     "2026-05-01",
@@ -277,22 +277,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00069,
-          "cumReturn": 0.842888
+          "return": -0.039,
+          "cumReturn": 0.810575
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010287,
+          "cumReturn": 0.818913
         }
       ],
       "metrics": {
-        "totalReturn": -15.71,
-        "annReturn": -69.18,
-        "annVolatility": 43.06,
-        "sharpe": -1.6066,
-        "sortino": -2.3912,
-        "maxDrawdown": -24.83,
-        "calmar": -2.7857,
-        "winRate": 53.7,
+        "totalReturn": -18.11,
+        "annReturn": -74.09,
+        "annVolatility": 43.8,
+        "sharpe": -1.6914,
+        "sortino": -2.6249,
+        "maxDrawdown": -25.99,
+        "calmar": -2.8505,
+        "winRate": 54.5,
         "bestDay": 4.21,
         "worstDay": -6.37,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -365,7 +370,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.94
+          "return": -20.27
         }
       ]
     },
@@ -490,22 +495,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000485,
-          "cumReturn": 0.823442
+          "return": -0.037668,
+          "cumReturn": 0.792809
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010225,
+          "cumReturn": 0.800916
         }
       ],
       "metrics": {
-        "totalReturn": -17.66,
-        "annReturn": -95.42,
-        "annVolatility": 51.06,
-        "sharpe": -1.8688,
-        "sortino": -2.7549,
-        "maxDrawdown": -17.24,
-        "calmar": -5.5346,
-        "winRate": 37.5,
+        "totalReturn": -19.91,
+        "annReturn": -96.58,
+        "annVolatility": 51.71,
+        "sharpe": -1.8679,
+        "sortino": -2.9288,
+        "maxDrawdown": -18.18,
+        "calmar": -5.3128,
+        "winRate": 40.0,
         "bestDay": 4.26,
         "worstDay": -6.33,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -573,7 +583,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.66
+          "return": -19.91
         }
       ]
     },
@@ -848,22 +858,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000272,
-          "cumReturn": 0.791288
+          "return": -0.038266,
+          "cumReturn": 0.760801
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.008614,
+          "cumReturn": 0.767355
         }
       ],
       "metrics": {
-        "totalReturn": -20.87,
-        "annReturn": -80.05,
-        "annVolatility": 42.13,
-        "sharpe": -1.9004,
-        "sortino": -2.697,
-        "maxDrawdown": -27.6,
-        "calmar": -2.901,
-        "winRate": 50.0,
+        "totalReturn": -23.26,
+        "annReturn": -83.3,
+        "annVolatility": 42.77,
+        "sharpe": -1.9476,
+        "sortino": -2.7984,
+        "maxDrawdown": -28.98,
+        "calmar": -2.8749,
+        "winRate": 49.1,
         "bestDay": 4.43,
         "worstDay": -6.59,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -936,7 +951,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.97
+          "return": -20.45
         }
       ]
     },
@@ -1061,22 +1076,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 2.4e-05,
-          "cumReturn": 0.822757
+          "return": -0.037661,
+          "cumReturn": 0.791752
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009661,
+          "cumReturn": 0.799401
         }
       ],
       "metrics": {
-        "totalReturn": -17.72,
-        "annReturn": -95.48,
-        "annVolatility": 51.58,
-        "sharpe": -1.8509,
-        "sortino": -2.844,
-        "maxDrawdown": -17.15,
-        "calmar": -5.5662,
-        "winRate": 41.7,
+        "totalReturn": -20.06,
+        "annReturn": -96.68,
+        "annVolatility": 52.16,
+        "sharpe": -1.8536,
+        "sortino": -2.9399,
+        "maxDrawdown": -18.22,
+        "calmar": -5.3051,
+        "winRate": 40.0,
         "bestDay": 4.27,
         "worstDay": -6.72,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -1144,7 +1164,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.72
+          "return": -20.06
         }
       ]
     },
@@ -1419,22 +1439,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000188,
-          "cumReturn": 0.850175
+          "return": -0.036157,
+          "cumReturn": 0.81959
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010832,
+          "cumReturn": 0.828467
         }
       ],
       "metrics": {
-        "totalReturn": -14.98,
-        "annReturn": -67.3,
-        "annVolatility": 43.93,
-        "sharpe": -1.5319,
-        "sortino": -2.2759,
+        "totalReturn": -17.15,
+        "annReturn": -71.97,
+        "annVolatility": 44.51,
+        "sharpe": -1.6169,
+        "sortino": -2.4996,
         "maxDrawdown": -26.11,
-        "calmar": -2.5777,
-        "winRate": 51.9,
+        "calmar": -2.7566,
+        "winRate": 52.7,
         "bestDay": 4.56,
         "worstDay": -6.09,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -1507,7 +1532,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.19
+          "return": -18.33
         }
       ]
     },
@@ -1632,22 +1657,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000181,
-          "cumReturn": 0.838092
+          "return": -0.036172,
+          "cumReturn": 0.807924
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010818,
+          "cumReturn": 0.816664
         }
       ],
       "metrics": {
-        "totalReturn": -16.19,
-        "annReturn": -93.94,
-        "annVolatility": 53.59,
-        "sharpe": -1.7529,
-        "sortino": -2.6364,
+        "totalReturn": -18.33,
+        "annReturn": -95.4,
+        "annVolatility": 54.05,
+        "sharpe": -1.7653,
+        "sortino": -2.7791,
         "maxDrawdown": -17.89,
-        "calmar": -5.2521,
-        "winRate": 33.3,
+        "calmar": -5.3341,
+        "winRate": 36.0,
         "bestDay": 4.55,
         "worstDay": -6.08,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -1715,7 +1745,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.19
+          "return": -18.33
         }
       ]
     },
@@ -1990,22 +2020,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -5.2e-05,
-          "cumReturn": 0.842353
+          "return": -0.040995,
+          "cumReturn": 0.807863
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.007773,
+          "cumReturn": 0.814142
         }
       ],
       "metrics": {
-        "totalReturn": -15.76,
-        "annReturn": -69.32,
-        "annVolatility": 46.43,
-        "sharpe": -1.4929,
-        "sortino": -2.175,
-        "maxDrawdown": -24.79,
-        "calmar": -2.7965,
-        "winRate": 50.0,
+        "totalReturn": -18.59,
+        "annReturn": -75.09,
+        "annVolatility": 47.12,
+        "sharpe": -1.5937,
+        "sortino": -2.3818,
+        "maxDrawdown": -25.8,
+        "calmar": -2.9103,
+        "winRate": 50.9,
         "bestDay": 4.95,
         "worstDay": -6.33,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -2078,7 +2113,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.56
+          "return": -20.32
         }
       ]
     },
@@ -2203,22 +2238,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000504,
-          "cumReturn": 0.834894
+          "return": -0.040756,
+          "cumReturn": 0.801272
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.008305,
+          "cumReturn": 0.807926
         }
       ],
       "metrics": {
-        "totalReturn": -16.51,
-        "annReturn": -94.29,
-        "annVolatility": 54.68,
-        "sharpe": -1.7245,
-        "sortino": -2.6133,
+        "totalReturn": -19.21,
+        "annReturn": -96.1,
+        "annVolatility": 55.35,
+        "sharpe": -1.7363,
+        "sortino": -2.773,
         "maxDrawdown": -17.47,
-        "calmar": -5.3963,
-        "winRate": 37.5,
+        "calmar": -5.4995,
+        "winRate": 40.0,
         "bestDay": 4.76,
         "worstDay": -6.48,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -2286,7 +2326,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.51
+          "return": -19.21
         }
       ]
     },
@@ -2561,22 +2601,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000352,
-          "cumReturn": 0.849112
+          "return": -0.037621,
+          "cumReturn": 0.81688
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.0104,
+          "cumReturn": 0.825376
         }
       ],
       "metrics": {
-        "totalReturn": -15.09,
-        "annReturn": -67.58,
-        "annVolatility": 44.96,
-        "sharpe": -1.5031,
-        "sortino": -2.212,
+        "totalReturn": -17.46,
+        "annReturn": -72.67,
+        "annVolatility": 45.57,
+        "sharpe": -1.5947,
+        "sortino": -2.3873,
         "maxDrawdown": -26.19,
-        "calmar": -2.5803,
-        "winRate": 53.7,
+        "calmar": -2.7746,
+        "winRate": 52.7,
         "bestDay": 4.58,
         "worstDay": -6.36,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -2645,7 +2690,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.06
+          "return": -18.41
         }
       ]
     },
@@ -2920,22 +2965,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00098,
-          "cumReturn": 0.834902
+          "return": -0.040643,
+          "cumReturn": 0.801755
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009774,
+          "cumReturn": 0.809591
         }
       ],
       "metrics": {
-        "totalReturn": -16.51,
-        "annReturn": -71.14,
-        "annVolatility": 41.35,
-        "sharpe": -1.7203,
-        "sortino": -2.5007,
-        "maxDrawdown": -24.23,
-        "calmar": -2.936,
-        "winRate": 51.9,
+        "totalReturn": -19.04,
+        "annReturn": -76.01,
+        "annVolatility": 42.23,
+        "sharpe": -1.7999,
+        "sortino": -2.6921,
+        "maxDrawdown": -25.67,
+        "calmar": -2.9613,
+        "winRate": 52.7,
         "bestDay": 4.28,
         "worstDay": -6.11,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -3008,7 +3058,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.71
+          "return": -20.21
         }
       ]
     },
@@ -3283,22 +3333,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00047,
-          "cumReturn": 0.836722
+          "return": -0.039863,
+          "cumReturn": 0.803745
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009759,
+          "cumReturn": 0.811589
         }
       ],
       "metrics": {
-        "totalReturn": -16.33,
-        "annReturn": -70.7,
-        "annVolatility": 41.65,
-        "sharpe": -1.6977,
-        "sortino": -2.5109,
-        "maxDrawdown": -24.54,
-        "calmar": -2.8809,
-        "winRate": 53.7,
+        "totalReturn": -18.84,
+        "annReturn": -75.61,
+        "annVolatility": 42.47,
+        "sharpe": -1.7804,
+        "sortino": -2.7402,
+        "maxDrawdown": -25.86,
+        "calmar": -2.9241,
+        "winRate": 54.5,
         "bestDay": 4.25,
         "worstDay": -6.35,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -3371,7 +3426,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.67
+          "return": -20.15
         }
       ]
     },
@@ -3646,22 +3701,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -9.6e-05,
-          "cumReturn": 0.829074
+          "return": -0.036685,
+          "cumReturn": 0.798736
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009222,
+          "cumReturn": 0.806102
         }
       ],
       "metrics": {
-        "totalReturn": -17.09,
-        "annReturn": -72.5,
-        "annVolatility": 42.6,
-        "sharpe": -1.7017,
-        "sortino": -2.524,
-        "maxDrawdown": -25.5,
-        "calmar": -2.8434,
-        "winRate": 53.7,
+        "totalReturn": -19.39,
+        "annReturn": -76.7,
+        "annVolatility": 43.2,
+        "sharpe": -1.7756,
+        "sortino": -2.7623,
+        "maxDrawdown": -26.28,
+        "calmar": -2.9184,
+        "winRate": 54.5,
         "bestDay": 4.6,
         "worstDay": -6.44,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -3734,7 +3794,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.47
+          "return": -19.76
         }
       ]
     },
@@ -4009,22 +4069,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000489,
-          "cumReturn": 0.842835
+          "return": -0.037719,
+          "cumReturn": 0.811441
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010237,
+          "cumReturn": 0.819748
         }
       ],
       "metrics": {
-        "totalReturn": -15.72,
-        "annReturn": -69.2,
-        "annVolatility": 42.77,
-        "sharpe": -1.6178,
-        "sortino": -2.4088,
-        "maxDrawdown": -24.18,
-        "calmar": -2.8614,
-        "winRate": 53.7,
+        "totalReturn": -18.03,
+        "annReturn": -73.91,
+        "annVolatility": 43.45,
+        "sharpe": -1.7008,
+        "sortino": -2.6472,
+        "maxDrawdown": -25.04,
+        "calmar": -2.9519,
+        "winRate": 54.5,
         "bestDay": 4.26,
         "worstDay": -6.34,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -4097,7 +4162,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.66
+          "return": -19.91
         }
       ]
     },
@@ -4372,22 +4437,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000379,
-          "cumReturn": 0.849074
+          "return": -0.037725,
+          "cumReturn": 0.816734
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010347,
+          "cumReturn": 0.825184
         }
       ],
       "metrics": {
-        "totalReturn": -15.09,
-        "annReturn": -67.59,
-        "annVolatility": 44.89,
-        "sharpe": -1.5055,
-        "sortino": -2.2111,
+        "totalReturn": -17.48,
+        "annReturn": -72.71,
+        "annVolatility": 45.51,
+        "sharpe": -1.5978,
+        "sortino": -2.3866,
         "maxDrawdown": -26.16,
-        "calmar": -2.5841,
-        "winRate": 53.7,
+        "calmar": -2.78,
+        "winRate": 52.7,
         "bestDay": 4.56,
         "worstDay": -6.37,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -4456,7 +4526,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.07
+          "return": -18.43
         }
       ]
     },
@@ -4731,22 +4801,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00098,
-          "cumReturn": 0.834902
+          "return": -0.040643,
+          "cumReturn": 0.801755
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009774,
+          "cumReturn": 0.809591
         }
       ],
       "metrics": {
-        "totalReturn": -16.51,
-        "annReturn": -71.14,
-        "annVolatility": 41.35,
-        "sharpe": -1.7203,
-        "sortino": -2.5007,
-        "maxDrawdown": -24.23,
-        "calmar": -2.936,
-        "winRate": 51.9,
+        "totalReturn": -19.04,
+        "annReturn": -76.01,
+        "annVolatility": 42.23,
+        "sharpe": -1.7999,
+        "sortino": -2.6921,
+        "maxDrawdown": -25.67,
+        "calmar": -2.9613,
+        "winRate": 52.7,
         "bestDay": 4.28,
         "worstDay": -6.11,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -4819,7 +4894,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.71
+          "return": -20.21
         }
       ]
     },
@@ -5094,22 +5169,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00047,
-          "cumReturn": 0.836722
+          "return": -0.039863,
+          "cumReturn": 0.803745
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009759,
+          "cumReturn": 0.811589
         }
       ],
       "metrics": {
-        "totalReturn": -16.33,
-        "annReturn": -70.7,
-        "annVolatility": 41.65,
-        "sharpe": -1.6977,
-        "sortino": -2.5109,
-        "maxDrawdown": -24.54,
-        "calmar": -2.8809,
-        "winRate": 53.7,
+        "totalReturn": -18.84,
+        "annReturn": -75.61,
+        "annVolatility": 42.47,
+        "sharpe": -1.7804,
+        "sortino": -2.7402,
+        "maxDrawdown": -25.86,
+        "calmar": -2.9241,
+        "winRate": 54.5,
         "bestDay": 4.25,
         "worstDay": -6.35,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -5182,7 +5262,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.67
+          "return": -20.15
         }
       ]
     },
@@ -5457,22 +5537,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -9.6e-05,
-          "cumReturn": 0.829074
+          "return": -0.036685,
+          "cumReturn": 0.798736
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009222,
+          "cumReturn": 0.806102
         }
       ],
       "metrics": {
-        "totalReturn": -17.09,
-        "annReturn": -72.5,
-        "annVolatility": 42.6,
-        "sharpe": -1.7017,
-        "sortino": -2.524,
-        "maxDrawdown": -25.5,
-        "calmar": -2.8434,
-        "winRate": 53.7,
+        "totalReturn": -19.39,
+        "annReturn": -76.7,
+        "annVolatility": 43.2,
+        "sharpe": -1.7756,
+        "sortino": -2.7623,
+        "maxDrawdown": -26.28,
+        "calmar": -2.9184,
+        "winRate": 54.5,
         "bestDay": 4.6,
         "worstDay": -6.44,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -5545,7 +5630,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.47
+          "return": -19.76
         }
       ]
     },
@@ -5820,22 +5905,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000486,
-          "cumReturn": 0.842854
+          "return": -0.03767,
+          "cumReturn": 0.811498
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010226,
+          "cumReturn": 0.819796
         }
       ],
       "metrics": {
-        "totalReturn": -15.71,
-        "annReturn": -69.19,
-        "annVolatility": 42.76,
-        "sharpe": -1.618,
-        "sortino": -2.4086,
-        "maxDrawdown": -24.17,
-        "calmar": -2.8624,
-        "winRate": 53.7,
+        "totalReturn": -18.02,
+        "annReturn": -73.9,
+        "annVolatility": 43.44,
+        "sharpe": -1.7011,
+        "sortino": -2.6472,
+        "maxDrawdown": -25.03,
+        "calmar": -2.9521,
+        "winRate": 54.5,
         "bestDay": 4.26,
         "worstDay": -6.33,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -5908,7 +5998,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.65
+          "return": -19.91
         }
       ]
     },
@@ -6183,22 +6273,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000219,
-          "cumReturn": 0.841884
+          "return": -0.032818,
+          "cumReturn": 0.814434
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.01111,
+          "cumReturn": 0.823482
         }
       ],
       "metrics": {
-        "totalReturn": -15.81,
-        "annReturn": -69.43,
-        "annVolatility": 43.15,
-        "sharpe": -1.609,
-        "sortino": -2.3967,
+        "totalReturn": -17.65,
+        "annReturn": -73.09,
+        "annVolatility": 43.6,
+        "sharpe": -1.6766,
+        "sortino": -2.5917,
         "maxDrawdown": -25.21,
-        "calmar": -2.7542,
-        "winRate": 50.0,
+        "calmar": -2.8993,
+        "winRate": 50.9,
         "bestDay": 4.78,
         "worstDay": -6.42,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -6271,7 +6366,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.25
+          "return": -18.08
         }
       ]
     },
@@ -6546,22 +6641,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.00031,
-          "cumReturn": 0.806787
+          "return": -0.03792,
+          "cumReturn": 0.775953
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009026,
+          "cumReturn": 0.782956
         }
       ],
       "metrics": {
-        "totalReturn": -19.32,
-        "annReturn": -77.2,
-        "annVolatility": 42.24,
-        "sharpe": -1.8277,
-        "sortino": -2.734,
-        "maxDrawdown": -26.01,
-        "calmar": -2.9679,
-        "winRate": 55.6,
+        "totalReturn": -21.7,
+        "annReturn": -80.87,
+        "annVolatility": 42.89,
+        "sharpe": -1.8856,
+        "sortino": -2.8692,
+        "maxDrawdown": -27.7,
+        "calmar": -2.9192,
+        "winRate": 54.5,
         "bestDay": 4.42,
         "worstDay": -6.59,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -6634,7 +6734,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -18.29
+          "return": -20.7
         }
       ]
     },
@@ -6909,22 +7009,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000245,
-          "cumReturn": 0.812754
+          "return": -0.038614,
+          "cumReturn": 0.781179
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.008754,
+          "cumReturn": 0.788018
         }
       ],
       "metrics": {
-        "totalReturn": -18.72,
-        "annReturn": -76.02,
-        "annVolatility": 42.08,
-        "sharpe": -1.8064,
-        "sortino": -2.699,
-        "maxDrawdown": -25.74,
-        "calmar": -2.9538,
-        "winRate": 55.6,
+        "totalReturn": -21.2,
+        "annReturn": -80.02,
+        "annVolatility": 42.77,
+        "sharpe": -1.8708,
+        "sortino": -2.8393,
+        "maxDrawdown": -27.33,
+        "calmar": -2.9277,
+        "winRate": 54.5,
         "bestDay": 4.39,
         "worstDay": -6.58,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -6997,7 +7102,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -18.07
+          "return": -20.56
         }
       ]
     },
@@ -7272,22 +7377,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000272,
-          "cumReturn": 0.791288
+          "return": -0.038266,
+          "cumReturn": 0.760801
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.008614,
+          "cumReturn": 0.767355
         }
       ],
       "metrics": {
-        "totalReturn": -20.87,
-        "annReturn": -80.05,
-        "annVolatility": 42.13,
-        "sharpe": -1.9004,
-        "sortino": -2.697,
-        "maxDrawdown": -27.6,
-        "calmar": -2.901,
-        "winRate": 50.0,
+        "totalReturn": -23.26,
+        "annReturn": -83.3,
+        "annVolatility": 42.77,
+        "sharpe": -1.9476,
+        "sortino": -2.7984,
+        "maxDrawdown": -28.98,
+        "calmar": -2.8749,
+        "winRate": 49.1,
         "bestDay": 4.43,
         "worstDay": -6.59,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -7360,7 +7470,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.97
+          "return": -20.45
         }
       ]
     },
@@ -7635,22 +7745,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.000525,
-          "cumReturn": 0.842595
+          "return": -0.032171,
+          "cumReturn": 0.815916
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.011874,
+          "cumReturn": 0.825604
         }
       ],
       "metrics": {
-        "totalReturn": -15.74,
-        "annReturn": -69.26,
-        "annVolatility": 43.47,
-        "sharpe": -1.5931,
-        "sortino": -2.3587,
+        "totalReturn": -17.44,
+        "annReturn": -72.62,
+        "annVolatility": 43.89,
+        "sharpe": -1.6544,
+        "sortino": -2.5397,
         "maxDrawdown": -26.04,
-        "calmar": -2.6598,
-        "winRate": 50.0,
+        "calmar": -2.7889,
+        "winRate": 50.9,
         "bestDay": 4.79,
         "worstDay": -6.5,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -7723,7 +7838,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.04
+          "return": -17.73
         }
       ]
     },
@@ -7998,22 +8113,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 1e-05,
-          "cumReturn": 0.824729
+          "return": -0.037814,
+          "cumReturn": 0.793535
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009764,
+          "cumReturn": 0.801283
         }
       ],
       "metrics": {
-        "totalReturn": -17.53,
-        "annReturn": -73.48,
-        "annVolatility": 42.28,
-        "sharpe": -1.7376,
-        "sortino": -2.6502,
-        "maxDrawdown": -25.64,
-        "calmar": -2.8656,
-        "winRate": 55.6,
+        "totalReturn": -19.87,
+        "annReturn": -77.63,
+        "annVolatility": 42.96,
+        "sharpe": -1.8071,
+        "sortino": -2.8032,
+        "maxDrawdown": -26.69,
+        "calmar": -2.909,
+        "winRate": 54.5,
         "bestDay": 4.21,
         "worstDay": -6.73,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -8086,7 +8206,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.76
+          "return": -20.1
         }
       ]
     },
@@ -8361,22 +8481,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -4e-05,
-          "cumReturn": 0.822038
+          "return": -0.03804,
+          "cumReturn": 0.7908
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009578,
+          "cumReturn": 0.798374
         }
       ],
       "metrics": {
-        "totalReturn": -17.8,
-        "annReturn": -74.07,
-        "annVolatility": 42.1,
-        "sharpe": -1.7593,
-        "sortino": -2.5899,
-        "maxDrawdown": -25.92,
-        "calmar": -2.857,
-        "winRate": 53.7,
+        "totalReturn": -20.16,
+        "annReturn": -78.17,
+        "annVolatility": 42.79,
+        "sharpe": -1.8271,
+        "sortino": -2.8165,
+        "maxDrawdown": -26.99,
+        "calmar": -2.8969,
+        "winRate": 54.5,
         "bestDay": 4.22,
         "worstDay": -6.72,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -8449,7 +8574,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.7
+          "return": -20.07
         }
       ]
     },
@@ -8724,22 +8849,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 2.4e-05,
-          "cumReturn": 0.820411
+          "return": -0.037661,
+          "cumReturn": 0.789494
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.009661,
+          "cumReturn": 0.797121
         }
       ],
       "metrics": {
-        "totalReturn": -17.96,
-        "annReturn": -74.42,
-        "annVolatility": 42.28,
-        "sharpe": -1.7599,
-        "sortino": -2.6769,
-        "maxDrawdown": -26.16,
-        "calmar": -2.8448,
-        "winRate": 55.6,
+        "totalReturn": -20.29,
+        "annReturn": -78.4,
+        "annVolatility": 42.94,
+        "sharpe": -1.8257,
+        "sortino": -2.8252,
+        "maxDrawdown": -27.11,
+        "calmar": -2.8917,
+        "winRate": 54.5,
         "bestDay": 4.27,
         "worstDay": -6.72,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -8812,7 +8942,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -17.72
+          "return": -20.06
         }
       ]
     },
@@ -9087,22 +9217,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.002564,
-          "cumReturn": 0.831614
+          "return": -0.019047,
+          "cumReturn": 0.817871
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.010849,
+          "cumReturn": 0.826744
         }
       ],
       "metrics": {
-        "totalReturn": -16.84,
-        "annReturn": -71.91,
-        "annVolatility": 54.41,
-        "sharpe": -1.3216,
-        "sortino": -1.8706,
+        "totalReturn": -17.33,
+        "annReturn": -72.36,
+        "annVolatility": 54.19,
+        "sharpe": -1.3354,
+        "sortino": -1.9207,
         "maxDrawdown": -28.51,
-        "calmar": -2.5223,
-        "winRate": 48.1,
+        "calmar": -2.5381,
+        "winRate": 49.1,
         "bestDay": 6.84,
         "worstDay": -7.91,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -9175,7 +9310,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -19.31
+          "return": -19.78
         }
       ]
     },
@@ -9300,22 +9435,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000881,
-          "cumReturn": 0.841658
+          "return": -0.027456,
+          "cumReturn": 0.817829
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.014523,
+          "cumReturn": 0.829707
         }
       ],
       "metrics": {
-        "totalReturn": -15.83,
-        "annReturn": -93.51,
-        "annVolatility": 49.34,
-        "sharpe": -1.8954,
-        "sortino": -2.8765,
+        "totalReturn": -17.03,
+        "annReturn": -94.15,
+        "annVolatility": 49.57,
+        "sharpe": -1.8993,
+        "sortino": -3.0003,
         "maxDrawdown": -16.56,
-        "calmar": -5.6475,
-        "winRate": 41.7,
+        "calmar": -5.6861,
+        "winRate": 40.0,
         "bestDay": 4.65,
         "worstDay": -6.99,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -9383,7 +9523,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -15.83
+          "return": -17.03
         }
       ]
     },
@@ -9508,22 +9648,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000807,
-          "cumReturn": 0.839765
+          "return": -0.027728,
+          "cumReturn": 0.815821
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.015678,
+          "cumReturn": 0.828612
         }
       ],
       "metrics": {
-        "totalReturn": -16.02,
-        "annReturn": -93.74,
-        "annVolatility": 52.7,
-        "sharpe": -1.7788,
-        "sortino": -2.7592,
+        "totalReturn": -17.14,
+        "annReturn": -94.27,
+        "annVolatility": 52.88,
+        "sharpe": -1.7828,
+        "sortino": -2.8769,
         "maxDrawdown": -17.76,
-        "calmar": -5.2783,
-        "winRate": 41.7,
+        "calmar": -5.308,
+        "winRate": 40.0,
         "bestDay": 5.21,
         "worstDay": -7.0,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -9591,7 +9736,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -16.02
+          "return": -17.14
         }
       ]
     },
@@ -9866,22 +10011,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": -0.00283,
-          "cumReturn": 0.842699
+          "return": -0.013096,
+          "cumReturn": 0.834023
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.016645,
+          "cumReturn": 0.847905
         }
       ],
       "metrics": {
-        "totalReturn": -15.73,
-        "annReturn": -69.23,
-        "annVolatility": 57.89,
-        "sharpe": -1.1959,
-        "sortino": -1.8341,
+        "totalReturn": -15.21,
+        "annReturn": -67.21,
+        "annVolatility": 57.63,
+        "sharpe": -1.1663,
+        "sortino": -1.8116,
         "maxDrawdown": -29.4,
-        "calmar": -2.3549,
-        "winRate": 48.1,
+        "calmar": -2.2864,
+        "winRate": 49.1,
         "bestDay": 7.48,
         "worstDay": -7.89,
-        "numDays": 54
+        "numDays": 55
       },
       "latestWeights": [
         {
@@ -9954,7 +10104,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -18.64
+          "return": -18.14
         }
       ]
     },
@@ -10079,22 +10229,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000873,
-          "cumReturn": 0.841779
+          "return": -0.027452,
+          "cumReturn": 0.817956
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.014652,
+          "cumReturn": 0.829941
         }
       ],
       "metrics": {
-        "totalReturn": -15.82,
-        "annReturn": -93.5,
-        "annVolatility": 49.42,
-        "sharpe": -1.892,
-        "sortino": -2.8713,
+        "totalReturn": -17.01,
+        "annReturn": -94.13,
+        "annVolatility": 49.66,
+        "sharpe": -1.8955,
+        "sortino": -2.9947,
         "maxDrawdown": -16.56,
-        "calmar": -5.645,
-        "winRate": 41.7,
+        "calmar": -5.6829,
+        "winRate": 40.0,
         "bestDay": 4.66,
         "worstDay": -6.99,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -10162,7 +10317,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -15.82
+          "return": -17.01
         }
       ]
     },
@@ -10287,22 +10442,27 @@
         },
         {
           "date": "2026-06-24",
-          "return": 0.000788,
-          "cumReturn": 0.840113
+          "return": -0.027288,
+          "cumReturn": 0.816544
+        },
+        {
+          "date": "2026-06-25",
+          "return": 0.015897,
+          "cumReturn": 0.829525
         }
       ],
       "metrics": {
-        "totalReturn": -15.99,
-        "annReturn": -93.7,
-        "annVolatility": 52.93,
-        "sharpe": -1.7703,
-        "sortino": -2.7493,
+        "totalReturn": -17.05,
+        "annReturn": -94.17,
+        "annVolatility": 53.08,
+        "sharpe": -1.774,
+        "sortino": -2.8658,
         "maxDrawdown": -17.8,
-        "calmar": -5.2628,
-        "winRate": 41.7,
+        "calmar": -5.2893,
+        "winRate": 40.0,
         "bestDay": 5.24,
         "worstDay": -7.01,
-        "numDays": 24
+        "numDays": 25
       },
       "latestWeights": [
         {
@@ -10370,7 +10530,7 @@
         {
           "year": 2026,
           "month": 6,
-          "return": -15.99
+          "return": -17.05
         }
       ]
     }
@@ -10599,7 +10759,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.785438
+          "cumReturn": 0.848998
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.89567
         }
       ]
     },
@@ -10826,7 +10990,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.703605
+          "cumReturn": 0.704228
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.713771
         }
       ]
     },
@@ -11053,7 +11221,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.937362
+          "cumReturn": 0.914693
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.923486
         }
       ]
     },
@@ -11280,7 +11452,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.801416
+          "cumReturn": 0.777893
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.789023
         }
       ]
     },
@@ -11507,7 +11683,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.429002
+          "cumReturn": 0.418799
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.433437
         }
       ]
     },
@@ -11734,7 +11914,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.817845
+          "cumReturn": 0.805379
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.815722
         }
       ]
     },
@@ -11961,7 +12145,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.605506
+          "cumReturn": 0.592166
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.600949
         }
       ]
     },
@@ -12188,7 +12376,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.837529
+          "cumReturn": 0.813912
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.8233
         }
       ]
     },
@@ -12415,7 +12607,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.827085
+          "cumReturn": 0.784889
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.784889
         }
       ]
     },
@@ -12642,7 +12838,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.759077
+          "cumReturn": 0.711936
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.711936
         }
       ]
     },
@@ -12869,7 +13069,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.817474
+          "cumReturn": 0.81679
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.832673
         }
       ]
     },
@@ -13096,7 +13300,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.842929
+          "cumReturn": 0.830313
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.865646
         }
       ]
     },
@@ -13323,7 +13531,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.726142
+          "cumReturn": 0.703542
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.717891
         }
       ]
     },
@@ -13550,7 +13762,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.871028
+          "cumReturn": 0.85556
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.836435
         }
       ]
     },
@@ -13777,7 +13993,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.40171
+          "cumReturn": 1.319441
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.319441
         }
       ]
     },
@@ -14004,7 +14224,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.523032
+          "cumReturn": 1.54377
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.550621
         }
       ]
     },
@@ -14231,7 +14455,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.758342
+          "cumReturn": 0.737682
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.754005
         }
       ]
     },
@@ -14458,7 +14686,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.831663
+          "cumReturn": 0.865741
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.894684
         }
       ]
     },
@@ -14685,7 +14917,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.586104
+          "cumReturn": 0.531298
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.531298
         }
       ]
     },
@@ -14912,7 +15148,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.517077
+          "cumReturn": 1.517506
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.515367
         }
       ]
     },
@@ -15139,7 +15379,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.793257
+          "cumReturn": 0.772923
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.780199
         }
       ]
     },
@@ -15366,7 +15610,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.686105
+          "cumReturn": 0.660225
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.669208
         }
       ]
     },
@@ -15593,7 +15841,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.827124
+          "cumReturn": 0.808895
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.822636
         }
       ]
     },
@@ -15820,7 +16072,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.198012
+          "cumReturn": 1.159569
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.155342
         }
       ]
     },
@@ -16047,7 +16303,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.7597
+          "cumReturn": 0.744152
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.756028
         }
       ]
     },
@@ -16274,7 +16534,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.205496
+          "cumReturn": 1.193159
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.197017
         }
       ]
     },
@@ -16501,7 +16765,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 0.904697
+          "cumReturn": 0.903214
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 0.920001
         }
       ]
     },
@@ -16728,7 +16996,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.437708
+          "cumReturn": 1.40033
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.43651
         }
       ]
     },
@@ -16955,7 +17227,11 @@
         },
         {
           "date": "2026-06-24",
-          "cumReturn": 1.073014
+          "cumReturn": 1.070461
+        },
+        {
+          "date": "2026-06-25",
+          "cumReturn": 1.081149
         }
       ]
     }
