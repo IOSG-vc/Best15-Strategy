@@ -106,6 +106,35 @@ def fetch_price_history(cg_id: str, days: int = 180) -> list[tuple[str, float]]:
     return []
 
 
+def fetch_yahoo_price_history(ticker: str, days: int = 200) -> list[tuple[str, float]]:
+    """Return [(date_str, close_price)] from Yahoo Finance chart API."""
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?range={days}d&interval=1d"
+    req = Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    for attempt in range(3):
+        try:
+            with urlopen(req, timeout=20) as r:
+                data = json.loads(r.read())
+            result = data["chart"]["result"][0]
+            timestamps = result.get("timestamp", [])
+            closes = result["indicators"]["quote"][0]["close"]
+            return [
+                (datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d"), float(p))
+                for ts, p in zip(timestamps, closes) if p is not None
+            ]
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(10 * (attempt + 1))
+            else:
+                print(f"  Yahoo Finance price fetch failed for {ticker}: {e}")
+    return []
+
+
+# Stock tickers to use Yahoo Finance for beta computation (token_key → yahoo ticker)
+YAHOO_BETA_TICKERS: dict[str, str] = {
+    "coinbase": "COIN",
+}
+
+
 def compute_up_down_beta(token_prices: list, btc_prices: list) -> tuple:
     """Return (up_beta, down_beta, ratio) vs BTC over common date range."""
     token_by_date = {d: p for d, p in token_prices}
@@ -177,12 +206,16 @@ btc_prices = fetch_price_history("bitcoin", days=200)
 if btc_prices:
     time.sleep(3)
     for token_key, _, _, symbol, _, cg_id in TOKENS:
-        if not cg_id:
-            continue
         if results.get(token_key, {}).get("status") != "ok":
             continue
         try:
-            tok_prices = fetch_price_history(cg_id, days=200)
+            yahoo_ticker = YAHOO_BETA_TICKERS.get(token_key)
+            if yahoo_ticker:
+                tok_prices = fetch_yahoo_price_history(yahoo_ticker, days=200)
+            elif cg_id:
+                tok_prices = fetch_price_history(cg_id, days=200)
+            else:
+                continue
             up_b, dn_b, ratio = compute_up_down_beta(tok_prices, btc_prices)
             gp = (results[token_key].get("data") or {}).get("current_gp")
             if gp is not None:
