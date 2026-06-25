@@ -17,6 +17,8 @@ import time
 from urllib.request import Request, urlopen
 from pathlib import Path
 
+import numpy as np
+
 REPO_ROOT    = Path(__file__).parent.parent
 
 # Load .env.local so API keys are available to Python agents
@@ -81,6 +83,51 @@ def fetch_mcap_history(coingecko_id: str, days: int = 90) -> list[dict]:
     return []
 
 
+def fetch_price_history(cg_id: str, days: int = 180) -> list[tuple[str, float]]:
+    """Return [(date_str, price)] from CoinGecko daily market chart."""
+    url = f"{CG_BASE}/coins/{cg_id}/market_chart?vs_currency=usd&days={days}&interval=daily"
+    headers = {"User-Agent": UA, "Accept": "application/json"}
+    if CG_API_KEY:
+        headers["x-cg-pro-api-key"] = CG_API_KEY
+    req = Request(url, headers=headers)
+    for attempt in range(3):
+        try:
+            with urlopen(req, timeout=20) as r:
+                data = json.loads(r.read())
+            return [
+                (datetime.datetime.fromtimestamp(ts / 1000, tz=datetime.timezone.utc).strftime("%Y-%m-%d"), float(p))
+                for ts, p in data.get("prices", [])
+            ]
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(10 * (attempt + 1))
+            else:
+                print(f"  price history fetch failed for {cg_id}: {e}")
+    return []
+
+
+def compute_up_down_beta(token_prices: list, btc_prices: list) -> tuple:
+    """Return (up_beta, down_beta, ratio) vs BTC over common date range."""
+    token_by_date = {d: p for d, p in token_prices}
+    btc_by_date   = {d: p for d, p in btc_prices}
+    common = sorted(set(token_by_date) & set(btc_by_date))
+    if len(common) < 40:
+        return None, None, None
+    tok = np.array([(token_by_date[d1] / token_by_date[d0]) - 1 for d0, d1 in zip(common, common[1:])])
+    btc = np.array([(btc_by_date[d1]   / btc_by_date[d0])   - 1 for d0, d1 in zip(common, common[1:])])
+
+    def _beta(t, b):
+        if len(b) < 10:
+            return None
+        var_b = float(np.var(b))
+        return float(np.cov(t, b)[0, 1] / var_b) if var_b > 1e-10 else None
+
+    up_beta   = _beta(tok[btc > 0], btc[btc > 0])
+    down_beta = _beta(tok[btc < 0], btc[btc < 0])
+    ratio = (up_beta / abs(down_beta)) if (up_beta is not None and down_beta and abs(down_beta) > 1e-6) else None
+    return up_beta, down_beta, ratio
+
+
 results: dict = {}
 
 for token_key, module_path, name, symbol, chain, cg_id in TOKENS:
@@ -123,6 +170,33 @@ for token_key, module_path, name, symbol, chain, cg_id in TOKENS:
         results[token_key]["mcap_history"] = []
         print(f"[{symbol}] no CoinGecko id — mcap history skipped")
     time.sleep(4)  # Respect public rate limits between tokens
+
+# ── Up/Down beta vs BTC ───────────────────────────────────────────────────────
+print("\n[BETA] Fetching BTC price history for conditional beta computation…")
+btc_prices = fetch_price_history("bitcoin", days=200)
+if btc_prices:
+    time.sleep(3)
+    for token_key, _, _, symbol, _, cg_id in TOKENS:
+        if not cg_id:
+            continue
+        if results.get(token_key, {}).get("status") != "ok":
+            continue
+        try:
+            tok_prices = fetch_price_history(cg_id, days=200)
+            up_b, dn_b, ratio = compute_up_down_beta(tok_prices, btc_prices)
+            gp = (results[token_key].get("data") or {}).get("current_gp")
+            if gp is not None:
+                gp["up_beta_btc"]    = up_b
+                gp["down_beta_btc"]  = dn_b
+                gp["beta_ratio_btc"] = ratio
+            print(f"[{symbol}] up_beta={f'{up_b:.2f}' if up_b is not None else 'N/A'} "
+                  f"down_beta={f'{dn_b:.2f}' if dn_b is not None else 'N/A'} "
+                  f"ratio={f'{ratio:.2f}' if ratio is not None else 'N/A'}")
+        except Exception as e:
+            print(f"[{symbol}] beta computation failed: {e}")
+        time.sleep(3)
+else:
+    print("[BETA] BTC price fetch failed — skipping betas")
 
 output = {
     "lastUpdated": str(datetime.date.today()),

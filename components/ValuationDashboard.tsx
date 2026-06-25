@@ -4522,12 +4522,15 @@ interface SummaryStats {
   vel30_180: number | null;
   gmv_vel7_30: number | null;
   gmv_vel30_180: number | null;
+  up_beta: number | null;
+  down_beta: number | null;
+  beta_ratio: number | null;
   signal: string | null;
 }
 
 function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
   const data = token.data;
-  if (!data) return { p50spot: null, vel7_30: null, vel30_180: null, gmv_vel7_30: null, gmv_vel30_180: null, signal: null };
+  if (!data) return { p50spot: null, vel7_30: null, vel30_180: null, gmv_vel7_30: null, gmv_vel30_180: null, up_beta: null, down_beta: null, beta_ratio: null, signal: null };
 
   const spot    = data.market.spot;
   const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
@@ -4571,10 +4574,14 @@ function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
     if (avg30 !== null && avg180 !== null && avg180 > 0) gmv_vel30_180 = avg30 / avg180;
   }
 
+  const up_beta   = num(gp.up_beta_btc);
+  const down_beta = num(gp.down_beta_btc);
+  const beta_ratio = num(gp.beta_ratio_btc);
+
   const signal = (data.hist_charts as { backtest?: { latest_signal?: string } } | undefined)
     ?.backtest?.latest_signal ?? null;
 
-  return { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, signal };
+  return { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, up_beta, down_beta, beta_ratio, signal };
 }
 
 function velColor(v: number): string {
@@ -4582,6 +4589,8 @@ function velColor(v: number): string {
   if (v < 0.95) return "#f87171";
   return "#9ca3af";
 }
+
+type SortCol = "p50spot" | "vel7_30" | "vel30_180" | "gmv_vel7_30" | "gmv_vel30_180" | "up_beta" | "down_beta" | "beta_ratio" | "signal" | null;
 
 function LandingSummary({
   tokens,
@@ -4592,11 +4601,41 @@ function LandingSummary({
   selected: string;
   onSelect: (key: string) => void;
 }) {
-  const rows = tokens.map(([key, token]) => ({
+  const [sortCol, setSortCol] = useState<SortCol>(null);
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+
+  function handleSort(col: SortCol) {
+    if (sortCol === col) setSortDir(d => d === "desc" ? "asc" : "desc");
+    else { setSortCol(col); setSortDir("desc"); }
+  }
+
+  const baseRows = tokens.map(([key, token]) => ({
     key,
     token,
     stats: extractSummaryStats(key, token),
   }));
+
+  const rows = sortCol === null ? baseRows : [...baseRows].sort((a, b) => {
+    const av = (a.stats as unknown as Record<string, unknown>)[sortCol] as number | string | null;
+    const bv = (b.stats as unknown as Record<string, unknown>)[sortCol] as number | string | null;
+    if (av === null && bv === null) return 0;
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    const cmp = typeof av === "string" ? av.localeCompare(bv as string) : (av as number) - (bv as number);
+    return sortDir === "desc" ? -cmp : cmp;
+  });
+
+  function SortTh({ col, children, className }: { col: SortCol; children: React.ReactNode; className?: string; }) {
+    const active = sortCol === col;
+    return (
+      <th
+        className={`px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap cursor-pointer select-none hover:text-gray-300 ${className ?? "text-right"}`}
+        onClick={() => handleSort(col)}
+      >
+        {children}{active ? (sortDir === "desc" ? " ↓" : " ↑") : ""}
+      </th>
+    );
+  }
 
   const signalStyle: Record<string, { color: string; bg: string; border: string }> = {
     GOOD:    { color: "#4ade80", bg: "rgba(74,222,128,0.12)", border: "rgba(74,222,128,0.35)" },
@@ -4614,19 +4653,22 @@ function LandingSummary({
           <thead>
             <tr className="border-b border-[#2d3144]">
               <th className="text-left px-5 py-2.5 font-medium text-gray-500 whitespace-nowrap">Token</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">P50 / spot</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">MS Vel 7/30</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">MS Vel 30/180</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">GMV Vel 7/30</th>
-              <th className="text-right px-4 py-2.5 font-medium text-gray-500 whitespace-nowrap">GMV Vel 30/180</th>
-              <th className="text-right px-5 py-2.5 font-medium text-gray-500 whitespace-nowrap">Signal</th>
+              <SortTh col="p50spot">P50 / spot</SortTh>
+              <SortTh col="vel7_30">MS Vel 7/30</SortTh>
+              <SortTh col="vel30_180">MS Vel 30/180</SortTh>
+              <SortTh col="gmv_vel7_30">GMV Vel 7/30</SortTh>
+              <SortTh col="gmv_vel30_180">GMV Vel 30/180</SortTh>
+              <SortTh col="up_beta">Up β</SortTh>
+              <SortTh col="down_beta">Down β</SortTh>
+              <SortTh col="beta_ratio">β ratio</SortTh>
+              <SortTh col="signal">Signal</SortTh>
             </tr>
           </thead>
           <tbody>
             {rows.map(({ key, token, stats }) => {
               const ring    = TOKEN_RING[key] ?? "#60a5fa";
               const active  = key === selected;
-              const { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, signal } = stats;
+              const { p50spot, vel7_30, vel30_180, gmv_vel7_30, gmv_vel30_180, up_beta, down_beta, beta_ratio, signal } = stats;
               const p50Color = p50spot === null ? "#9ca3af" : p50spot >= 1.1 ? "#4ade80" : p50spot < 0.9 ? "#f87171" : "#fbbf24";
               const ss = signal ? signalStyle[signal] : null;
 
@@ -4677,6 +4719,21 @@ function LandingSummary({
                     ) : (
                       <span className="text-gray-600">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {up_beta !== null ? (
+                      <span style={{ color: up_beta >= 1 ? "#4ade80" : up_beta < 0.5 ? "#f87171" : "#9ca3af" }}>{up_beta.toFixed(2)}</span>
+                    ) : <span className="text-gray-600">—</span>}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {down_beta !== null ? (
+                      <span style={{ color: down_beta <= 1 ? "#4ade80" : down_beta > 1.5 ? "#f87171" : "#9ca3af" }}>{down_beta.toFixed(2)}</span>
+                    ) : <span className="text-gray-600">—</span>}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono whitespace-nowrap">
+                    {beta_ratio !== null ? (
+                      <span style={{ color: beta_ratio >= 1.1 ? "#4ade80" : beta_ratio < 0.85 ? "#f87171" : "#9ca3af" }}>{beta_ratio.toFixed(2)}</span>
+                    ) : <span className="text-gray-600">—</span>}
                   </td>
                   <td className="px-5 py-2.5 text-right whitespace-nowrap">
                     {ss ? (
