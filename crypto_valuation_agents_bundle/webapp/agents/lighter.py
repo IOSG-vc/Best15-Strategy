@@ -170,10 +170,12 @@ def _compute_ms(lighter_rev: list, binance_vol: list) -> dict:
         cutoff = last_date - timedelta(days=n - 1)
         return sum(v for d, v in bn_by_date.items() if d >= cutoff and d <= last_date)
 
+    lt7   = _vol_sum(7);   bn7   = _bn_sum(7)
     lt30  = _vol_sum(30);  bn30  = _bn_sum(30)
     lt90  = _vol_sum(90);  bn90  = _bn_sum(90)
     lt180 = _vol_sum(180); bn180 = _bn_sum(180)
 
+    ms7   = float(np.clip(lt7   / bn7,   0, MS_SHARE_CAP)) if bn7   > 0 else None
     ms30  = float(np.clip(lt30  / bn30,  0, MS_SHARE_CAP)) if bn30  > 0 else None
     ms90  = float(np.clip(lt90  / bn90,  0, MS_SHARE_CAP)) if bn90  > 0 else 0.031
     ms180 = float(np.clip(lt180 / bn180, 0, MS_SHARE_CAP)) if bn180 > 0 else None
@@ -182,8 +184,9 @@ def _compute_ms(lighter_rev: list, binance_vol: list) -> dict:
     floor = max(1.0, min(trend, MS_AMPLIFIER_CAP)) if trend else 1.0
 
     return {
-        "ms30": ms30, "ms90": ms90, "ms180": ms180,
+        "ms7": ms7, "ms30": ms30, "ms90": ms90, "ms180": ms180,
         "ms30_ms180_trend": trend,
+        "ms7_ms30_trend": (ms7 / ms30) if (ms7 and ms30 and ms30 > 0) else None,
         "model_momentum_floor": floor,
     }
 
@@ -553,6 +556,7 @@ def run() -> dict:
             "ms30_vs_binance": ms_data.get("ms30"),
             "ms90_vs_binance": ms90,
             "ms180_vs_binance": ms_data.get("ms180"),
+            "ms7_ms30_trend":   ms_data.get("ms7_ms30_trend"),
             "ms30_ms180_trend": ms_data.get("ms30_ms180_trend", 1.0),
             "model_momentum_floor": ms_data.get("model_momentum_floor", 1.0),
             "terminal_share_month_36": float(terminal_share),

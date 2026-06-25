@@ -4555,6 +4555,9 @@ function extractSummaryStats(key: string, token: TokenResult): SummaryStats {
     const ens = gp.card_velocity_ensemble as Record<string, number> | undefined;
     if (ens?.gdv_7 && ens?.gdv_30) vel7_30 = (ens.gdv_7 / 7) / (ens.gdv_30 / 30);
   }
+  if (vel7_30 === null && key === "uni") {
+    vel7_30 = num(gp.ms7_ms30_binance_spot_trend);
+  }
 
   // GMV velocity — 7D vs 30D daily average ratio (CARDS)
   let gmv_vel: number | null = null;

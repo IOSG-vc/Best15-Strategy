@@ -906,6 +906,12 @@ def run() -> dict:
                 "ms30_vs_binance_spot": binance_spot_snapshot["ms30"],
                 "ms90_vs_binance_spot": binance_spot_snapshot["ms90"],
                 "ms180_vs_binance_spot": binance_spot_snapshot["ms180"],
+                "ms7_ms30_binance_spot_trend": (
+                    binance_spot_snapshot["ms7"] / binance_spot_snapshot["ms30"]
+                    if binance_spot_snapshot and binance_spot_snapshot.get("ms7") and binance_spot_snapshot.get("ms30")
+                    and binance_spot_snapshot["ms30"] > 0
+                    else None
+                ),
                 "ms30_ms180_binance_spot_trend": (
                     binance_spot_snapshot["ms30"] / binance_spot_snapshot["ms180"]
                     if binance_spot_snapshot and binance_spot_snapshot["ms30"] and binance_spot_snapshot["ms180"]

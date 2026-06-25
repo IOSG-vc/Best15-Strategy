@@ -85,9 +85,11 @@ def run() -> dict:
         scenarios.append(entry)
 
     # ── current_gp: HYPE-specific metrics ────────────────────────────────────
+    ms7   = ms.get("ms7")
     ms30  = ms.get("ms30") or ms["ms90"]
     ms180 = ms.get("ms180") or ms["ms90"]
     ms30_ms180_trend = (ms30 / ms180) if ms180 > 0 else 1.0
+    ms7_ms30_trend = (ms7 / ms30) if (ms7 and ms30 and ms30 > 0) else None
 
     # Growth velocity: how much the rolling 30D share has changed over the last 90 days.
     # Use ms_history to find ms30 from ~90 days ago; fall back to (ms30 - ms90) if history is thin.
@@ -101,6 +103,7 @@ def run() -> dict:
         # ── header cards (order matters: UI reads these top 6) ──────────────
         "ms90_vs_binance":        ms["ms90"],          # MS90 valuation seed
         "ms30_vs_binance":        ms30,                # MCP MS30
+        "ms7_ms30_trend":         ms7_ms30_trend,      # MS7 / MS30
         "ms30_ms180_trend":       ms30_ms180_trend,    # MS30 / MS180
         "growth_velocity_pp":     growth_velocity_pp,  # pp above 90D seed
         # ── market share trend data table ────────────────────────────────────

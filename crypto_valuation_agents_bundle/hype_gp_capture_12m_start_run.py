@@ -70,6 +70,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     same scaled BTCUSDT Binance Futures proxy used for the MC monthly draw pool.
     """
     vals = np.array([v for _, v in rev_rows], dtype=float)
+    rev7  = float(vals[-7:].sum())
     rev30 = float(vals[-30:].sum())
     rev90 = float(vals[-90:].sum())
     rev180 = float(vals[-180:].sum())
@@ -80,6 +81,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
         cutoff = last_rev_date - timedelta(days=days - 1)
         return float(sum(v for d, v in scaled_binance_daily if d >= cutoff and d <= last_rev_date))
 
+    bn7  = bn_sum(7)
     bn30 = bn_sum(30)
     bn90 = bn_sum(90)
     bn180 = bn_sum(180)
@@ -90,6 +92,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     # Priority: 1) DefiLlama pro API  2) MCP cache  3) revenue-implied fallback
     pro  = h.fetch_hl_derivatives_volume()
     mcp  = pro or load_defillama_mcp_metrics()
+    hl7_volume   = float(mcp.get("volume_derivatives_7d_usd")   or (rev7   / NET_REVENUE_TAKE_RATE))
     hl30_volume  = float(mcp.get("volume_derivatives_30d_usd")  or (rev30  / NET_REVENUE_TAKE_RATE))
     hl90_volume  = float(mcp.get("volume_derivatives_90d_usd")  or (rev90  / NET_REVENUE_TAKE_RATE))
     hl180_volume = float(mcp.get("volume_derivatives_180d_usd") or (rev180 / NET_REVENUE_TAKE_RATE))
@@ -100,6 +103,7 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     else:
         source = "DeFiLlama clean treasury revenue / fixed 0.026% take-rate"
 
+    ms7  = float(np.clip(hl7_volume  / bn7,  0.0, MS_SHARE_CAP)) if bn7  > 0 else None
     ms30 = float(np.clip(hl30_volume / bn30, 0.0, MS_SHARE_CAP)) if bn30 > 0 else None
     ms90 = float(np.clip(hl90_volume / bn90, 0.0, MS_SHARE_CAP)) if bn90 > 0 else 0.125
     ms180 = float(np.clip(hl180_volume / bn180, 0.0, MS_SHARE_CAP)) if bn180 > 0 else None
@@ -108,12 +112,15 @@ def derive_hl_volume_market_share(rev_rows, scaled_binance_daily) -> dict:
     return {
         "method": f"HL numerator from {source}; Binance denominator is the same scaled BTCUSDT Futures proxy used for MC draws",
         "lookback_days": 90,
+        "hl_7d_volume": hl7_volume,
         "hl_30d_volume": hl30_volume,
         "hl_90d_volume": hl90_volume,
         "hl_180d_volume": hl180_volume,
+        "binance_7d_volume": bn7,
         "binance_30d_volume": bn30,
         "binance_90d_volume": bn90,
         "binance_180d_volume": bn180,
+        "ms7": ms7,
         "ms30": ms30,
         "ms90": ms90,
         "ms180": ms180,
