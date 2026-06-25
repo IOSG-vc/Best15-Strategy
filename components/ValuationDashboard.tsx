@@ -177,6 +177,34 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  coinbase: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "Four product lines: (1) Spot — Binance spot denominator × Coinbase spot MS × 32 bps blended take-rate (calibrated from Q1-2025: $1.26B revenue / $396B volume = 31.8 bps). (2) Derivatives — Deribit total derivatives volume × Coinbase derivatives MS × 35 bps. (3) USDC — USDC circulating supply × current SOFR × 50% Coinbase revenue share from Circle. (4) Other services — staking (cbETH), custody, subscriptions, Base L2 — modeled as ~17% of trading revenue (empirical Q4-2024 ratio). PV = Y3 company valuation / Y3 diluted shares / (1+DR)³.",
+      },
+      {
+        heading: "CAPM discount rate (derived, not hardcoded)",
+        text: "DR = risk-free rate (10Y US Treasury) + equity risk premium (5.5%) × CAPM beta. Beta is computed as cov(COIN daily log-returns, S&P 500 daily log-returns) / var(S&P 500 daily log-returns) over the trailing 1Y from Yahoo Finance. Falls back to corr × vol-ratio estimate if fewer than 60 overlapping return dates are available. COIN is a high-beta equity due to its crypto revenue mix; historical beta typically ranges 1.5–3.5 depending on market cycle.",
+      },
+      {
+        heading: "USDC revenue (velocity decay, manual scenarios)",
+        text: "USDC revenue = Y3 USDC supply × Y3 interest rate × 50% Coinbase share. Y3 USDC supply computed via constant-growth CAGR: Bear −10%/yr ($43B), Base +25%/yr ($114B), Bull +50%/yr ($247B). Interest rate retention (fraction of current SOFR): Bear 60%, Base 85%, Bull 90% — captures rate-cut risk. This is the most volatile revenue line; a 150-basis-point SOFR cut and 20% USDC supply decline would reduce USDC revenue by ~40%.",
+      },
+      {
+        heading: "Derivatives & market structure",
+        text: "Coinbase derivatives market share is measured vs Deribit total derivatives volume (options + futures). Coinbase's derivatives business is growing through Coinbase Advanced Trade and Coinbase International Exchange, but remains small relative to Deribit (~2–5% share). Take-rate of 35 bps is estimated from institutional options pricing; Coinbase does not disclose derivatives revenue separately from spot.",
+      },
+      {
+        heading: "Supply & valuation",
+        text: "Y3 diluted shares = current shares outstanding × SBC dilution multiplier (Bear 1.25×, Base 1.15×, Bull 1.10×). Coinbase has significant SBC; the bull case assumes buybacks partially offset. Optionality bonus (1.00–1.15×) captures international expansion, Base L2 growth, and favorable US crypto regulation. P/S range 4–11× vs comps: Nasdaq OMX ~7×, ICE ~12×, CME ~20×; Coinbase trades at a crypto premium that compresses in bear markets. FDV = market cap (no token unlock; stock shares).",
+      },
+      {
+        heading: "Key risks",
+        text: "USDC revenue sensitivity: Coinbase earns ~$1.5B+/yr from USDC interest; Fed rate cuts compress this materially. Competition: Binance, OKX, Kraken, and Robinhood compete on spot; Deribit and CME on derivatives. Regulatory: favorable crypto regulation in the US is a tailwind, but SEC enforcement risk persists. Derivatives: no separately reported derivatives revenue; Coinbase Advanced Trade derivatives volume is estimated, not disclosed. Equity dilution: SBC is significant and dilutive.",
+      },
+    ],
+  },
   vvv: {
     sections: [
       {
@@ -2018,12 +2046,13 @@ function TechScoreHistoryChart({ tokenKey }: { tokenKey: string }) {
 // ── Token color palette ──────────────────────────────────────────────────────
 
 const TOKEN_COLORS: Record<string, string> = {
-  uni:   "#ff007a",
-  ethfi: "#06b6d4",
-  jup:   "#9945ff",
-  hype:  "#00e5a0",
-  lighter: "#14b8a6",
-  sky:   "#f59e0b",
+  uni:      "#ff007a",
+  ethfi:    "#06b6d4",
+  jup:      "#9945ff",
+  hype:     "#00e5a0",
+  lighter:  "#14b8a6",
+  sky:      "#f59e0b",
+  coinbase: "#0052ff",
 };
 
 // ── TokenHistoricalCharts (UNI / ETHFI / JUP / SKY) ─────────────────────────
@@ -2773,9 +2802,272 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Y3 Supply P50",            value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e9).toFixed(2)}B CARDS`, sub: "Est. circulating after team + investor + community unlock" },
     { label: "GP margin (Q1 2026)",      value: (gp) => `${((gp["gross_margin"] as number) * 100).toFixed(1)}%`,    sub: "Compressed from 10–12% at launch; key downside risk" },
   ],
+  coinbase: [
+    { label: "Y3 total revenue (base)",  value: (gp) => fmtLarge(gp["y3_revenue_p50"]),              sub: (gp) => `Spot ${fmtLarge(gp["y3_spot_revenue_p50"] as number)} · USDC ${fmtLarge(gp["y3_usdc_revenue_p50"] as number)} · deriv+other ${fmtLarge((gp["y3_deriv_revenue_p50"] as number ?? 0) + (gp["y3_other_revenue_p50"] as number ?? 0))}` },
+    { label: "Y3 company val (base)",    value: (gp) => fmtLarge(gp["y3_company_val_p50"] as number),  sub: "Revenue × 7× P/S × 1.05 optionality" },
+    { label: "Y3 diluted shares (base)", value: (gp) => `${((gp["y3_supply_p50"] ?? 0) / 1e6).toFixed(0)}M`,       sub: "Current shares × 1.15 SBC dilution (base)" },
+  ],
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  // ── COINBASE: CAPM DR + product-line output ──────────────────────────────
+  if (tokenKey === "coinbase") {
+    const gp   = data.current_gp as Record<string, unknown>;
+    const spot = data.market.spot;
+
+    type CoinScenario = {
+      key: string; label: string; is_primary: boolean;
+      pv: { p25: number; p50: number; p75: number; p90: number };
+      ev: number; prob_above_spot: number; prob_3x: number;
+      y3_spot_volume_ann: number; y3_deriv_volume_ann: number;
+      y3_spot_ms: number; y3_deriv_ms: number;
+      y3_spot_revenue: number; y3_deriv_revenue: number;
+      y3_usdc_supply: number; y3_usdc_revenue: number;
+      y3_other_revenue: number; y3_total_revenue: number;
+      y3_company_val: number; y3_shares: number;
+      ps_multiple: number; optionality_mult: number;
+      spot_take_rate_bps: number; deriv_take_rate_bps: number;
+      usdc_cagr: number; sofr_y3: number; denom_growth: number;
+    };
+
+    const scenarios  = data.scenarios as unknown as CoinScenario[];
+    const DR         = (gp["derived_discount_rate"] as number) ?? 0.22;
+    const beta       = (gp["capm_beta"]             as number) ?? 0;
+    const rf         = (gp["risk_free_rate"]         as number) ?? 0;
+    const coinVol    = (gp["coin_daily_vol"]         as number) ?? 0;
+    const spVol      = (gp["sp500_daily_vol"]        as number) ?? 0;
+    const sofr       = (gp["sofr_rate"]              as number) ?? 0;
+    const spotMs     = (gp["spot_ms_vs_binance"]     as number) ?? 0;
+    const derivMs    = (gp["deriv_ms_vs_deribit"]    as number) ?? 0;
+    const spotTake   = (gp["spot_take_rate_bps"]     as number) ?? 32;
+    const derivTake  = (gp["deriv_take_rate_bps"]    as number) ?? 35;
+    const spotAnn    = (gp["spot_volume_30d_ann"]    as number) ?? 0;
+    const derivAnn   = (gp["deriv_volume_30d_ann"]   as number) ?? 0;
+    const usdcSupply = (gp["usdc_supply"]            as number) ?? 0;
+    const spotRev    = (gp["spot_revenue_ann"]       as number) ?? 0;
+    const derivRev   = (gp["deriv_revenue_ann"]      as number) ?? 0;
+    const usdcRev    = (gp["usdc_revenue_ann"]       as number) ?? 0;
+    const otherRev   = (gp["other_revenue_ann"]      as number) ?? 0;
+    const totalRev   = (gp["total_revenue_ann"]      as number) ?? 0;
+    const shares     = (gp["shares_outstanding"]     as number) ?? 0;
+    const bnAnn      = (gp["binance_spot_annual"]    as number) ?? 7.307e12;
+
+    const pct    = (v: number) => `${(v * 100).toFixed(2)}%`;
+    const pctMs  = (v: number) => `${(v * 100).toFixed(2)}%`;
+    const bpsStr = (v: number) => `${v.toFixed(0)} bps`;
+
+    const SmCard = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-1 leading-snug">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-xs text-gray-500 leading-snug">{sub}</div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
+
+        {/* ── CAPM block ───────────────────────────────────── */}
+        <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-6">
+          <div className="text-xs font-mono text-gray-500 mb-3 tracking-wide">CAPM Discount Rate — derived from live market data</div>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            {[
+              { label: "10Y risk-free rate", val: `${(rf*100).toFixed(2)}%` },
+              { label: "CAPM beta (1Y daily)", val: beta.toFixed(2) },
+              { label: "COIN daily vol", val: `${(coinVol*100).toFixed(2)}%` },
+              { label: "SPX daily vol", val: `${(spVol*100).toFixed(2)}%` },
+              { label: "Derived DR", val: `${(DR*100).toFixed(1)}%` },
+            ].map(c => (
+              <div key={c.label} className="text-center">
+                <div className="text-xs text-gray-500 mb-1">{c.label}</div>
+                <div className="text-2xl font-bold font-mono text-white">{c.val}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-4">DR = {(rf*100).toFixed(2)}% rf + 5.5% ERP × β{beta.toFixed(2)} = {(DR*100).toFixed(1)}%. Beta from cov(COIN,SPX)/var(SPX) trailing 1Y daily returns.</p>
+        </div>
+
+        {/* ── Current snapshot ─────────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-4">Current Snapshot</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Spot vol 30D (ann.)",  val: fmtLarge(spotAnn),   sub: `MS ${pctMs(spotMs)} vs Binance · ${bpsStr(spotTake)} blended take` },
+              { label: "Deriv vol 30D (ann.)",  val: fmtLarge(derivAnn),  sub: `MS ${pctMs(derivMs)} vs Deribit · ${bpsStr(derivTake)} take (est.)` },
+              { label: "USDC supply",           val: fmtLarge(usdcSupply), sub: `${(sofr*100).toFixed(2)}% SOFR × 50% share = ${fmtLarge(usdcRev)}/yr` },
+              { label: "Ann. revenue proxy",    val: fmtLarge(totalRev),  sub: `Spot ${fmtLarge(spotRev)} · USDC ${fmtLarge(usdcRev)} · deriv ${fmtLarge(derivRev)} · other ${fmtLarge(otherRev)}` },
+            ].map(c => (
+              <div key={c.label} className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <div className="text-xs text-gray-400 font-mono mb-1">{c.label}</div>
+                <div className="text-xl font-bold text-gray-900 font-mono">{c.val}</div>
+                <div className="text-xs text-gray-400 mt-1">{c.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Scenario assumptions ─────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Scenario Assumptions</h3>
+            <p className="text-xs text-gray-400 mt-1">MS multiplier applied to current 30D market share. USDC CAGR: 3Y compound growth of USDC supply. SOFR retention: fraction of current SOFR applied at Y3.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","SPOT MS MULT","DERIV MS MULT","DENOM GROWTH","USDC CAGR","SOFR RET.","P/S","OPTIONALITY","SHARES DILU."].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const sMult = spotMs > 0 ? s.y3_spot_ms / spotMs : 0;
+                  const dMult = derivMs > 0 ? s.y3_deriv_ms / derivMs : 0;
+                  const shrDilu = shares > 0 ? s.y3_shares / shares : 0;
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{sMult.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{dMult.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.denom_growth.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.usdc_cagr*100).toFixed(0)}%`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.sofr_y3/sofr*100).toFixed(0)}%`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.ps_multiple}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.optionality_mult.toFixed(2)}×</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{shrDilu.toFixed(2)}×</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Product-line outputs ──────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Product-Line Outputs</h3>
+            <p className="text-xs text-gray-400 mt-1">Y3 volumes and revenue by product. Spot/derivatives use Binance/Deribit denominator × Y3 MS × take-rate. USDC uses supply × SOFR × 50%.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","Y3 SPOT VOL","SPOT MS","Y3 DERIV VOL","DERIV MS","SPOT REV","DERIV REV","USDC REV","OTHER REV","TOTAL REV"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => (
+                  <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                    <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_spot_volume_ann)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_spot_ms)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_deriv_volume_ann)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{pctMs(s.y3_deriv_ms)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_spot_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_deriv_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_usdc_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_other_revenue)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Valuation chain ───────────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Valuation Chain</h3>
+            <p className="text-xs text-gray-400 mt-1">Revenue → co. val (P/S × optionality) → PV/COIN (discounted at {(DR*100).toFixed(1)}% CAPM DR). P(Spot) uses log-normal σ=1.0.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","TOTAL REV","CO. VAL","DILUTED SHARES","PV / COIN","VS SPOT","P(SPOT)","EV"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const vsSpot = spot > 0 ? (s.pv.p50 / spot - 1) * 100 : 0;
+                  const pColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_total_revenue)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_company_val)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(s.y3_shares/1e6).toFixed(0)}M`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtPrice(s.pv.p50)}</td>
+                      <td className={`px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap ${vsSpot>=0?"text-green-700":"text-red-700"}`}>
+                        {`${vsSpot>=0?"+":""}${vsSpot.toFixed(0)}%`}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: pColor }}>
+                        {pct(s.prob_above_spot)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── 4 summary cards ───────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SmCard
+            label="Y3 total revenue (base)"
+            value={fmtLarge((gp["y3_revenue_p50"] as number) ?? 0)}
+            sub={`Spot ${fmtLarge((gp["y3_spot_revenue_p50"] as number) ?? 0)} · USDC ${fmtLarge((gp["y3_usdc_revenue_p50"] as number) ?? 0)} · other ${fmtLarge(((gp["y3_deriv_revenue_p50"] as number) ?? 0) + ((gp["y3_other_revenue_p50"] as number) ?? 0))}`}
+          />
+          <SmCard
+            label="Y3 company valuation (base)"
+            value={fmtLarge((gp["y3_company_val_p50"] as number) ?? 0)}
+            sub="Revenue × 7× P/S × 1.05 optionality"
+          />
+          <SmCard
+            label="Derived discount rate"
+            value={`${(DR * 100).toFixed(1)}%`}
+            sub={`β${beta.toFixed(2)} (1Y cov/var) · rf ${(rf*100).toFixed(2)}% · COIN vol ${(coinVol*100).toFixed(1)}%/day`}
+          />
+          <SmCard
+            label="Current P/S (market)"
+            value={`${((gp["coin_ps_current"] as number) ?? 0).toFixed(1)}×`}
+            sub={`Current COIN market cap / annualized revenue proxy`}
+          />
+        </div>
+
+        {/* ── Revenue Semantics ─────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Revenue Semantics</h2>
+            <p className="text-gray-500 text-base leading-relaxed">
+              Driver-based model replaces P&L extrapolation with observable volumes × market-share × take-rate for spot and derivatives. USDC and other services use independent manual scenarios.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
+              <li><span className="font-bold text-gray-900">Spot:</span> Binance spot ({`$${(bnAnn/1e12).toFixed(1)}T`}/yr 2025) × current MS {pctMs(spotMs)} × {bpsStr(spotTake)} blended. Take calibrated from Q1-2025: $1.26B / $396B = 31.8 bps.</li>
+              <li><span className="font-bold text-gray-900">Derivatives:</span> Deribit total ({fmtLarge((gp["deribit_volume_30d"] as number ?? 0) * 12)}/yr) × current MS {pctMs(derivMs)} × {bpsStr(derivTake)} est. Coinbase Advanced Trade + International Exchange; volumes not separately disclosed.</li>
+              <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 50% Coinbase share = {fmtLarge(usdcRev)}/yr. Bear/base/bull apply USDC CAGR + SOFR retention for Y3.</li>
+              <li><span className="font-bold text-gray-900">Other services:</span> Staking (cbETH), custody, subscriptions, Base L2 = ~17% of spot+derivatives revenue (Q4-2024 empirical ratio).</li>
+              <li><span className="font-bold text-gray-900">Discount rate:</span> CAPM from live market data — not fixed. High COIN beta (~{beta.toFixed(1)}×) drives the {(DR*100).toFixed(1)}% DR; this re-prices automatically each run.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── BP: driver-based product-line output ────────────────────────────────
   if (tokenKey === "bp") {
     const gp   = data.current_gp as Record<string, unknown>;
@@ -4137,8 +4429,25 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               sub={`${((gp["treasury_card_pct"] as number) * 100).toFixed(0)}% in physical Pokémon & TCG cards`}
             />
           </>}
+          {tokenKey === "coinbase" && <>
+            <MetricCard
+              label="Spot MS vs Binance"
+              value={`${((gp["spot_ms_vs_binance"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["spot_volume_30d_ann"] as number)} ann. · ${(gp["spot_take_rate_bps"] as number ?? 32).toFixed(0)} bps blended take`}
+            />
+            <MetricCard
+              label="Deriv MS vs Deribit"
+              value={`${((gp["deriv_ms_vs_deribit"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["deriv_volume_30d_ann"] as number)} ann. · ${(gp["deriv_take_rate_bps"] as number ?? 35).toFixed(0)} bps take (est.)`}
+            />
+            <MetricCard
+              label="CAPM beta / DR"
+              value={`β${(gp["capm_beta"] as number ?? 0).toFixed(2)} / ${((gp["derived_discount_rate"] as number ?? 0)*100).toFixed(1)}%`}
+              sub={`rf ${((gp["risk_free_rate"] as number ?? 0)*100).toFixed(2)}% + 5.5% ERP × β = DR`}
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards", "coinbase"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
@@ -4362,11 +4671,12 @@ function LandingSummary({
 // ── Token picker ─────────────────────────────────────────────────────────────
 
 const TOKEN_RING: Record<string, string> = {
-  uni:   "#ff007a",
-  ethfi: "#06b6d4",
-  jup:   "#9945ff",
-  hype:  "#00e5a0",
-  sky:   "#f59e0b",
+  uni:      "#ff007a",
+  ethfi:    "#06b6d4",
+  jup:      "#9945ff",
+  hype:     "#00e5a0",
+  sky:      "#f59e0b",
+  coinbase: "#0052ff",
 };
 
 // ── Main dashboard ───────────────────────────────────────────────────────────

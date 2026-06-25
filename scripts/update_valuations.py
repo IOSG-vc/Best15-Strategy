@@ -36,15 +36,17 @@ CG_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
 CG_BASE    = "https://pro-api.coingecko.com/api/v3" if CG_API_KEY else "https://api.coingecko.com/api/v3"
 
 TOKENS = [
-    ("uni",     "agents.uni",     "Uniswap",        "UNI",   "Ethereum",  "uniswap"),
-    ("ethfi",   "agents.ethfi",   "ether.fi",       "ETHFI", "Ethereum",  "ether-fi"),
-    ("jup",     "agents.jup",     "Jupiter",        "JUP",   "Solana",    "jupiter-exchange-solana"),
-    ("hype",    "agents.hype",    "Hyperliquid",    "HYPE",  "HyperEVM",  "hyperliquid"),
-    ("sky",     "agents.sky",     "Sky",            "SKY",   "Ethereum",  "sky"),
-    ("lighter", "agents.lighter", "Lighter",        "LIT",   "zkSync",    "lighter"),
-    ("vvv",     "agents.vvv",     "Venice AI",      "VVV",   "Ethereum",  "venice-token"),
-    ("bp",      "agents.bp",      "Backpack",       "BP",    "Solana",    "backpack"),
-    ("cards",   "agents.cards",   "Collector Crypt","CARDS", "Solana",    "collector-crypt"),
+    ("uni",      "agents.uni",      "Uniswap",        "UNI",   "Ethereum",  "uniswap"),
+    ("ethfi",    "agents.ethfi",    "ether.fi",       "ETHFI", "Ethereum",  "ether-fi"),
+    ("jup",      "agents.jup",      "Jupiter",        "JUP",   "Solana",    "jupiter-exchange-solana"),
+    ("hype",     "agents.hype",     "Hyperliquid",    "HYPE",  "HyperEVM",  "hyperliquid"),
+    ("sky",      "agents.sky",      "Sky",            "SKY",   "Ethereum",  "sky"),
+    ("lighter",  "agents.lighter",  "Lighter",        "LIT",   "zkSync",    "lighter"),
+    ("vvv",      "agents.vvv",      "Venice AI",      "VVV",   "Ethereum",  "venice-token"),
+    ("bp",       "agents.bp",       "Backpack",       "BP",    "Solana",    "backpack"),
+    ("cards",    "agents.cards",    "Collector Crypt","CARDS", "Solana",    "collector-crypt"),
+    # Stock tickers (cg_id="" → agent supplies its own mcap_history)
+    ("coinbase", "agents.coinbase", "Coinbase",       "COIN",  "NYSE",      ""),
 ]
 
 UA = "Mozilla/5.0 Hermes valuation cron"
@@ -107,11 +109,19 @@ for token_key, module_path, name, symbol, chain, cg_id in TOKENS:
         }
         print(f"[{symbol}] ERROR: {err.strip().splitlines()[-1]}")
 
-    # Fetch historical market cap (independent of valuation success)
-    print(f"[{symbol}] fetching market cap history …")
-    mcap_history = fetch_mcap_history(cg_id)
-    results[token_key]["mcap_history"] = mcap_history
-    print(f"[{symbol}] {len(mcap_history)} market cap data points ✓")
+    # Market cap history: agent-supplied (stocks) or CoinGecko (crypto)
+    if "mcap_history" in (results[token_key].get("data") or {}):
+        # Agent already embedded its own history (e.g. stock tickers via Yahoo Finance)
+        results[token_key]["mcap_history"] = results[token_key]["data"].pop("mcap_history", [])
+        print(f"[{symbol}] using agent-supplied mcap history ({len(results[token_key]['mcap_history'])} pts)")
+    elif cg_id:
+        print(f"[{symbol}] fetching market cap history …")
+        mcap_history = fetch_mcap_history(cg_id)
+        results[token_key]["mcap_history"] = mcap_history
+        print(f"[{symbol}] {len(mcap_history)} market cap data points ✓")
+    else:
+        results[token_key]["mcap_history"] = []
+        print(f"[{symbol}] no CoinGecko id — mcap history skipped")
     time.sleep(4)  # Respect public rate limits between tokens
 
 output = {
