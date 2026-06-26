@@ -181,7 +181,7 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
     sections: [
       {
         heading: "Core revenue model",
-        text: "Four product lines: (1) Spot — Binance spot denominator × Coinbase spot MS × 32 bps blended take-rate (calibrated from Q1-2025: $1.26B revenue / $396B volume = 31.8 bps). (2) Derivatives — Deribit total derivatives volume × Coinbase derivatives MS × 35 bps. (3) USDC — USDC circulating supply × current SOFR × 50% Coinbase revenue share from Circle. (4) Other services — staking (cbETH), custody, subscriptions, Base L2 — modeled as ~17% of trading revenue (empirical Q4-2024 ratio). PV = Y3 company valuation / Y3 diluted shares / (1+DR)³.",
+        text: "Four product lines: (1) Spot — Binance spot denominator × Coinbase spot MS × 32 bps blended take-rate (calibrated Q1-2026: ~$517M consumer spot / $167.7B vol ≈ 31bps). (2) Deribit (Coinbase-owned) — Binance Futures denominator × Deribit MS × 3.88 bps take-rate (calibrated Q1-2026: ~$136M inst rev / $350.8B Deribit vol). (3) CDE retail — Binance Futures denominator × CDE MS × 119 bps (calibrated Q1-2026: $200M ann / $16.8B ann vol). (4) USDC — USDC circulating supply × SOFR × 37.9% Coinbase net share (calibrated Q1-2026: $1.22B ann on $75B supply × 4.3%). (5) Other services: 17% of spot+deriv. PV = Y3 revenue × P/S / Y3 diluted shares / (1+DR)³.",
       },
       {
         heading: "CAPM discount rate (derived, not hardcoded)",
@@ -189,11 +189,11 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
       {
         heading: "USDC revenue (velocity decay, manual scenarios)",
-        text: "USDC revenue = Y3 USDC supply × Y3 interest rate × 50% Coinbase share. Y3 USDC supply computed via constant-growth CAGR: Bear −10%/yr ($43B), Base +25%/yr ($114B), Bull +50%/yr ($247B). Interest rate retention (fraction of current SOFR): Bear 60%, Base 85%, Bull 90% — captures rate-cut risk. This is the most volatile revenue line; a 150-basis-point SOFR cut and 20% USDC supply decline would reduce USDC revenue by ~40%.",
+        text: "USDC revenue = Y3 USDC supply × Y3 SOFR × 37.9% Coinbase net share (calibrated Q1-2026: $305M/Q = $1.22B ann on $75B avg supply × 4.3% SOFR). Supply grows with velocity-decay; SOFR mean-reverts to 2.5% long-run over 36 months. Most volatile revenue line: a 150bps SOFR cut + 20% supply decline reduces USDC revenue ~40%.",
       },
       {
         heading: "Derivatives & market structure",
-        text: "Coinbase derivatives market share is measured vs Deribit total derivatives volume (options + futures). Coinbase's derivatives business is growing through Coinbase Advanced Trade and Coinbase International Exchange, but remains small relative to Deribit (~2–5% share). Take-rate of 35 bps is estimated from institutional options pricing; Coinbase does not disclose derivatives revenue separately from spot.",
+        text: "Coinbase acquired Deribit (2025), the world's largest crypto options exchange. Deribit revenue is modeled as Binance Futures denominator × Deribit MS × 3.88 bps take-rate. CDE retail (CFTC-regulated US venue) is separate at 119 bps on small notional (~$4.2B/Q). Combined Coinbase derivatives MS vs Binance Futures ≈ 8.2% as of Q1-2026 ($355B total / $1.45T Binance Futures).",
       },
       {
         heading: "Supply & valuation",
@@ -2804,7 +2804,7 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
   ],
   coinbase: [
     { label: "Y3 total revenue (base P50)", value: (gp) => fmtLarge(gp["y3_revenue_p50"]), sub: (gp) => `Spot ${fmtLarge(gp["y3_spot_revenue_p50"] as number)} · USDC ${fmtLarge(gp["y3_usdc_revenue_p50"] as number)} · deriv+other ${fmtLarge(((gp["y3_deriv_revenue_p50"] as number) ?? 0) + ((gp["y3_other_revenue_p50"] as number) ?? 0))}` },
-    { label: "Spot MS (30D vs Binance)",    value: (gp) => `${(((gp["spot_ms30_vs_binance"] as number) ?? 0)*100).toFixed(2)}%`, sub: (gp) => `Vel ${(((gp["spot_vel_monthly"] as number) ?? 0)*100).toFixed(2)}%/mo · deriv MS ${(((gp["deriv_ms30_vs_deribit"] as number) ?? 0)*100).toFixed(2)}%` },
+    { label: "Spot MS (30D vs Binance)",    value: (gp) => `${(((gp["spot_ms30_vs_binance"] as number) ?? 0)*100).toFixed(2)}%`, sub: (gp) => `Vel ${(((gp["spot_vel_monthly"] as number) ?? 0)*100).toFixed(2)}%/mo · Deribit MS ${(((gp["deribit_ms30_vs_binance_futures"] as number) ?? 0)*100).toFixed(2)}%` },
     { label: "Y3 diluted shares (base)",    value: (gp) => `${(((gp["y3_supply_p50"] as number) ?? 0) / 1e6).toFixed(0)}M`, sub: "Current shares × 1.15 SBC dilution (base)" },
   ],
 };
@@ -2836,11 +2836,11 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
     const spVol      = (gp["sp500_daily_vol"]         as number) ?? 0;
     const sofr       = (gp["sofr_rate"]               as number) ?? 0;
     const spotMs     = (gp["spot_ms30_vs_binance"]    as number) ?? 0;
-    const derivMs    = (gp["deriv_ms30_vs_deribit"]   as number) ?? 0;
+    const derivMs    = (gp["deribit_ms30_vs_binance_futures"] as number) ?? 0;
     const spotTake   = 32;
-    const derivTake  = 35;
-    const spotAnn    = ((gp["spot_volume_30d"]  as number) ?? 0) * 12;
-    const derivAnn   = ((gp["deriv_volume_30d"] as number) ?? 0) * 12;
+    const derivTake  = 3.88;
+    const spotAnn    = ((gp["spot_volume_30d"]    as number) ?? 0) * 12;
+    const derivAnn   = ((gp["deribit_volume_30d"] as number) ?? 0) * 12;
     const usdcSupply = (gp["usdc_supply"]            as number) ?? 0;
     const spotRev    = (gp["spot_revenue_ann"]        as number) ?? 0;
     const derivRev   = (gp["deriv_revenue_ann"]       as number) ?? 0;
@@ -2892,8 +2892,8 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Spot vol 30D (ann.)",  val: fmtLarge(spotAnn),   sub: `MS ${pctMs(spotMs)} vs Binance · ${bpsStr(spotTake)} blended take` },
-              { label: "Deriv vol 30D (ann.)",  val: fmtLarge(derivAnn),  sub: `MS ${pctMs(derivMs)} vs Deribit · ${bpsStr(derivTake)} take (est.)` },
-              { label: "USDC supply",           val: fmtLarge(usdcSupply), sub: `${(sofr*100).toFixed(2)}% SOFR × 50% share = ${fmtLarge(usdcRev)}/yr` },
+              { label: "Deribit vol 30D (ann.)", val: fmtLarge(derivAnn),  sub: `MS ${pctMs(derivMs)} vs BNB Fut. · ${derivTake.toFixed(2)} bps take` },
+              { label: "USDC supply",           val: fmtLarge(usdcSupply), sub: `${(sofr*100).toFixed(2)}% SOFR × 37.9% share = ${fmtLarge(usdcRev)}/yr` },
               { label: "Ann. revenue proxy",    val: fmtLarge(totalRev),  sub: `Spot ${fmtLarge(spotRev)} · USDC ${fmtLarge(usdcRev)} · deriv ${fmtLarge(derivRev)} · other ${fmtLarge(otherRev)}` },
             ].map(c => (
               <div key={c.label} className="bg-white rounded-lg border border-gray-200 px-4 py-3">
@@ -3046,8 +3046,8 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
               <li><span className="font-bold text-gray-900">Spot:</span> Binance spot ({`$${(bnAnn/1e12).toFixed(1)}T`}/yr 2025) × current MS {pctMs(spotMs)} × {bpsStr(spotTake)} blended. Take calibrated from Q1-2025: $1.26B / $396B = 31.8 bps.</li>
-              <li><span className="font-bold text-gray-900">Derivatives:</span> Deribit total ({fmtLarge(((gp["deribit_volume_30d"] as number) ?? 0) * 12)}/yr) × current MS {pctMs(derivMs)} × {bpsStr(derivTake)} est. Coinbase Advanced Trade + International Exchange; volumes not separately disclosed.</li>
-              <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 50% Coinbase share = {fmtLarge(usdcRev)}/yr. Velocity decays linearly to 0 by decay window; SOFR mean-reverts to 2.5% long-run.</li>
+              <li><span className="font-bold text-gray-900">Deribit (Coinbase-owned):</span> Deribit total ({fmtLarge(((gp["deribit_volume_30d"] as number) ?? 0) * 12)}/yr) × current MS {pctMs(derivMs)} vs Binance Futures × 3.88 bps take (calibrated Q1-2026: ~$544M ann). CDE retail adds ~$200M ann at 119 bps on small notional.</li>
+              <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 37.9% Coinbase net share = {fmtLarge(usdcRev)}/yr (calibrated Q1-2026: $1.22B ann). SOFR mean-reverts to 2.5% long-run.</li>
               <li><span className="font-bold text-gray-900">Other services:</span> Staking (cbETH), custody, subscriptions, Base L2 = ~17% of spot+derivatives revenue (Q4-2024 empirical ratio).</li>
               <li><span className="font-bold text-gray-900">Discount rate:</span> CAPM from live market data — not fixed. High COIN beta (~{beta.toFixed(1)}×) drives the {(DR*100).toFixed(1)}% DR; this re-prices automatically each run.</li>
             </ul>
@@ -3386,14 +3386,15 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
         {/* GP Conversion Sensitivity */}
         {(() => {
           const baseGp  = gp["y3_gp_p50"]    as number ?? 0;
-          const basePv  = gp["weighted_pv"]   as number ?? 0;
+          const primaryScen = data.scenarios?.find((s: { is_primary?: boolean }) => s.is_primary);
+          const basePv  = (primaryScen as { pv?: { p50?: number } } | undefined)?.pv?.p50 ?? (gp["weighted_pv"] as number ?? 0);
           if (gpConv === 0 || baseGp === 0 || basePv === 0) return null;
           const gpRates = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60];
           return (
             <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200">
                 <h3 className="text-base font-semibold text-gray-800">Gross Profit Estimate Sensitivity</h3>
-                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on conservative-scenario Y3 GP ($535M GMV × 8.4% margin); PV uses weighted 6/12/24M discount. All other model inputs held constant.</p>
+                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on base-scenario Y3 GP ($535M GMV × 8.4% margin); PV uses full 3-year DR³ discount — 60% base matches the card P50. All other model inputs held constant.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -4444,12 +4445,12 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             <MetricCard
               label="Spot MS vs Binance"
               value={`${((gp["spot_ms30_vs_binance"] as number ?? 0) * 100).toFixed(2)}%`}
-              sub={`${fmtLarge(gp["spot_revenue_ann"] as number)} ann. · ${(gp["spot_take_rate_bps"] as number ?? 32).toFixed(0)} bps blended take`}
+              sub={`${fmtLarge(gp["spot_revenue_ann"] as number)} ann. · 32 bps blended take`}
             />
             <MetricCard
-              label="Deriv MS vs Deribit"
-              value={`${((gp["deriv_ms30_vs_deribit"] as number ?? 0) * 100).toFixed(2)}%`}
-              sub={`${fmtLarge(gp["deriv_revenue_ann"] as number)} ann. · ${(gp["deriv_take_rate_bps"] as number ?? 35).toFixed(0)} bps take (est.)`}
+              label="Deribit MS vs BNB Fut."
+              value={`${((gp["deribit_ms30_vs_binance_futures"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["deribit_revenue_ann"] as number)} ann. · 3.88 bps take · CDE ${fmtLarge(gp["cde_revenue_ann"] as number)}`}
             />
             <MetricCard
               label="CAPM beta / DR"
