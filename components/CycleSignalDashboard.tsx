@@ -1,7 +1,9 @@
 "use client";
 
 import type { CycleSignalData } from "@/lib/types";
+import type { CrashClusterData } from "@/lib/loadCrashClusterData";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Nav from "./Nav";
 
 const ExposureHistoryChart = dynamic(() => import("./ExposureHistoryChart"), { ssr: false });
@@ -53,7 +55,13 @@ function MetricRow({
   );
 }
 
-export default function CycleSignalDashboard({ data }: { data: CycleSignalData }) {
+export default function CycleSignalDashboard({
+  data,
+  crashClusterData,
+}: {
+  data: CycleSignalData;
+  crashClusterData?: CrashClusterData;
+}) {
   const { state, history } = data;
 
   return (
@@ -229,6 +237,99 @@ export default function CycleSignalDashboard({ data }: { data: CycleSignalData }
                 />
                 <div className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]">
                   <ExposureHistoryChart history={history} />
+                </div>
+              </section>
+            )}
+
+            {/* Crash Cluster Overlay — Experimental Candidate */}
+            {crashClusterData && (
+              <section>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-lg font-semibold">Crash Cluster Overlay</h2>
+                  <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    Experimental · Not Production-Ready
+                  </span>
+                </div>
+
+                {/* Warning */}
+                <div className="bg-amber-500/8 border border-amber-500/20 rounded-xl p-4 mb-4 text-xs text-amber-300/80">
+                  <span className="font-semibold text-amber-400">Research candidate only.</span>{" "}
+                  The SH crash-gate overlay is a post-hoc diagnostic applied to the V4 cbrtM baseline.
+                  It has not been validated out-of-sample and is not integrated into the live production pipeline.
+                  Data runs to{" "}
+                  {crashClusterData.windows.find((w) => w.key === "full_2020_26")?.end ?? "—"}.
+                </div>
+
+                {/* Summary grid — full period */}
+                {(() => {
+                  const fullMetrics = crashClusterData.metrics.filter(
+                    (m) => m.window === "full_2020_26"
+                  );
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                      {crashClusterData.variants.map((v) => {
+                        const row = fullMetrics.find((m) => m.strategy === v.key);
+                        if (!row) return null;
+                        return (
+                          <div
+                            key={v.key}
+                            className="bg-[#1a1d29] rounded-xl p-4 border border-[#2d3144]"
+                            style={{ borderLeftWidth: 3, borderLeftColor: v.color }}
+                          >
+                            <div
+                              className="text-xs font-semibold mb-2"
+                              style={{ color: v.color }}
+                            >
+                              {v.label}
+                              {v.isBaseline && (
+                                <span className="ml-1 text-gray-500 font-normal">(baseline)</span>
+                              )}
+                            </div>
+                            <div className="text-xl font-bold font-mono text-white mb-0.5">
+                              {row.cagr_sharpe.toFixed(3)}
+                            </div>
+                            <div className="text-xs text-gray-500">CAGR Sharpe</div>
+                            <div className="mt-2 flex gap-3 text-xs">
+                              <span className="text-gray-400">
+                                DD{" "}
+                                <span className="text-red-400 font-mono">
+                                  {(row.max_drawdown * 100).toFixed(0)}%
+                                </span>
+                              </span>
+                              <span className="text-gray-400">
+                                Exp{" "}
+                                <span className="font-mono text-gray-300">
+                                  {(row.avg_exposure * 100).toFixed(0)}%
+                                </span>
+                              </span>
+                            </div>
+                            {!v.isBaseline && (
+                              <div className="mt-1.5 text-xs font-mono"
+                                style={{ color: row.d_cagr_sharpe >= 0 ? "#34d399" : "#f87171" }}>
+                                {row.d_cagr_sharpe >= 0 ? "+" : ""}
+                                {row.d_cagr_sharpe.toFixed(3)} Sharpe vs base
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+                <div className="text-center">
+                  <Link
+                    href="/crash-cluster"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      background: "#a78bfa22",
+                      color: "#a78bfa",
+                      border: "1px solid #a78bfa44",
+                    }}
+                  >
+                    View Full Crash Cluster Analysis
+                    <span>→</span>
+                  </Link>
                 </div>
               </section>
             )}
