@@ -217,6 +217,8 @@ def _fetch_coinbase_cde_deriv_history() -> list[tuple[str, float]]:
         pid = p.get("product_id") or p.get("id", "")
         if not pid:
             continue
+        # contract_size used only to filter invalid products; Coinbase candle
+        # `volume` field for futures is already USD notional (quote currency)
         contract_size = float(p.get("contract_size") or p.get("base_increment") or 0)
         if contract_size <= 0:
             continue
@@ -227,18 +229,17 @@ def _fetch_coinbase_cde_deriv_history() -> list[tuple[str, float]]:
                 continue
             for row in rows:
                 if isinstance(row, dict):
-                    ts    = int(row.get("start", 0))
-                    close = float(row.get("close", 0))
-                    vol   = float(row.get("volume", 0))
+                    ts  = int(row.get("start", 0))
+                    vol = float(row.get("volume", 0))
                 elif isinstance(row, (list, tuple)) and len(row) >= 6:
-                    ts, _, _, _, close, vol = int(row[0]), *row[1:5], float(row[5])
+                    ts  = int(row[0])
+                    vol = float(row[5])
                 else:
                     continue
-                if ts <= 0 or vol <= 0 or close <= 0:
+                if ts <= 0 or vol <= 0:
                     continue
                 day = date.fromtimestamp(ts).isoformat()
-                usd_vol = vol * contract_size * close
-                daily_totals[day] = daily_totals.get(day, 0.0) + usd_vol
+                daily_totals[day] = daily_totals.get(day, 0.0) + vol
             fetched += 1
             time.sleep(0.15)
         except Exception:
@@ -393,18 +394,26 @@ def _compute_deriv_ms_data(
     deribit_vel = _velocity_ensemble(deribit_ms7, deribit_ms30, deribit_ms180)
 
     # ── CDE retail MS vs Binance Futures ──────────────────────────────────────
+    # The public brokerage API returns incomplete volume (misses institutional
+    # flow and uses inconsistent units across product types). Use API data only
+    # when the computed monthly total is within 5×–0.2× of the Q1-2026 baseline.
+    _cde_api_ok = False
     if cde_history and len(cde_history) >= 30:
         cde_vols = [v for _, v in sorted(cde_history)]
         n = len(cde_vols)
-        ca7   = sum(cde_vols[-min(7,   n):]) / min(7,   n)
-        ca30  = sum(cde_vols[-min(30,  n):]) / min(30,  n)
-        ca180 = sum(cde_vols[-min(180, n):]) / min(180, n)
-        cde_ms7   = min(ca7   / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
-        cde_ms30  = min(ca30  / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
-        cde_ms180 = min(ca180 / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
-        cde_30d   = ca30 * 30
-        cde_source = "cde_api"
-    else:
+        ca30_api = sum(cde_vols[-min(30, n):]) / min(30, n)
+        cde_30d_api = ca30_api * 30
+        if _FB_CDE30 * 0.2 < cde_30d_api < _FB_CDE30 * 5:
+            _cde_api_ok = True
+            ca7   = sum(cde_vols[-min(7,   n):]) / min(7,   n)
+            ca30  = ca30_api
+            ca180 = sum(cde_vols[-min(180, n):]) / min(180, n)
+            cde_ms7   = min(ca7   / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
+            cde_ms30  = min(ca30  / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
+            cde_ms180 = min(ca180 / bn_daily, CDE_MS_CAP) if bn_daily > 0 else None
+            cde_30d   = cde_30d_api
+            cde_source = "cde_api"
+    if not _cde_api_ok:
         cde_ms7 = cde_ms30 = cde_ms180 = _FB_CDE30 / bn_futures_monthly
         cde_30d = _FB_CDE30
         cde_source = "cde_fallback"
