@@ -4443,13 +4443,13 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
           {tokenKey === "coinbase" && <>
             <MetricCard
               label="Spot MS vs Binance"
-              value={`${((gp["spot_ms_vs_binance"] as number ?? 0) * 100).toFixed(2)}%`}
-              sub={`${fmtLarge(gp["spot_volume_30d_ann"] as number)} ann. · ${(gp["spot_take_rate_bps"] as number ?? 32).toFixed(0)} bps blended take`}
+              value={`${((gp["spot_ms30_vs_binance"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["spot_revenue_ann"] as number)} ann. · ${(gp["spot_take_rate_bps"] as number ?? 32).toFixed(0)} bps blended take`}
             />
             <MetricCard
               label="Deriv MS vs Deribit"
-              value={`${((gp["deriv_ms_vs_deribit"] as number ?? 0) * 100).toFixed(2)}%`}
-              sub={`${fmtLarge(gp["deriv_volume_30d_ann"] as number)} ann. · ${(gp["deriv_take_rate_bps"] as number ?? 35).toFixed(0)} bps take (est.)`}
+              value={`${((gp["deriv_ms30_vs_deribit"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["deriv_revenue_ann"] as number)} ann. · ${(gp["deriv_take_rate_bps"] as number ?? 35).toFixed(0)} bps take (est.)`}
             />
             <MetricCard
               label="CAPM beta / DR"
