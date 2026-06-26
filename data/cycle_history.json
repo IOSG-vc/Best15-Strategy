@@ -34428,5 +34428,28 @@
     "n_universe": 138,
     "selected_motifs": 111,
     "generated_at": "2026-06-25T11:37:36.113120+00:00"
+  },
+  {
+    "date": "2026-06-26",
+    "btc_price": 59362.21875,
+    "base_exposure": 0.5,
+    "exposure": 0.3,
+    "overlay_delta": -0.2,
+    "direction": "DOWN",
+    "k3_E": 0.0,
+    "k3_score": 0.5,
+    "k3_rank": 0.0,
+    "base_sharpe": 1.2661801612471901,
+    "strategy_sharpe": 1.3024477546881508,
+    "sharpe_delta": 0.036267593440960644,
+    "annual_return": 0.5516977469027662,
+    "max_drawdown": -0.4838094545878603,
+    "avg_exposure": 0.7266779231743352,
+    "k3_mode": "cbrtM",
+    "k3_low": 0.1,
+    "k3_high": 0.914874,
+    "n_universe": 138,
+    "selected_motifs": 111,
+    "generated_at": "2026-06-26T11:44:56.320352+00:00"
   }
 ]
