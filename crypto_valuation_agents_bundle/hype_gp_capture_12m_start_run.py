@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Updated HYPE GP-capture scenario run after critique.
+"""HYPE GP-capture MC — Binance/MS90 architecture with velocity-decay scenarios.
 
-Fixes:
-- Treat DeFiLlama dailyRevenue as net GP / buyback capacity directly (GP margin = 100%).
-- Scenario emissions instead of hardcoded single base.
-- Product optionality as separate Y3 value uplift sensitivity.
+Three momentum-decay scenarios replace the old supply-emission scenario axis:
+- Bear:  6M decay window, USDC beta 0.60
+- Base: 12M decay window, USDC beta 0.85
+- Bull: 24M decay window, USDC beta 1.00
+
+Weighted P50 = 40% bull + 40% base + 20% bear.
+
+Supply/emissions are fixed at DB-observed baseline (~962K HYPE/mo) across all scenarios;
+scenario variance comes entirely from how fast the MS30/MS90 momentum dissipates and
+how strongly USDC TVL tracks HL volume growth.
 """
 import json, math, os
 from datetime import datetime, timezone
@@ -30,25 +36,29 @@ MS_SHARE_CAP = 0.35
 # Locked MS momentum: MS30/MS180 is interpreted as the current 6M forward share-growth amplifier.
 # The 6M amplifier linearly decays back to 1.0x over 12 months; gained share is retained.
 MS_AMPLIFIER_CAP = 1.5
-MS_AMPLIFIER_INITIAL = min(max(1.223, 1.0), MS_AMPLIFIER_CAP)
-MS_MOMENTUM_DECAY_MONTHS = 12
+MS_MOMENTUM_DECAY_MONTHS = 12  # default / base-scenario; overridden per-scenario in run_once()
 DEFILLAMA_MCP_METRICS_PATH = os.path.expanduser("~/.hermes/tmp/hype_defillama_mcp_metrics.json")
 
 
-def ms_acceleration_path(months: int = MONTHS, initial: float = MS_AMPLIFIER_INITIAL) -> np.ndarray:
+def ms_acceleration_path(months: int = MONTHS, initial: float = 1.0,
+                          decay_months: int = MS_MOMENTUM_DECAY_MONTHS) -> np.ndarray:
     """Cumulative share multiplier from a decaying 6M market-share growth amplifier.
 
     `initial` is MS30/MS180, interpreted as the current 6-month forward share-growth
     factor. Convert it to a monthly velocity, linearly decay that velocity to zero
-    over 12 months, compound the gained share, then hold the terminal share flat.
+    over `decay_months` months, compound the gained share, then hold the terminal share flat.
+
+    `decay_months` is the scenario-specific momentum window:
+        Bear  →  6  (momentum fades quickly)
+        Base  → 12  (current default)
+        Bull  → 24  (momentum sustained longer)
     """
     initial = min(max(float(initial), 1.0), MS_AMPLIFIER_CAP)
     monthly_log_velocity = math.log(initial) / 6.0
     cumulative = []
     acc = 0.0
     for m in range(months):
-        # Midpoint integration: velocity at the middle of month m, decaying to 0 by month 12.
-        decay_weight = max(0.0, 1.0 - (m + 0.5) / MS_MOMENTUM_DECAY_MONTHS)
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / decay_months)
         acc += monthly_log_velocity * decay_weight
         cumulative.append(math.exp(acc))
     return np.array(cumulative, dtype=float)
@@ -311,7 +321,7 @@ def _fetch_hype_price_history() -> dict:
 
 def _compute_historical_charts(rev_rows, scaled_binance_daily, ms_full, price_by_date,
                                 circ, gross_3y, base_p50_pv, spot, current_hl_monthly_volume,
-                                usdc_tvl_val, usdc_net_yield_val, usdc_elasticity_val):
+                                usdc_tvl_val, usdc_net_yield_val, usdc_beta=0.85):
     """Compute backtest, buyback horizon, and EOY3 MS history for the dashboard charts."""
     from datetime import timedelta
     FIXED_MULTIPLE = 15.0  # deterministic proxy uses fixed normal multiple
@@ -377,7 +387,7 @@ def _compute_historical_charts(rev_rows, scaled_binance_daily, ms_full, price_by
         bn30 = _bn_trailing30(row["date"])
         y3_hl_monthly = bn30 * eoy3_share
         y3_gp_perp = y3_hl_monthly * NET_REVENUE_TAKE_RATE * 12.0
-        usdc_scale = (y3_hl_monthly / max(current_hl_monthly_volume, 1.0)) ** usdc_elasticity_val
+        usdc_scale = (y3_hl_monthly / max(current_hl_monthly_volume, 1.0)) ** usdc_beta
         y3_usdc_gp = usdc_tvl_val * usdc_scale * usdc_net_yield_val * USDC_CAPTURE
         y3_gp = y3_gp_perp + y3_usdc_gp
         y3_price = y3_gp * FIXED_MULTIPLE * TOKEN_CAPTURE / max(circ, 1.0)
@@ -462,48 +472,54 @@ def _compute_historical_charts(rev_rows, scaled_binance_daily, ms_full, price_by
     }
 
 
+# ── Velocity-decay scenarios ──────────────────────────────────────────────────
+# Scenario axis is momentum-decay speed, not supply/emission assumptions.
+# Supply is fixed at DB-observed baseline (~962K/mo + 15% overhang) across all three.
+# USDC beta is the DefiLlama Pro volume-based stablecoin elasticity per scenario.
+#   Formula: USDC_TVL_t = current_USDC_TVL × (HL_vol_t / current_HL_vol) ^ usdc_beta
+# Weighted P50 = 40% bull + 40% base + 20% bear (computed in run_once).
+
 SCENARIOS = [
     {
-        "key": "bear_worst_case_emissions",
-        "label": "Bear: worst-case emissions",
-        "monthly_emission": 9_916_667.0,
-        "emission_months": 20,
-        "optionality": 0.10,
-        "usdc_yield_capture": 0.90,
-        "overhang_release_fraction_3y": 1.00,
-        "note": "Worst-case: models full non-circulating/team/reserved overhang entering over 3Y before buyback offsets.",
-    },
-    {
-        "key": "base_db_observed_emissions",
-        "label": "Base: DB-observed emissions",
+        "key": "bear_velocity",
+        "label": "Bear: 6M momentum decay",
+        "decay_months": 6,
+        "usdc_beta": 0.60,
         "monthly_emission": 962_000.0,
         "emission_months": 36,
         "optionality": 0.10,
         "usdc_yield_capture": 0.90,
         "overhang_release_fraction_3y": 0.15,
-        "note": "Base: DB-observed emissions plus 15% of non-circulating/team/reserved overhang over 3Y, whichever is larger.",
+        "note": "Bear: momentum fades in 6M; USDC TVL weakly tracks volume (beta 0.60).",
     },
     {
-        "key": "upside_db_observed_plus_optionality",
-        "label": "Bull: base + stronger supply/burn",
+        "key": "base_velocity",
+        "label": "Base: 12M momentum decay",
+        "decay_months": 12,
+        "usdc_beta": 0.85,
         "monthly_emission": 962_000.0,
         "emission_months": 36,
         "optionality": 0.10,
         "usdc_yield_capture": 0.90,
-        "overhang_release_fraction_3y": 0.10,
-        "note": "Upside: base optionality with 10% of non-circulating/team/reserved overhang over 3Y.",
+        "overhang_release_fraction_3y": 0.15,
+        "note": "Base: 12M decay window; USDC TVL elasticity 0.85 (DefiLlama Pro volume-based).",
     },
     {
-        "key": "zero_emissions_sensitivity",
-        "label": "Sensitivity: zero emissions",
-        "monthly_emission": 0.0,
+        "key": "bull_velocity",
+        "label": "Bull: 24M momentum decay",
+        "decay_months": 24,
+        "usdc_beta": 1.00,
+        "monthly_emission": 962_000.0,
         "emission_months": 36,
         "optionality": 0.10,
         "usdc_yield_capture": 0.90,
-        "overhang_release_fraction_3y": 0.0,
-        "note": "Sensitivity only; ignores non-circulating overhang.",
+        "overhang_release_fraction_3y": 0.15,
+        "note": "Bull: momentum sustained 24M; USDC TVL tracks volume 1-for-1 (beta 1.00).",
     },
 ]
+
+# Weighted P50 weights: bull / base / bear
+WEIGHTED_P50_WEIGHTS = {"bull_velocity": 0.40, "base_velocity": 0.40, "bear_velocity": 0.20}
 
 CORE_QS = [25, 50, 75, 90]
 CHART_QS = [5, 10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 95]
@@ -543,7 +559,6 @@ def run_once():
     usdc_tvl = fetch_hyperliquid_usdc_tvl()
     usdc_yield = fetch_base_usdc_yield()
     usdc_net_yield = float(usdc_yield["net_yield"])
-    usdc_elasticity = estimate_usdc_volume_elasticity(rev)
 
     scaled_binance_daily, shares = h.scaled_binance_futures_daily()
     monthly_proxy_all = h.monthly_sums(scaled_binance_daily)
@@ -563,21 +578,28 @@ def run_once():
     bn_monthly_volume_path = start_bn_monthly_vol[:, None] * growth
 
     ms_momentum_initial = min(max(float(ms.get("ms30") or ms["ms90"]) / max(float(ms.get("ms180") or ms["ms90"]), 1e-12), 1.0), MS_AMPLIFIER_CAP)
-    share_multiplier = ms_acceleration_path(MONTHS, initial=ms_momentum_initial)
-    hl_share_path = np.minimum(float(ms["ms90"]) * share_multiplier, MS_SHARE_CAP)
-    hl_monthly_volume_path = bn_monthly_volume_path * hl_share_path[None, :]
-    perp_monthly_gp = hl_monthly_volume_path * NET_REVENUE_TAKE_RATE
 
     non_circ_overhang = max((total_supply if total_supply == total_supply else 1_000_000_000.0) - circ, 0.0)
 
+    # pv_arrays: save raw PV draws per scenario key for weighted P50 computation.
+    pv_arrays: dict = {}
+
     scenarios = {}
     for sc in SCENARIOS:
+        # Per-scenario share path: momentum decays over sc["decay_months"] instead of a fixed window.
+        sc_share_multiplier = ms_acceleration_path(MONTHS, initial=ms_momentum_initial,
+                                                   decay_months=sc["decay_months"])
+        sc_hl_share_path = np.minimum(float(ms["ms90"]) * sc_share_multiplier, MS_SHARE_CAP)
+        sc_hl_monthly_volume_path = bn_monthly_volume_path * sc_hl_share_path[None, :]
+        sc_perp_monthly_gp = sc_hl_monthly_volume_path * NET_REVENUE_TAKE_RATE
+
+        # USDC TVL tracks HL volume with per-scenario beta (DefiLlama Pro volume-based).
         usdc_tvl_path = float(usdc_tvl["tvl"]) * np.power(
-            np.maximum(hl_monthly_volume_path, 1.0) / max(float(ms["current_hl_monthly_volume"]), 1.0),
-            float(usdc_elasticity["elasticity"]),
+            np.maximum(sc_hl_monthly_volume_path, 1.0) / max(float(ms["current_hl_monthly_volume"]), 1.0),
+            float(sc["usdc_beta"]),
         )
         usdc_monthly_gp = usdc_tvl_path * usdc_net_yield * float(sc["usdc_yield_capture"]) / 12.0
-        monthly_gp = perp_monthly_gp + usdc_monthly_gp
+        monthly_gp = sc_perp_monthly_gp + usdc_monthly_gp
         y3_ttm_gp = monthly_gp[:, -12:].sum(axis=1)
         ranks = h.percentile_ranks(y3_ttm_gp)
         multiple = h.multiple_for_ranks(ranks)
@@ -609,13 +631,14 @@ def run_once():
         y3_price = y3_price_core * (1.0 + sc["optionality"])
         pv = y3_price / ((1.0 + SELECTED_DR) ** 3)
         p50_idx = int(np.argmin(np.abs(pv - np.percentile(pv, 50))))
-        y3_daily_vol_path = hl_monthly_volume_path[p50_idx, -12:] / 30.0
+        y3_daily_vol_path = sc_hl_monthly_volume_path[p50_idx, -12:] / 30.0
         p50_volume_stats = {
             "min_daily_volume": float(np.min(y3_daily_vol_path)),
             "avg_daily_volume": float(np.mean(y3_daily_vol_path)),
             "max_daily_volume": float(np.max(y3_daily_vol_path)),
-            "eoy_market_share": float(hl_share_path[-1]),
+            "eoy_market_share": float(sc_hl_share_path[-1]),
         }
+        pv_arrays[sc["key"]] = pv
         current_perp_monthly_gp = float(ms["current_hl_monthly_volume"]) * NET_REVENUE_TAKE_RATE
         current_usdc_monthly_gp = float(usdc_tvl["tvl"]) * usdc_net_yield * float(sc["usdc_yield_capture"]) / 12.0
         current_monthly_gp = current_perp_monthly_gp + current_usdc_monthly_gp
@@ -654,8 +677,25 @@ def run_once():
             "buyback_years_simple": float(buyback_years),
         }
 
-    # Volume sanity: implied HYPE volume from Y3 treasury revenue using clean revenue take-rate.
-    # Compare to total Binance futures current/peak daily volume from scaled BTCUSDT proxy.
+    # Weighted P50 = 40% bull + 40% base + 20% bear
+    weighted_p50_pv = sum(
+        WEIGHTED_P50_WEIGHTS.get(k, 0) * float(np.percentile(pv_arrays[k], 50))
+        for k in WEIGHTED_P50_WEIGHTS if k in pv_arrays
+    )
+    weighted_p25_pv = sum(
+        WEIGHTED_P50_WEIGHTS.get(k, 0) * float(np.percentile(pv_arrays[k], 25))
+        for k in WEIGHTED_P50_WEIGHTS if k in pv_arrays
+    )
+    weighted_p75_pv = sum(
+        WEIGHTED_P50_WEIGHTS.get(k, 0) * float(np.percentile(pv_arrays[k], 75))
+        for k in WEIGHTED_P50_WEIGHTS if k in pv_arrays
+    )
+    weighted_p90_pv = sum(
+        WEIGHTED_P50_WEIGHTS.get(k, 0) * float(np.percentile(pv_arrays[k], 90))
+        for k in WEIGHTED_P50_WEIGHTS if k in pv_arrays
+    )
+
+    # Volume sanity check: implied HYPE volume from Y3 GP using clean revenue take-rate.
     latest_month_vol = float(monthly_proxy[-1][1])
     current_binance_daily = latest_month_vol / 30.0
     peak_binance_daily = float(max(v for _, v in monthly_proxy)) / 30.0
@@ -672,7 +712,7 @@ def run_once():
         }
 
     # ── Historical charts (backtest / buyback horizon / EOY3 MS) ────────────
-    base_scenario = scenarios.get("base_db_observed_emissions", next(iter(scenarios.values())))
+    base_scenario = scenarios.get("base_velocity", next(iter(scenarios.values())))
     base_p50_pv = base_scenario["discounted_token_price"]["p50"]
     base_gross_3y = base_scenario["modeled_gross_release_3y"]
     hist_charts = _compute_historical_charts(
@@ -687,7 +727,7 @@ def run_once():
         current_hl_monthly_volume=float(ms["current_hl_monthly_volume"]),
         usdc_tvl_val=float(usdc_tvl["tvl"]),
         usdc_net_yield_val=usdc_net_yield,
-        usdc_elasticity_val=float(usdc_elasticity.get("elasticity", 0.22)),
+        usdc_beta=0.85,  # base scenario beta for historical backtest proxy
     )
 
     out = {
@@ -717,7 +757,12 @@ def run_once():
             "gross_yield": float(usdc_yield["gross_yield"]),
             "yield_haircut": float(usdc_yield["haircut"]),
             "net_yield": float(usdc_yield["net_yield"]),
-            "volume_elasticity": usdc_elasticity,
+            "usdc_beta_per_scenario": {
+                "bear_velocity": 0.60,
+                "base_velocity": 0.85,
+                "bull_velocity": 1.00,
+            },
+            "usdc_beta_note": "DefiLlama Pro volume-based stablecoin beta; replaces short-window revenue/USDC elasticity (~0.22 old)",
         },
         "mc": {
             "paths": N_PATHS,
@@ -734,12 +779,20 @@ def run_once():
                 "initial": float(ms_momentum_initial),
                 "cap": MS_AMPLIFIER_CAP,
                 "share_cap": MS_SHARE_CAP,
-                "decay_months": MS_MOMENTUM_DECAY_MONTHS,
-                "rule": "MS30/MS180 is the current 6M share-growth amplifier; convert to monthly velocity, linearly decay velocity to 1.0x over 12M, compound gained share, cap share at 35%",
+                "decay_months_per_scenario": {"bear_velocity": 6, "base_velocity": 12, "bull_velocity": 24},
+                "rule": "MS30/MS180 is the current 6M share-growth amplifier; monthly velocity decays over scenario-specific window, gained share held flat, cap 35%",
             },
         },
         "discount": {"selected": SELECTED_DR},
         "scenarios": scenarios,
+        "weighted_p50": {
+            "pv_p25": float(weighted_p25_pv),
+            "pv_p50": float(weighted_p50_pv),
+            "pv_p75": float(weighted_p75_pv),
+            "pv_p90": float(weighted_p90_pv),
+            "weights": {"bull_velocity": 0.40, "base_velocity": 0.40, "bear_velocity": 0.20},
+            "formula": "0.40 × bull_p50 + 0.40 × base_p50 + 0.20 × bear_p50 (velocity scenario axis)",
+        },
     }
     return out
 
@@ -750,13 +803,12 @@ def write_report(res):
     lines.append("# HYPE 3Y GP-Capture MC — Binance/MS90 Architecture")
     lines.append(f"As of: {res['asof_utc']}")
     lines.append("")
-    lines.append("## What changed")
-    lines.append("- Core perp treasury revenue is now generated from **sampled Binance monthly volume × MS90 × 0.026% clean revenue take-rate**, not total fees.")
-    lines.append("- Binance starting volume is a **uniform random draw** from historical monthly Binance Futures volumes since 2022.")
-    lines.append("- HL/Binance **MS90** is from DefiLlama MCP reported 90D derivatives volume versus scaled Binance Futures 90D volume.")
-    lines.append("- MS momentum treats **MS30/MS180** as the current 6M share-growth amplifier; monthly velocity linearly decays to 1.0x over 12M, then the gained share is held flat; share cap 35%.")
-    lines.append("- USDC TVL follows the simulated **HL volume path** using live-estimated elasticity; capture fixed at **90%**.")
-    lines.append("- Supply scenarios now include explicit non-circulating/team/reserved overhang release assumptions before buyback offsets.")
+    lines.append("## Model")
+    lines.append("- Perp GP = Binance volume × HL/Binance share × **0.026% clean revenue take-rate** (not gross 0.034%).")
+    lines.append("- USDC GP = USDC TVL × (HL_vol / current_HL_vol)^beta × net_yield × 90% capture.")
+    lines.append("- Scenario axis = momentum-decay window: **Bear 6M / Base 12M / Bull 24M**; supply fixed at DB-observed ~962K/mo.")
+    lines.append("- USDC beta per scenario: Bear 0.60 / Base 0.85 / Bull 1.00 (DefiLlama Pro volume-based).")
+    lines.append("- **Weighted P50 = 40% bull + 40% base + 20% bear** across 100K MC paths per scenario.")
     lines.append("")
     lines.append("## Market + GP base")
     lines.append("```text")
@@ -775,23 +827,25 @@ def write_report(res):
     lines.append(f"MS share cap                  {mc['market_share']['share_cap']:.0%}")
     lines.append(f"Start Binance volume P50      {fmt_money(mc['start_binance_monthly_volume_p50'])}/mo")
     lines.append(f"Current HL volume proxy       {fmt_money(mc['market_share']['current_hl_monthly_volume'])}/mo")
-    lines.append(f"Current perp GP proxy         {fmt_money(scs['base_db_observed_emissions']['current_perp_monthly_gp'])}/mo")
+    lines.append(f"Current perp GP proxy         {fmt_money(scs['base_velocity']['current_perp_monthly_gp'])}/mo")
     lines.append(f"USDC on Hyperliquid L1       {fmt_money(u['usdc_tvl'])}")
     lines.append(f"USDC yield proxy             {u['net_yield']:.2%} net ({u['yield_source']} {u['yield_date']}, gross {u['gross_yield']:.2%}, haircut {u['yield_haircut']:.2%})")
-    lines.append(f"USDC/volume elasticity       {u['volume_elasticity']['elasticity']:.2f} beta, corr {u['volume_elasticity']['corr']:.2f}, {u['volume_elasticity']['lookback_days']}d")
+    lines.append("USDC beta                    Bear 0.60 / Base 0.85 / Bull 1.00 (DefiLlama Pro volume-based)")
     lines.append("Discount rate                25% selected HYPE rate")
     lines.append(f"MC paths / horizon           {mc['paths']:,} / {mc['months']} months")
     lines.append(f"Monthly mkt logret mean/std  {mc['monthly_log_return_mean']:.2%} / {mc['monthly_log_return_std']:.2%}")
     lines.append("```")
     lines.append("")
-    lines.append("## Scenario output — discounted fair value @ 25%")
+    lines.append("## Velocity-scenario output — discounted fair value @ 25%")
     lines.append("```text")
     lines.append("Scenario                         P25      P50      P75      P90      P(spot)  3x+")
     lines.append("-------------------------------  -------  -------  -------  -------  -------  ------")
-    order = ["bear_worst_case_emissions", "base_db_observed_emissions", "upside_db_observed_plus_optionality", "zero_emissions_sensitivity"]
+    order = ["bear_velocity", "base_velocity", "bull_velocity"]
     for k in order:
         s = scs[k]; d = s["discounted_token_price"]
         lines.append(f"{s['label']:<31}  ${d['p25']:>6.2f}  ${d['p50']:>6.2f}  ${d['p75']:>6.2f}  ${d['p90']:>6.2f}  {s['prob_current_spot_justified']:>6.1%}  {s['prob_3x_vs_spot']:>5.1%}")
+    wp = res.get("weighted_p50", {})
+    lines.append(f"{'Weighted P50 (40/40/20)':<31}  ${wp.get('pv_p25',0):>6.2f}  ${wp.get('pv_p50',0):>6.2f}  ${wp.get('pv_p75',0):>6.2f}  ${wp.get('pv_p90',0):>6.2f}  —")
     lines.append("```")
     lines.append("")
     lines.append("## Supply / buyback sanity")
@@ -803,26 +857,26 @@ def write_report(res):
         lines.append(f"{s['label']:<31}  {s['modeled_monthly_supply_release']/1e6:>8.2f}M       {s['net_monthly_supply_now']/1e6:>+8.2f}M          {s['buyback_years_simple']:>6.1f}y       {s['y3_supply']['p50']/1e6:>7.1f}M")
     lines.append("```")
     lines.append("")
-    base = scs["base_db_observed_emissions"]["discounted_token_price"]
-    upside = scs["upside_db_observed_plus_optionality"]["discounted_token_price"]
-    bear = scs["bear_worst_case_emissions"]["discounted_token_price"]
+    base_d = scs["base_velocity"]["discounted_token_price"]
+    bull_d = scs["bull_velocity"]["discounted_token_price"]
+    bear_d = scs["bear_velocity"]["discounted_token_price"]
 
     lines.append("## P50 volume sanity")
     lines.append("```text")
-    lines.append("Assumed clean treasury revenue take-rate: 0.026% of notional volume")
+    lines.append("Perp GP = Binance volume × HL share × 0.026% clean treasury revenue take-rate")
     lines.append("")
     lines.append("Scenario                         Implied HYPE daily vol   vs Binance current   vs Binance peak")
     lines.append("-------------------------------  ----------------------   ------------------   ---------------")
-    for k in order[:3]:
+    for k in order:
         s = scs[k]; vs = s["volume_sanity"]
         lines.append(f"{s['label']:<31}  {fmt_money(vs['implied_hype_daily_volume_y3_p50']):>22}   {vs['implied_vs_current_binance']:>17.1%}   {vs['implied_vs_peak_binance']:>14.1%}")
     lines.append("```")
     lines.append("")
     lines.append("## Read-through")
-    lines.append(f"- **Bear/worst-case:** P50 **${bear['p50']:.2f}**, clearly below spot because full non-circulating/team/reserved overhang release overwhelms buybacks.")
-    lines.append(f"- **Base corrected run:** P50 **${base['p50']:.2f}**, P75 **${base['p75']:.2f}**, with spot justified in **{scs['base_db_observed_emissions']['prob_current_spot_justified']:.1%}** of paths.")
-    lines.append(f"- **Upside optionality run:** P50 **${upside['p50']:.2f}**, P75 **${upside['p75']:.2f}**, spot justified in **{scs['upside_db_observed_plus_optionality']['prob_current_spot_justified']:.1%}** of paths.")
-    lines.append("- Main conclusion: corrected model no longer says HYPE is obviously expensive; it says current spot is around the upper half of fair-value distribution unless worst-case emissions are true.")
+    lines.append(f"- **Bear (6M decay):** P50 **${bear_d['p50']:.2f}** — momentum fades quickly, USDC TVL barely tracks volume.")
+    lines.append(f"- **Base (12M decay):** P50 **${base_d['p50']:.2f}**, P75 **${base_d['p75']:.2f}**, spot justified in **{scs['base_velocity']['prob_current_spot_justified']:.1%}** of paths.")
+    lines.append(f"- **Bull (24M decay):** P50 **${bull_d['p50']:.2f}**, P75 **${bull_d['p75']:.2f}**, spot justified in **{scs['bull_velocity']['prob_current_spot_justified']:.1%}** of paths.")
+    lines.append(f"- **Weighted P50 (40% bull + 40% base + 20% bear):** ${wp.get('pv_p50',0):.2f}")
     lines.append("")
     report = "\n".join(lines) + "\n"
     md = os.path.join(OUTDIR, "hype_3y_gp_capture_12m_start_run.md")

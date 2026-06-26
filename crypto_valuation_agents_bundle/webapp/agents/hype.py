@@ -2,8 +2,8 @@
 
 Uses hype_gp_capture_12m_start_run.run_once() which models perp treasury
 revenue as Binance volume × HL market share × 0.026% clean revenue take-rate, plus separate
-USDC yield GP. Four supply/emission scenarios replace the old DR-sensitivity
-approach.
+USDC yield GP. Three velocity-decay scenarios (bear 6M / base 12M / bull 24M) replace the
+old supply/emission scenario axis. Weighted P50 = 40% bull + 40% base + 20% bear.
 """
 import json
 import os
@@ -18,12 +18,11 @@ import hype_gp_capture_12m_start_run as _run  # noqa: E402
 
 RESULTS_DIR = Path(__file__).parent.parent / "results"
 
-# Display order: primary first, then supporting scenarios
+# Velocity-decay scenarios — momentum window is the scenario axis, not supply/emissions.
 _SCENARIO_DISPLAY = [
-    ("base_db_observed_emissions",          "Base: DB-observed emissions",       True),
-    ("upside_db_observed_plus_optionality", "Bull: base + stronger supply/burn", False),
-    ("bear_worst_case_emissions",           "Bear: worst-case emissions",        False),
-    ("zero_emissions_sensitivity",          "Sensitivity: zero emissions",       False),
+    ("base_velocity", "Base: 12M momentum decay", True),
+    ("bull_velocity", "Bull: 24M momentum decay", False),
+    ("bear_velocity", "Bear: 6M momentum decay",  False),
 ]
 
 
@@ -36,9 +35,10 @@ def run() -> dict:
     u   = res["usdc_yield"]
     mc  = res["mc"]
     scs = res["scenarios"]
+    wp  = res.get("weighted_p50", {})
     spot = m["spot"]
     ms   = mc["market_share"]
-    base = scs["base_db_observed_emissions"]
+    base = scs["base_velocity"]
 
     # ── Scenarios → standardized list ─────────────────────────────────────────
     scenarios = []
@@ -126,6 +126,11 @@ def run() -> dict:
         "trailing_30d_revenue":   r["trailing_30d_revenue"],
         "ttm_gp":                 r["ttm_gp"],
         "non_circ_overhang":      base["non_circ_overhang"],
+        # Velocity-scenario weighted P50 (40% bull + 40% base + 20% bear)
+        "weighted_p50_pv":        wp.get("pv_p50"),
+        "weighted_p25_pv":        wp.get("pv_p25"),
+        "weighted_p75_pv":        wp.get("pv_p75"),
+        "usdc_beta_per_scenario": u.get("usdc_beta_per_scenario", {}),
     }
 
     # ── MCP weekly bullets ────────────────────────────────────────────────────
@@ -200,19 +205,22 @@ def run() -> dict:
             "multiple":      15.0,
             "paths":         mc["paths"],
             "note": (
-                "HL vol × Binance market share × 0.026% clean treasury revenue take-rate + USDC yield; "
-                "MS30/MS90 momentum decays over 12 months; 4 supply/emission scenarios"
+                "Perp GP = Binance vol × HL share × 0.026% clean revenue take-rate; "
+                "USDC GP = TVL × (HL_vol/current_vol)^beta × SOFR-haircut × 90%; "
+                "3 velocity scenarios (bear 6M / base 12M / bull 24M decay); "
+                "USDC beta 0.60/0.85/1.00; weighted P50 = 40% bull + 40% base + 20% bear"
             ),
         },
         "current_gp": current_gp,
         "scenarios":  scenarios,
         "ms_history": res.get("ms_history", []),
         "hist_charts": res.get("hist_charts", {}),
+        "weighted_p50": wp,
         "mcp_bullets": mcp_bullets,
         "caveats": [
-            "Market share (MS90) from DefiLlama MCP derivatives volume vs scaled Binance BTCUSDT proxy.",
-            "USDC yield modeled separately from perp revenue; TVL follows HL volume path via estimated elasticity.",
-            "Supply scenarios range from DB-observed emissions (~1M/mo) to worst-case non-circulating overhang release.",
+            "Market share (MS90) from DefiLlama MCP derivatives volume vs scaled Binance BTCUSDT proxy; refreshed on every run.",
+            "USDC yield modeled separately; TVL follows HL volume path with scenario betas 0.60/0.85/1.00 (DefiLlama Pro volume-based).",
+            "All 3 scenarios use DB-observed emissions (~962K HYPE/mo + 15% overhang); variance is entirely from momentum decay window.",
         ],
         "data_freshness": res["asof_utc"][:10],
     }

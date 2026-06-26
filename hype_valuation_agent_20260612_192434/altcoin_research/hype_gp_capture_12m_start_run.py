@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# DEPRECATED — superseded by crypto_valuation_agents_bundle/hype_gp_capture_12m_start_run.py
+# Key differences: this file uses 0.034% take-rate and supply/emission scenarios;
+# the active model uses 0.026% clean revenue take-rate and velocity-decay scenarios.
 """Updated HYPE GP-capture scenario run after critique.
 
 Fixes:
