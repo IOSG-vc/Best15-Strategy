@@ -1,0 +1,282 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-05-12",
+    "total_tokens": 25,
+    "total_x_accounts": 71,
+    "total_telegram_channels": 10,
+    "notes": "T1 = official project account, T1.5 = founder/core team, T2 = key analyst/KOL with deep coverage"
+  },
+  "tokens": {
+    "ethereum": {
+      "coingecko_id": "ethereum",
+      "ticker": "ETH",
+      "category": "L1",
+      "accounts": [
+        {"handle": "@ethereum", "tier": "T1", "role": "Official"},
+        {"handle": "@VitalikButerin", "tier": "T1.5", "role": "Co-founder"},
+        {"handle": "@ethereumjoseph", "tier": "T1.5", "role": "Community lead"},
+        {"handle": "@tkstanczak", "tier": "T1.5", "role": "Nethermind CEO"},
+        {"handle": "@dankrad", "tier": "T1.5", "role": "ETH researcher"},
+        {"handle": "@sassal0x", "tier": "T2", "role": "ETH analyst"},
+        {"handle": "@TrustlessState", "tier": "T2", "role": "Bankless/ETH"},
+        {"handle": "@econoar", "tier": "T2", "role": "ETH analyst (Eric Conner)"},
+        {"handle": "@ryansadams", "tier": "T2", "role": "Bankless co-founder"}
+      ]
+    },
+    "bitcoin": {
+      "coingecko_id": "bitcoin",
+      "ticker": "BTC",
+      "category": "L1",
+      "accounts": [
+        {"handle": "@nic__carter", "tier": "T2", "role": "Castle Island, BTC analyst"}
+      ]
+    },
+    "solana": {
+      "coingecko_id": "solana",
+      "ticker": "SOL",
+      "category": "L1",
+      "accounts": [
+        {"handle": "@solana", "tier": "T1", "role": "Official"},
+        {"handle": "@aeyakovenko", "tier": "T1.5", "role": "Co-founder Anatoly Yakovenko"},
+        {"handle": "@0xmert_", "tier": "T2", "role": "Helius/Solana ecosystem"},
+        {"handle": "@solbigbrain", "tier": "T2", "role": "Solana analyst"},
+        {"handle": "@mert", "tier": "T2", "role": "Solana ecosystem"}
+      ]
+    },
+    "hyperliquid": {
+      "coingecko_id": "hyperliquid",
+      "ticker": "HYPE",
+      "category": "DeFi/Perps",
+      "accounts": [
+        {"handle": "@HyperliquidX", "tier": "T1", "role": "Official"},
+        {"handle": "@chameleon_jeff", "tier": "T1.5", "role": "Founder Jeff Yan"}
+      ]
+    },
+    "uniswap": {
+      "coingecko_id": "uniswap",
+      "ticker": "UNI",
+      "category": "DeFi/DEX",
+      "accounts": [
+        {"handle": "@Uniswap", "tier": "T1", "role": "Official"},
+        {"handle": "@haydenzadams", "tier": "T1.5", "role": "Founder"}
+      ]
+    },
+    "aave": {
+      "coingecko_id": "aave",
+      "ticker": "AAVE",
+      "category": "DeFi/Lending",
+      "accounts": [
+        {"handle": "@aave", "tier": "T1", "role": "Official"},
+        {"handle": "@StaniKulechov", "tier": "T1.5", "role": "Founder & CEO"},
+        {"handle": "@marczeller", "tier": "T1.5", "role": "Aave contributor/governance"}
+      ]
+    },
+    "chainlink": {
+      "coingecko_id": "chainlink",
+      "ticker": "LINK",
+      "category": "Oracle/Infra",
+      "accounts": [
+        {"handle": "@chainlink", "tier": "T1", "role": "Official"},
+        {"handle": "@SergeyNazarov", "tier": "T1.5", "role": "Co-founder & CEO"}
+      ]
+    },
+    "coinbase": {
+      "coingecko_id": "coinbase",
+      "ticker": "COIN",
+      "category": "Exchange/Stock",
+      "accounts": [
+        {"handle": "@coinbase", "tier": "T1", "role": "Official"},
+        {"handle": "@brian_armstrong", "tier": "T1.5", "role": "CEO"}
+      ]
+    },
+    "robinhood": {
+      "coingecko_id": "robinhood",
+      "ticker": "HOOD",
+      "category": "Exchange/Stock",
+      "accounts": [
+        {"handle": "@RobinhoodApp", "tier": "T1", "role": "Official"},
+        {"handle": "@vladtenev", "tier": "T1.5", "role": "CEO"}
+      ]
+    },
+    "binancecoin": {
+      "coingecko_id": "binancecoin",
+      "ticker": "BNB",
+      "category": "Exchange/L1",
+      "accounts": [
+        {"handle": "@binance", "tier": "T1", "role": "Official"},
+        {"handle": "@cz_binance", "tier": "T1.5", "role": "Founder CZ"}
+      ]
+    },
+    "circle": {
+      "coingecko_id": "circle",
+      "ticker": "CRCL",
+      "category": "Stock/Stablecoin issuer (USDC, ARC)",
+      "accounts": [
+        {"handle": "@circle", "tier": "T1", "role": "Official"},
+        {"handle": "@jerallaire", "tier": "T1.5", "role": "CEO Jeremy Allaire"}
+      ]
+    },
+    "strategy": {
+      "coingecko_id": "strategy",
+      "ticker": "MSTR",
+      "category": "BTC Treasury",
+      "accounts": [
+        {"handle": "@Strategy", "tier": "T1", "role": "Official (rebranded from MicroStrategy Feb 2025)"},
+        {"handle": "@saylor", "tier": "T1.5", "role": "Founder Michael Saylor"}
+      ]
+    },
+    "ripple": {
+      "coingecko_id": "ripple",
+      "ticker": "XRP",
+      "category": "Payments",
+      "accounts": [
+        {"handle": "@Ripple", "tier": "T1", "role": "Official"},
+        {"handle": "@bgarlinghouse", "tier": "T1.5", "role": "CEO Brad Garlinghouse"},
+        {"handle": "@jdorman81", "tier": "T2", "role": "XRP TVA analyst"}
+      ]
+    },
+    "tron": {
+      "coingecko_id": "tron",
+      "ticker": "TRX",
+      "category": "L1",
+      "accounts": [
+        {"handle": "@trondao", "tier": "T1", "role": "Official"},
+        {"handle": "@justinsuntron", "tier": "T1.5", "role": "Founder Justin Sun"}
+      ]
+    },
+    "zcash": {
+      "coingecko_id": "zcash",
+      "ticker": "ZEC",
+      "category": "Privacy",
+      "accounts": [
+        {"handle": "@ElectricCoinCo", "tier": "T1", "role": "Electric Coin Company (Zcash dev org)"},
+        {"handle": "@zooko", "tier": "T1.5", "role": "Founder Zooko Wilcox"}
+      ]
+    },
+    "ether-fi": {
+      "coingecko_id": "ether-fi",
+      "ticker": "ETHFI",
+      "category": "Liquid Staking",
+      "accounts": [
+        {"handle": "@ether_fi", "tier": "T1", "role": "Official"},
+        {"handle": "@MikeSilagadze", "tier": "T1.5", "role": "Founder & CEO"}
+      ]
+    },
+    "ethena": {
+      "coingecko_id": "ethena",
+      "ticker": "ENA",
+      "category": "Synthetic Dollar",
+      "accounts": [
+        {"handle": "@ethena_labs", "tier": "T1", "role": "Official"},
+        {"handle": "@leptokurtic_", "tier": "T1.5", "role": "Founder Guy Young"}
+      ]
+    },
+    "morpho": {
+      "coingecko_id": "morpho",
+      "ticker": "MORPHO",
+      "category": "DeFi/Lending",
+      "accounts": [
+        {"handle": "@MorphoLabs", "tier": "T1", "role": "Official"},
+        {"handle": "@PaulFrambot", "tier": "T1.5", "role": "Co-founder & CEO"}
+      ]
+    },
+    "bittensor": {
+      "coingecko_id": "bittensor",
+      "ticker": "TAO",
+      "category": "AI/Decentralized",
+      "accounts": [
+        {"handle": "@opentensor", "tier": "T1", "role": "Official"},
+        {"handle": "@bittingthembits", "tier": "T2", "role": "TAO ecosystem analyst"},
+        {"handle": "@chiefbuidl", "tier": "T2", "role": "TAO thesis analyst"},
+        {"handle": "@0xPrismatic", "tier": "T2", "role": "TAO analyst"},
+        {"handle": "@0xSamHogan", "tier": "T2", "role": "TAO ecosystem"}
+      ]
+    },
+    "sky": {
+      "coingecko_id": "sky",
+      "ticker": "SKY",
+      "category": "DeFi/Stablecoin",
+      "accounts": [
+        {"handle": "@SkyEcosystem", "tier": "T1", "role": "Official (rebranded from MakerDAO)"},
+        {"handle": "@RuneKek", "tier": "T1.5", "role": "Founder Rune Christensen"}
+      ]
+    },
+    "jupiter-exchange-solana": {
+      "coingecko_id": "jupiter-exchange-solana",
+      "ticker": "JUP",
+      "category": "DeFi/DEX Aggregator",
+      "accounts": [
+        {"handle": "@JupiterExchange", "tier": "T1", "role": "Official"},
+        {"handle": "@weremeow", "tier": "T1.5", "role": "Co-founder Meow"}
+      ]
+    },
+    "pump-fun": {
+      "coingecko_id": "pump-fun",
+      "ticker": "PUMP",
+      "category": "Memecoin Platform",
+      "accounts": [
+        {"handle": "@pumpdotfun", "tier": "T1", "role": "Official"},
+        {"handle": "@a1lon9", "tier": "T1.5", "role": "Founder Alon"}
+      ]
+    },
+    "ondo-finance": {
+      "coingecko_id": "ondo-finance",
+      "ticker": "ONDO",
+      "category": "RWA",
+      "accounts": [
+        {"handle": "@OndoFinance", "tier": "T1", "role": "Official"},
+        {"handle": "@nathanlallman", "tier": "T1.5", "role": "CEO Nathan Allman"}
+      ]
+    },
+    "pendle": {
+      "coingecko_id": "pendle",
+      "ticker": "PENDLE",
+      "category": "DeFi/Yield",
+      "accounts": [
+        {"handle": "@pendle_fi", "tier": "T1", "role": "Official"},
+        {"handle": "@tn_pendle", "tier": "T1.5", "role": "Co-founder TN Lee"}
+      ]
+    },
+    "near": {
+      "coingecko_id": "near",
+      "ticker": "NEAR",
+      "category": "L1/AI",
+      "accounts": [
+        {"handle": "@NEARProtocol", "tier": "T1", "role": "Official"},
+        {"handle": "@ilblackdragon", "tier": "T1.5", "role": "Co-founder Illia Polosukhin"}
+      ]
+    }
+  },
+  "shared_kol_watchlist": [
+    {"handle": "@hasufl", "tier": "T2", "focus": "DeFi/Crypto Research", "relevance": "general"},
+    {"handle": "@DefiIgnas", "tier": "T2", "focus": "DeFi Analysis/Rankings", "relevance": "general"},
+    {"handle": "@QwQiao", "tier": "T2", "focus": "Token Frameworks", "relevance": "general"},
+    {"handle": "@HadickM", "tier": "T2", "focus": "Dragonfly VC, RWA", "relevance": "general"},
+    {"handle": "@zachxbt", "tier": "T2", "focus": "On-chain Investigator", "relevance": "general"},
+    {"handle": "@solidintel_x", "tier": "T2", "focus": "DeFi Intel", "relevance": "MORPHO, AERO"},
+    {"handle": "@aixbt_agent", "tier": "T2", "focus": "AI Agent Crypto Analysis", "relevance": "general"}
+  ],
+  "telegram_sources": {
+    "note": "Telegram channels as additional news sources. Messages are fetched daily, filtered for relevance to the 25-token universe using embedding similarity (not just exact token name match — sector/domain relevance counts). Priority order determines tiebreaking when same event appears in multiple channels.",
+    "channels": [
+      {"priority": 1, "name": "Shoal Research Hub", "chat_id": 1811915252, "language": "EN", "focus": "Crypto research, deep analysis"},
+      {"priority": 2, "name": "Eli5DeFi NewsHub", "chat_id": 2106747654, "language": "EN", "focus": "DeFi news simplified"},
+      {"priority": 3, "name": "Stacy in Dataland", "chat_id": 1993180528, "language": "EN", "focus": "Data-driven crypto analysis"},
+      {"priority": 4, "name": "Layergg exchange & project alert", "chat_id": 1497020843, "language": "EN", "focus": "Exchange listings, project alerts"},
+      {"priority": 5, "name": "Stablewatch", "chat_id": 2649224953, "language": "EN", "focus": "Stablecoin flows, market structure"},
+      {"priority": 6, "name": "Cookie Reads", "chat_id": 1811377118, "language": "EN", "focus": "Crypto reading recommendations"},
+      {"priority": 7, "name": "PANews Web3", "chat_id": 1456088978, "language": "CN", "focus": "Chinese crypto/Web3 news"},
+      {"priority": 8, "name": "6551News", "chat_id": 2395608815, "language": "CN", "focus": "Chinese crypto news aggregator"},
+      {"priority": 9, "name": "Ahboyash Reads", "chat_id": 1742094092, "language": "EN", "focus": "Crypto analysis/reads"},
+      {"priority": 10, "name": "Hodl crypto for 100y", "chat_id": 3283330028, "language": "EN/CN", "focus": "Long-term crypto thesis"}
+    ]
+  },
+  "discord_config": {
+    "guild_id": "1486578246748340254",
+    "guild_name": "IOSG_AI",
+    "target_channel_id": "1486648298176643207",
+    "target_channel_name": "#best20",
+    "bot_token_env_var": "DISCORD_BOT_TOKEN"
+  }
+}

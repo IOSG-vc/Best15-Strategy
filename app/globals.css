@@ -7,6 +7,54 @@ body {
   color: #ffffff;
 }
 
+/* ── SOP Monitor design tokens ──────────────────────────────────────────
+   Scoped to .sop-page so they don't bleed into the dark dashboard theme. */
+.sop-page {
+  --canvas: #faf9f5;
+  --surface-soft: #f5f0e8;
+  --surface-card: #efe9de;
+  --surface-cream-strong: #e8e0d2;
+  --surface-dark: #181715;
+  --surface-dark-soft: #1f1e1b;
+  --surface-dark-elevated: #252320;
+
+  --ink: #141413;
+  --body-strong: #252523;
+  --body: #3d3d3a;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
+  --on-primary: #ffffff;
+  --on-dark: #faf9f5;
+  --on-dark-soft: #a09d96;
+
+  --primary: #cc785c;
+  --primary-active: #a9583e;
+  --primary-disabled: #e6dfd8;
+  --accent-teal: #5db8a6;
+  --accent-amber: #e8a55a;
+
+  --hairline: #e6dfd8;
+  --hairline-soft: #ebe6df;
+
+  --success: #5db872;
+  --warning: #d4a017;
+  --error: #c64545;
+
+  background: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+.sop-page h1,
+.sop-page h2,
+.sop-page h3 {
+  font-family: "Cormorant Garamond", Garamond, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

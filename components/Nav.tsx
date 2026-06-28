@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/private-fund",   label: "Private Fund",   experimental: false },
   { href: "/valuation",      label: "Valuations",     experimental: false },
   { href: "/crypto-tech",    label: "Tech Dashboard", experimental: false },
+  { href: "/sop",            label: "SOP Monitor",    experimental: false },
 ];
 
 export default function Nav() {
