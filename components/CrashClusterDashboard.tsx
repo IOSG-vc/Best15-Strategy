@@ -4,7 +4,9 @@ import dynamic from "next/dynamic";
 import Nav from "./Nav";
 import type { CrashClusterData, CrashClusterMetric } from "@/lib/loadCrashClusterData";
 
-const CrashClusterBarChart = dynamic(() => import("./CrashClusterBarChart"), { ssr: false });
+const CrashClusterBarChart    = dynamic(() => import("./CrashClusterBarChart"),    { ssr: false });
+const CrashClusterLineChart   = dynamic(() => import("./CrashClusterLineChart"),   { ssr: false });
+const CrashClusterExposureChart = dynamic(() => import("./CrashClusterExposureChart"), { ssr: false });
 
 function pct(v: number, digits = 1) {
   return `${(v * 100).toFixed(digits)}%`;
@@ -276,6 +278,24 @@ export default function CrashClusterDashboard({ data }: { data: CrashClusterData
           <p className="text-sm text-gray-500 mb-4">All variants vs baseline across sub-periods</p>
           <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
             <CrashClusterBarChart data={data} />
+          </div>
+        </section>
+
+        {/* Equity curve chart */}
+        <section>
+          <h2 className="text-lg font-semibold mb-1">Cumulative Equity Curves</h2>
+          <p className="text-sm text-gray-500 mb-4">All strategies indexed to 1.0 on 2020-01-01 · Red ticks mark individual crash events</p>
+          <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
+            <CrashClusterLineChart />
+          </div>
+        </section>
+
+        {/* Exposure / gate chart */}
+        <section>
+          <h2 className="text-lg font-semibold mb-1">Exposure &amp; Gate Over Time</h2>
+          <p className="text-sm text-gray-500 mb-4">How the crash gate compresses exposure after events · Toggle between effective exposure and raw gate multiplier</p>
+          <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
+            <CrashClusterExposureChart />
           </div>
         </section>
 
