@@ -3,9 +3,9 @@
   "description": "SH crash-gate (crash cluster) overlay applied post-hoc to V4 cbrtM locked-convention baseline. Experimental diagnostic only — not production-ready.",
   "variants": [
     { "key": "baseline_v4_cbrtM_locked", "label": "Baseline V4", "color": "#9ca3af", "isBaseline": true },
-    { "key": "A_locked_SH", "label": "A — SH Gate", "color": "#a78bfa", "isBaseline": false, "params": "vol=180d · z≥1.5σ · HL=126d · jump=20% · floor=15%" },
-    { "key": "B_floor35", "label": "B — Floor 35%", "color": "#60a5fa", "isBaseline": false, "params": "vol=180d · z≥1.5σ · HL=126d · jump=20% · floor=35%" },
-    { "key": "C_strong", "label": "C — Strong Filter", "color": "#34d399", "isBaseline": false, "params": "vol=365d · z≥1.5σ · HL=91d · jump=35% · floor=15%" }
+    { "key": "A_locked_SH", "label": "A — SH Gate", "color": "#a78bfa", "isBaseline": false, "params": "vol=180d · z≤−1.5σ · HL=126d · jump=20% · floor=15%" },
+    { "key": "B_floor35", "label": "B — Floor 35%", "color": "#60a5fa", "isBaseline": false, "params": "vol=180d · z≤−1.5σ · HL=126d · jump=20% · floor=35%" },
+    { "key": "C_strong", "label": "C — Strong Filter", "color": "#34d399", "isBaseline": false, "params": "vol=365d · z≤−1.5σ · HL=91d · jump=35% · floor=15%" }
   ],
   "windows": [
     { "key": "full_2020_26", "label": "Full 2020–2026", "start": "2020-01-01", "end": "2026-06-10" },
