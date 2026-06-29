@@ -459,6 +459,54 @@ function pct(n: number, decimals = 1): string {
   return `${(n * 100).toFixed(decimals)}%`;
 }
 
+// ── Implied growth utility ────────────────────────────────────────────────────
+// Inverts the valuation formula: implied_y3_gp = spot × y3_supply × (1+DR)³ / multiple
+// Returns: implied Y3 GP/revenue, % premium vs model P50, and optional CAGR from current run-rate
+
+interface ImpliedGrowth {
+  impliedY3Gp: number;        // $ implied Y3 GP/revenue at current spot
+  vsModelPct: number | null;  // % above/below model's base P50 Y3 GP
+  impliedCagr: number | null; // annualized CAGR if current run-rate is available
+  baseMultiple: number;       // the exit multiple used (P/S or P/GP)
+}
+
+function computeImpliedGrowth(data: ValuationData): ImpliedGrowth | null {
+  const spot    = data.market.spot;
+  const dr      = data.model.discount_rate;
+  const primary = data.scenarios.find((s) => s.is_primary) ?? data.scenarios[0];
+  if (!primary || spot <= 0) return null;
+
+  const scRaw = primary as unknown as Record<string, unknown>;
+  const y3Supply   = (scRaw["y3_supply_p50"] as number | undefined)
+                     ?? data.market.circulating_supply;
+  const y3GpModel  = ((scRaw["y3_gp_p50"] as number | undefined)
+                     ?? (scRaw["y3_revenue_p50"] as number | undefined)) ?? 0;
+
+  // Stock P/S models store ps_center per-scenario; GP models use model.multiple
+  const psCenter = scRaw["ps_center"] as number | undefined;
+  const baseMultiple = psCenter ?? (data.model.multiple as number | undefined) ?? 10;
+
+  if (!y3Supply || baseMultiple <= 0) return null;
+
+  const impliedY3Gp = (spot * y3Supply * Math.pow(1 + dr, 3)) / baseMultiple;
+  const vsModelPct  = y3GpModel > 0 ? ((impliedY3Gp / y3GpModel) - 1) * 100 : null;
+
+  // Current run-rate: try stock revenue field first, then GP fields
+  const gp = data.current_gp as Record<string, unknown>;
+  const currentAnn =
+    (gp["total_revenue_ann"]  as number | undefined) ??
+    (gp["gross_profit_ann"]   as number | undefined) ??
+    (gp["revenue_ann"]        as number | undefined) ??
+    null;
+
+  const impliedCagr =
+    currentAnn && currentAnn > 0 && impliedY3Gp > 0
+      ? Math.pow(impliedY3Gp / currentAnn, 1 / 3) - 1
+      : null;
+
+  return { impliedY3Gp, vsModelPct, impliedCagr, baseMultiple };
+}
+
 // ── MetricCard ───────────────────────────────────────────────────────────────
 
 function valueTextClass(v: string): string {
@@ -3065,6 +3113,43 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
           />
         </div>
 
+        {/* ── Market-implied growth panel ────────────────────── */}
+        {(() => {
+          const ig = computeImpliedGrowth(data);
+          if (!ig) return null;
+          const baseSc = scenarios.find(s => s.is_primary);
+          const cagr3Label = ig.impliedCagr != null ? `${ig.impliedCagr >= 0 ? "+" : ""}${(ig.impliedCagr*100).toFixed(0)}%/yr` : "—";
+          const vsModelLabel = ig.vsModelPct != null ? `${ig.vsModelPct >= 0 ? "+" : ""}${ig.vsModelPct.toFixed(0)}%` : "—";
+          return (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-base font-semibold text-amber-900">Market-Implied Growth Rate</span>
+                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">from current spot</span>
+              </div>
+              <p className="text-sm text-amber-800 mb-4">
+                At the current price of {fmtPrice(spot)}, the market implies Y3 revenue of {fmtLarge(ig.impliedY3Gp)} —
+                using the base scenario exit P/S of {ig.baseMultiple.toFixed(0)}× and {(DR*100).toFixed(1)}% CAPM DR.
+                That is {vsModelLabel} vs the model&#39;s base P50 of {fmtLarge(baseSc?.y3_revenue_p50 ?? 0)}.
+                {ig.impliedCagr != null && ` Relative to the current ${fmtLarge(totalRev)} revenue run-rate, this requires a ${cagr3Label} 3-year CAGR.`}
+              </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "Implied Y3 revenue", val: fmtLarge(ig.impliedY3Gp) },
+                  { label: "Model base P50 Y3 rev", val: fmtLarge(baseSc?.y3_revenue_p50 ?? 0) },
+                  { label: "Implied vs model", val: vsModelLabel },
+                  { label: ig.impliedCagr != null ? "Implied rev CAGR (3Y)" : "Exit P/S used",
+                    val: ig.impliedCagr != null ? cagr3Label : `${ig.baseMultiple.toFixed(0)}×` },
+                ].map(c => (
+                  <div key={c.label} className="bg-white rounded-lg border border-amber-200 px-4 py-3">
+                    <div className="text-xs text-amber-700 font-mono mb-1">{c.label}</div>
+                    <div className="text-xl font-bold text-amber-900 font-mono">{c.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Revenue Semantics ─────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
           <div className="flex flex-col justify-center">
@@ -3308,6 +3393,43 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
             sub={`Bear ${scenarios.find(s=>s.key==="bear")?.ps_center.toFixed(0)}× · Base ${scenarios.find(s=>s.key==="base")?.ps_center.toFixed(0)}× · Bull ${scenarios.find(s=>s.key==="bull")?.ps_center.toFixed(0)}× (model exit P/S centers)`}
           />
         </div>
+
+        {/* ── Market-implied growth panel ────────────────────── */}
+        {(() => {
+          const ig = computeImpliedGrowth(data);
+          if (!ig) return null;
+          const baseSc = scenarios.find(s => s.is_primary);
+          const cagr3Label = ig.impliedCagr != null ? `${ig.impliedCagr >= 0 ? "+" : ""}${(ig.impliedCagr*100).toFixed(0)}%/yr` : "—";
+          const vsModelLabel = ig.vsModelPct != null ? `${ig.vsModelPct >= 0 ? "+" : ""}${ig.vsModelPct.toFixed(0)}%` : "—";
+          return (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-base font-semibold text-amber-900">Market-Implied Growth Rate</span>
+                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">from current spot</span>
+              </div>
+              <p className="text-sm text-amber-800 mb-4">
+                At the current price of {fmtPrice(spot)}, the market implies Y3 revenue of {fmtLarge(ig.impliedY3Gp)} —
+                using the base scenario exit P/S of {ig.baseMultiple.toFixed(0)}× and {(DR*100).toFixed(1)}% CAPM DR.
+                That is {vsModelLabel} vs the model&#39;s base P50 of {fmtLarge(baseSc?.y3_revenue_p50 ?? 0)}.
+                {ig.impliedCagr != null && ` Relative to the current ${fmtLarge(totalRev)} revenue run-rate, this requires a ${cagr3Label} 3-year CAGR.`}
+              </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "Implied Y3 revenue", val: fmtLarge(ig.impliedY3Gp) },
+                  { label: "Model base P50 Y3 rev", val: fmtLarge(baseSc?.y3_revenue_p50 ?? 0) },
+                  { label: "Implied vs model", val: vsModelLabel },
+                  { label: ig.impliedCagr != null ? "Implied rev CAGR (3Y)" : "Exit P/S used",
+                    val: ig.impliedCagr != null ? cagr3Label : `${ig.baseMultiple.toFixed(0)}×` },
+                ].map(c => (
+                  <div key={c.label} className="bg-white rounded-lg border border-amber-200 px-4 py-3">
+                    <div className="text-xs text-amber-700 font-mono mb-1">{c.label}</div>
+                    <div className="text-xl font-bold text-amber-900 font-mono">{c.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Revenue Semantics ─────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
@@ -4749,6 +4871,32 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             accent={probColor as "green" | "red" | "yellow"}
             termKey="prob_above_spot"
           />
+          {/* Implied growth card — computed for every token */}
+          {(() => {
+            const ig = computeImpliedGrowth(d);
+            if (!ig) return null;
+            const vsModel = ig.vsModelPct;
+            const isStock = (primary as unknown as Record<string,unknown>)["ps_center"] != null;
+            const labelSuffix = isStock ? "rev" : "GP";
+            const vsLabel = vsModel != null
+              ? `${vsModel >= 0 ? "+" : ""}${vsModel.toFixed(0)}% vs model P50`
+              : "—";
+            const cagrLabel = ig.impliedCagr != null
+              ? `${ig.impliedCagr >= 0 ? "+" : ""}${(ig.impliedCagr * 100).toFixed(0)}% ann. CAGR`
+              : null;
+            const accent = vsModel == null ? "default"
+              : vsModel > 50  ? "red"
+              : vsModel > 0   ? "yellow"
+              : "green";
+            return (
+              <MetricCard
+                label={`Mkt-implied Y3 ${labelSuffix}`}
+                value={fmtLarge(ig.impliedY3Gp)}
+                sub={cagrLabel ? `${vsLabel} · ${cagrLabel} from current run-rate` : vsLabel}
+                accent={accent as "green" | "red" | "yellow" | "default"}
+              />
+            );
+          })()}
         </div>
       )}
 

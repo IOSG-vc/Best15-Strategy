@@ -233,6 +233,72 @@ if btc_prices:
 else:
     print("[BETA] BTC price fetch failed — skipping betas")
 
+# ── Implied growth rate from current market price ────────────────────────────
+# Formula: implied_y3_gp = spot × y3_supply_p50 × (1+DR)^3 / base_multiple
+# base_multiple: ps_center (stock P/S models) or model.multiple (crypto GP models)
+# vs_model_pct: how much the implied Y3 GP deviates from the model's P50 projection
+# implied_cagr: only computed when a current GP/revenue run-rate is available in current_gp
+
+print("\n[IMPLIED] Computing market-implied growth rates…")
+for token_key, _, _, symbol, _, _ in TOKENS:
+    try:
+        tok_data = (results.get(token_key) or {}).get("data")
+        if not tok_data:
+            continue
+        scenarios = tok_data.get("scenarios", [])
+        primary   = next((s for s in scenarios if s.get("is_primary")), None)
+        if not primary:
+            primary = scenarios[0] if scenarios else None
+        if not primary:
+            continue
+
+        spot       = float(tok_data.get("market", {}).get("spot", 0) or 0)
+        dr         = float(tok_data.get("model", {}).get("discount_rate", 0.20) or 0.20)
+        y3_supply  = float(primary.get("y3_supply_p50") or tok_data.get("market", {}).get("circulating_supply", 0) or 0)
+        y3_gp_p50  = float(primary.get("y3_gp_p50") or primary.get("y3_revenue_p50") or 0)
+        gp_dict    = tok_data.get("current_gp") or {}
+
+        # Pick the exit multiple: P/S-based models store ps_center in the scenario;
+        # GP-based models store it in model.multiple
+        ps_center = primary.get("ps_center")   # present in COIN and HOOD scenarios
+        if ps_center:
+            base_multiple = float(ps_center)
+        else:
+            base_multiple = float(tok_data.get("model", {}).get("multiple", 10) or 10)
+
+        if spot <= 0 or y3_supply <= 0 or base_multiple <= 0:
+            continue
+
+        implied_y3_gp = spot * y3_supply * (1 + dr) ** 3 / base_multiple
+        vs_model_pct  = ((implied_y3_gp / y3_gp_p50) - 1) * 100 if y3_gp_p50 > 0 else None
+
+        # Current GP/revenue run-rate for CAGR: try common field names
+        current_annual = None
+        for field in ("total_revenue_ann", "gross_profit_ann", "revenue_ann", "gp_ann",
+                      "defillama_30d_ann"):
+            v = gp_dict.get(field)
+            if v and float(v) > 0:
+                current_annual = float(v)
+                break
+
+        implied_cagr = None
+        if current_annual and implied_y3_gp > 0 and current_annual > 0:
+            implied_cagr = (implied_y3_gp / current_annual) ** (1.0 / 3.0) - 1
+
+        gp_dict["implied_y3_gp"]      = implied_y3_gp
+        gp_dict["implied_vs_model"]   = vs_model_pct
+        gp_dict["implied_cagr"]       = implied_cagr
+        gp_dict["implied_multiple"]   = base_multiple
+        gp_dict["implied_current_ann"]= current_annual
+
+        vs_str = f"{vs_model_pct:+.0f}%" if vs_model_pct is not None else "N/A"
+        label = f"implied_y3={implied_y3_gp/1e9:.2f}B vs_model={vs_str}"
+        if implied_cagr is not None:
+            label += f" cagr={implied_cagr*100:+.0f}%"
+        print(f"  [{symbol}] {label}")
+    except Exception as e:
+        print(f"  [{symbol}] implied growth computation failed: {e}")
+
 output = {
     "lastUpdated": str(datetime.date.today()),
     "tokens": results,
