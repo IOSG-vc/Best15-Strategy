@@ -1,28 +1,28 @@
 {
   "token": "COIN",
   "name": "Coinbase",
-  "as_of_utc": "2026-06-26T08:43:32.767795+00:00",
+  "as_of_utc": "2026-06-29T20:05:22.829235+00:00",
   "market": {
-    "spot": 142.52,
-    "market_cap": 34632360000.0,
-    "fdv": 34632360000.0,
+    "spot": 151.65,
+    "market_cap": 36850950000.0,
+    "fdv": 36850950000.0,
     "circulating_supply": 243000000.0,
     "max_supply": 291600000.0
   },
   "model": {
     "type": "3Y GP-Capture MC (50,000 paths)",
-    "discount_rate": 0.2179847920336418,
+    "discount_rate": 0.21844798812988486,
     "multiple": 7.0,
     "paths": 50000,
-    "note": "DR=21.8% (CAPM: 4.39%rf + 5.5%ERP \u00d7 \u03b23.16). Spot: Binance regime-switching \u00d7 CB spot MS \u00d7 32.0bps. Deribit (Coinbase-owned): Binance Futures regime-switching \u00d7 Deribit MS \u00d7 3.88bps (calibrated Q1-2026). CDE retail: Binance Futures \u00d7 CDE MS \u00d7 119bps. USDC: supply velocity-decay \u00d7 SOFR path \u00d7 37.9% CB net share (calibrated Q1-2026: $1.22B ann on $75B supply \u00d7 4.3% SOFR). Other services: staking/custody/subs/Base = 17% of spot+deriv revenue. Exit P/S: log-normal \u03c3=0.30 around bear/base/bull centers (4\u00d7/7\u00d7/11\u00d7). 50,000 MC paths; real percentiles."
+    "note": "DR=21.8% (CAPM: 4.37%rf + 5.5%ERP \u00d7 \u03b23.18). Spot: Binance regime-switching \u00d7 CB spot MS \u00d7 32.0bps. Deribit (Coinbase-owned): Binance Futures regime-switching \u00d7 Deribit MS \u00d7 3.88bps (calibrated Q1-2026). CDE retail: Binance Futures \u00d7 CDE MS \u00d7 119bps. USDC: supply velocity-decay \u00d7 SOFR path \u00d7 37.9% CB net share (calibrated Q1-2026: $1.22B ann on $75B supply \u00d7 4.3% SOFR). Other services: staking/custody/subs/Base = 17% of spot+deriv revenue. Exit P/S: log-normal \u03c3=0.30 around bear/base/bull centers (4\u00d7/7\u00d7/11\u00d7). 50,000 MC paths; real percentiles."
   },
   "current_gp": {
-    "ms7_ms30_trend": 0.7670478227636023,
-    "ms30_ms180_trend": 1.0840343906580783,
-    "spot_ms7_vs_binance": 0.0624982105564953,
-    "spot_ms30_vs_binance": 0.08147889701494757,
-    "spot_ms180_vs_binance": 0.07516264955900953,
-    "spot_vel_monthly": -0.009150639082234017,
+    "ms7_ms30_trend": 0.8882355907202735,
+    "ms30_ms180_trend": 1.0741210385506668,
+    "spot_ms7_vs_binance": 0.06954947966409583,
+    "spot_ms30_vs_binance": 0.07830071254823048,
+    "spot_ms180_vs_binance": 0.0728974759249509,
+    "spot_vel_monthly": 4.570169172796179e-05,
     "deribit_ms30_vs_binance_futures": 0.08062068965517241,
     "deribit_ms7_vs_binance_futures": 0.08062068965517241,
     "deribit_ms180_vs_binance_futures": 0.08062068965517241,
@@ -32,38 +32,38 @@
     "cde_ms180_vs_binance_futures": 0.0009655172413793104,
     "cde_vel_monthly": 0.0,
     "deriv_ms30_vs_binance_futures": 0.08158620689655172,
-    "spot_volume_30d": 48934216478.483986,
+    "spot_volume_30d": 47025477253.96604,
     "deribit_volume_30d": 116900000000.0,
     "cde_volume_30d": 1400000000.0,
     "bn_futures_volume_30d": 1450000000000.0,
     "binance_spot_annual": 7307000000000.0,
     "cde_deriv_history_days": 300,
     "cde_data_source": "cde_fallback",
-    "spot_revenue_ann": 1905172161.5623097,
+    "spot_revenue_ann": 1830858581.0877447,
     "deribit_revenue_ann": 551845933.3333334,
     "cde_revenue_ann": 202696666.66666672,
     "deriv_revenue_ann": 754542600.0000001,
-    "usdc_revenue_ann": 1201652132.7762783,
-    "other_revenue_ann": 452151509.4655927,
-    "total_revenue_ann": 4313518403.80418,
-    "usdc_supply": 73734560518.88559,
-    "usdc_vel_monthly": -0.005549739750530413,
-    "sofr_rate": 0.043,
-    "risk_free_rate": 0.04392,
-    "coin_daily_vol": 0.0425506867645141,
-    "sp500_daily_vol": 0.00789689652504294,
-    "capm_beta": 3.164814400611669,
-    "derived_discount_rate": 0.2179847920336418,
+    "usdc_revenue_ann": 1014083194.4565547,
+    "other_revenue_ann": 439518200.78491664,
+    "total_revenue_ann": 4039002576.329216,
+    "usdc_supply": 73913846736.58177,
+    "usdc_vel_monthly": -0.0033407510222745285,
+    "sofr_rate": 0.0362,
+    "risk_free_rate": 0.043739999999999994,
+    "coin_daily_vol": 0.04253398993587904,
+    "sp500_daily_vol": 0.0079176654163491,
+    "capm_beta": 3.1765088750888157,
+    "derived_discount_rate": 0.21844798812988486,
     "shares_outstanding": 243000000.0,
-    "coin_ps_current": 8.02879616079927,
-    "y3_revenue_p50": 4297594114.42819,
+    "coin_ps_current": 9.123774819052333,
+    "y3_revenue_p50": 4326598714.589827,
     "y3_supply_p50": 279450000.0,
-    "y3_spot_revenue_p50": 2015917646.6809976,
+    "y3_spot_revenue_p50": 2056618981.5471892,
     "y3_deribit_revenue_p50": 609755837.3362379,
     "y3_cde_revenue_p50": 223967357.99435863,
     "y3_deriv_revenue_p50": 833723195.3305966,
-    "y3_usdc_revenue_p50": 750126969.0598636,
-    "y3_other_revenue_p50": 515443944.1988168
+    "y3_usdc_revenue_p50": 733534375.4036391,
+    "y3_other_revenue_p50": 522069177.4885914
   },
   "scenarios": [
     {
@@ -71,30 +71,30 @@
       "label": "Bear: velocity decays to 0 by M6",
       "is_primary": false,
       "pv": {
-        "p25": 23.783205548407633,
-        "p50": 33.5872016497642,
-        "p75": 49.917382373677725,
-        "p90": 70.21920188037032
+        "p25": 23.581347211511513,
+        "p50": 33.27886931216809,
+        "p75": 49.41690011298738,
+        "p90": 68.98556937732558
       },
-      "ev": 39.64135618316851,
-      "prob_above_spot": 0.00176,
+      "ev": 39.21210853347458,
+      "prob_above_spot": 0.00098,
       "prob_3x": 0.0,
-      "prob_spot_up_30_2y": 0.02966,
-      "prob_spot_down_30_2y": 0.75354,
-      "prob_y2_undiscounted_up_30": 0.02966,
-      "prob_y2_undiscounted_down_30": 0.75354,
-      "y3_price_p50": 60.68752395085771,
-      "y3_mcap_p50": 18433835400.07303,
+      "prob_spot_up_30_2y": 0.0185,
+      "prob_spot_down_30_2y": 0.79536,
+      "prob_y2_undiscounted_up_30": 0.0185,
+      "prob_y2_undiscounted_down_30": 0.79536,
+      "y3_price_p50": 60.19903753586362,
+      "y3_mcap_p50": 18285457651.518574,
       "y3_supply_p50": 303750000.0,
-      "y3_revenue_p50": 4373133440.538269,
+      "y3_revenue_p50": 4333633837.011109,
       "y3_revenue_by_product_line_p50": {
-        "spot": 2072025055.5288548,
+        "spot": 2056337027.9761744,
         "deribit": 609755837.3362379,
         "cde_retail": 223967357.99435863,
-        "stablecoin_gp": 762720543.1155342,
-        "other_services": 524589908.17253417
+        "stablecoin_gp": 740923006.064141,
+        "other_services": 522017813.0435767
       },
-      "y3_gp_p50": 4373133440.538269,
+      "y3_gp_p50": 4333633837.011109,
       "decay_months": 6,
       "ps_center": 4.0,
       "sbc_dilution": 1.25
@@ -104,30 +104,30 @@
       "label": "Base: velocity decays to 0 by M12",
       "is_primary": true,
       "pv": {
-        "p25": 44.19983994891823,
-        "p50": 63.00159100547573,
-        "p75": 93.44946368857045,
-        "p90": 130.82419241900735
+        "p25": 44.54140864973137,
+        "p50": 63.13459807588749,
+        "p75": 93.31051255567927,
+        "p90": 132.1455034157831
       },
-      "ev": 74.068474977435,
-      "prob_above_spot": 0.07284,
+      "ev": 74.3689209831098,
+      "prob_above_spot": 0.05916,
       "prob_3x": 0.0,
-      "prob_spot_up_30_2y": 0.23716,
-      "prob_spot_down_30_2y": 0.34216,
-      "prob_y2_undiscounted_up_30": 0.23716,
-      "prob_y2_undiscounted_down_30": 0.34216,
-      "y3_price_p50": 113.83534129922948,
-      "y3_mcap_p50": 31811286126.06968,
+      "prob_spot_up_30_2y": 0.2026,
+      "prob_spot_down_30_2y": 0.3965,
+      "prob_y2_undiscounted_up_30": 0.2026,
+      "prob_y2_undiscounted_down_30": 0.3965,
+      "y3_price_p50": 114.20586450010026,
+      "y3_mcap_p50": 31914828834.553017,
       "y3_supply_p50": 279450000.0,
-      "y3_revenue_p50": 4297594114.42819,
+      "y3_revenue_p50": 4326598714.589827,
       "y3_revenue_by_product_line_p50": {
-        "spot": 2015917646.6809976,
+        "spot": 2056618981.5471892,
         "deribit": 609755837.3362379,
         "cde_retail": 223967357.99435863,
-        "stablecoin_gp": 750126969.0598636,
-        "other_services": 515443944.1988168
+        "stablecoin_gp": 733534375.4036391,
+        "other_services": 522069177.4885914
       },
-      "y3_gp_p50": 4297594114.42819,
+      "y3_gp_p50": 4326598714.589827,
       "decay_months": 12,
       "ps_center": 7.0,
       "sbc_dilution": 1.15
@@ -137,30 +137,30 @@
       "label": "Bull: velocity decays to 0 by M24",
       "is_primary": false,
       "pv": {
-        "p25": 70.59314568093278,
-        "p50": 99.82965866163632,
-        "p75": 147.84701280068862,
-        "p90": 205.68868568714578
+        "p25": 72.90991764489452,
+        "p50": 103.38629877002853,
+        "p75": 153.69879266303,
+        "p90": 215.66975547679826
       },
-      "ev": 117.14218539583533,
-      "prob_above_spot": 0.27008,
-      "prob_3x": 0.00124,
-      "prob_spot_up_30_2y": 0.5369,
-      "prob_spot_down_30_2y": 0.08334,
-      "prob_y2_undiscounted_up_30": 0.5369,
-      "prob_y2_undiscounted_down_30": 0.08334,
-      "y3_price_p50": 180.37867114411833,
-      "y3_mcap_p50": 48215218796.82284,
+      "ev": 121.94951783150658,
+      "prob_above_spot": 0.25664,
+      "prob_3x": 0.00116,
+      "prob_spot_up_30_2y": 0.50188,
+      "prob_spot_down_30_2y": 0.10328,
+      "prob_y2_undiscounted_up_30": 0.50188,
+      "prob_y2_undiscounted_down_30": 0.10328,
+      "y3_price_p50": 187.01824337749667,
+      "y3_mcap_p50": 49989976454.80486,
       "y3_supply_p50": 267300000.00000003,
-      "y3_revenue_p50": 4151502073.3378944,
+      "y3_revenue_p50": 4312726371.653448,
       "y3_revenue_by_product_line_p50": {
-        "spot": 1908219608.1630802,
+        "spot": 2057183004.6742678,
         "deribit": 609755837.3362379,
         "cde_retail": 223967357.99435863,
-        "stablecoin_gp": 725560199.7386677,
-        "other_services": 497786426.07852006
+        "stablecoin_gp": 718977421.9782302,
+        "other_services": 522168650.8075104
       },
-      "y3_gp_p50": 4151502073.3378944,
+      "y3_gp_p50": 4312726371.653448,
       "decay_months": 24,
       "ps_center": 11.0,
       "sbc_dilution": 1.1
@@ -176,16 +176,8 @@
     "Other services (staking/custody/subs/Base) = 17% of spot+deriv revenue.",
     "Exit P/S log-normal \u03c3=0.30; 50,000 paths; real percentiles."
   ],
-  "data_freshness": "2026-06-26",
+  "data_freshness": "2026-06-29",
   "mcap_history": [
-    {
-      "date": "2026-02-17",
-      "mcap": 40342861038
-    },
-    {
-      "date": "2026-02-18",
-      "mcap": 39864150742
-    },
     {
       "date": "2026-02-19",
       "mcap": 40323420593
@@ -537,6 +529,14 @@
     {
       "date": "2026-06-25",
       "mcap": 34632361038
+    },
+    {
+      "date": "2026-06-26",
+      "mcap": 36221579407
+    },
+    {
+      "date": "2026-06-29",
+      "mcap": 36850948517
     }
   ]
 }

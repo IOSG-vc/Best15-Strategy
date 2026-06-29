@@ -1,11 +1,11 @@
 {
   "token": "CARDS",
   "name": "Collector Crypt",
-  "as_of_utc": "2026-06-19T16:24:19.308443+00:00",
+  "as_of_utc": "2026-06-29T20:04:34.529274+00:00",
   "market": {
-    "spot": 0.305698,
-    "market_cap": 78674640.0,
-    "fdv": 610851368.0,
+    "spot": 0.229343,
+    "market_cap": 59067801.22463648,
+    "fdv": 458604483.0,
     "circulating_supply": 257552230.609334,
     "max_supply": 2000000000.0
   },
@@ -14,73 +14,74 @@
     "discount_rate": 0.3,
     "multiple": 15.0,
     "paths": 1,
-    "note": "Y3_price = Y3_GP \u00d7 15 \u00d7 1.10 / Y3_supply. GP = Gacha pack sales GP + marketplace fees. Q1 2026: $146.9M GMV at 5.9% margin = $8.6M GP ($34.4M annualized). Y3 supply risk is the dominant headwind (team + foundation + community unlocks). Distributions approximate log-normal \u03c3=1.0."
+    "note": "Y3_price = Y3_GP \u00d7 15 \u00d7 1.10 / Y3_supply. GP = Y3_GMV \u00d7 margin (margin is the scenario lever: bear=5% floor, base=8.4% blend, bull=12%). Q1 2026: $146.9M GMV at 5.9% margin = $8.6M GP ($34.4M annualized). Supply is rules-based: Foundation (730M, 36.5%) stays locked in base/bull; only releases in bear. Bull assumes ~100M additional buyback. Distributions approximate log-normal \u03c3=1.0."
   },
   "current_gp": {
     "gmv_q1_2026": 146900000.0,
     "gross_margin": 0.059,
     "gross_profit_q1": 8667100.0,
     "gross_profit_ann": 34668400.0,
-    "revenue_30d": 13707015.0,
-    "gmv_30d": 110987975.70850202,
-    "gmv_30d_ann": 1331855708.5020242,
-    "net_spread": 0.1235,
+    "revenue_30d": 15838159.0,
+    "gmv_30d": 188549511.90476188,
+    "gmv_30d_ann": 2262594142.8571424,
+    "net_spread": 0.084,
     "gmv_velocity_input": 0.2,
-    "gmv_7d_daily_avg": 5668157.316367842,
-    "gmv_30d_daily_avg": 3699599.190283401,
-    "y3_gmv_base": 4502598302.937802,
+    "gmv_7d_daily_avg": 5883714.285714285,
+    "gmv_30d_daily_avg": 6284983.7301587295,
+    "gmv_180d_daily_avg": 2936601.455026455,
+    "y3_gmv_base": 7649141331.776705,
     "true_gp_conversion": 0.6,
-    "float_supply_y3": 1265000000.0,
-    "weighted_pv": 0.5768175926809334,
+    "float_supply_y3": 770000000.0,
+    "weighted_pv": 0.7481149383861803,
     "velocity_scenarios": [
       {
         "label": "A: 6M velocity decay",
         "decay_months": 6.0,
-        "y3_gmv": 2562151006.592173,
-        "y3_gp": 189855389.58848,
-        "pv": 1.0246926167113257
+        "y3_gmv": 4352654588.34963,
+        "y3_gp": 219373791.25282136,
+        "pv": 1.945159496593537
       },
       {
         "label": "B: 12M velocity decay",
         "decay_months": 12.0,
-        "y3_gmv": 4502598302.937802,
-        "y3_gp": 333642534.2476911,
-        "pv": 1.800744462432734
+        "y3_gmv": 7649141331.776705,
+        "y3_gp": 385516723.121546,
+        "pv": 3.4183277354735147
       },
       {
         "label": "C: 24M velocity decay",
         "decay_months": 24.0,
-        "y3_gmv": 13900467267.838675,
-        "y3_gp": 1030024624.5468458,
-        "pv": 5.5592766162275495
+        "y3_gmv": 23614506903.72695,
+        "y3_gp": 1190171147.9478383,
+        "pv": 10.553096145994582
       },
       {
         "label": "Weighted 40/40/20",
         "decay_months": 0,
-        "y3_gmv": 5605993177.379725,
-        "y3_gp": 415404094.44383764,
-        "pv": 2.2420301549031336
+        "y3_gmv": 9523619748.795925,
+        "y3_gp": 479990435.3393146,
+        "pv": 4.2560141220257375
       },
       {
         "label": "Base, full FDV supply",
         "decay_months": 12,
-        "y3_gmv": 4502598302.937802,
-        "y3_gp": 333642534.2476911,
-        "pv": 1.1389708724887042
+        "y3_gmv": 7649141331.776705,
+        "y3_gp": 385516723.121546,
+        "pv": 1.316056178157303
       }
     ],
-    "y3_gp_base": 333642534.2476911,
-    "y3_supply_float": 1265000000.0,
+    "y3_gp_base": 385516723.121546,
+    "y3_supply_float": 770000000.0,
     "locked_supply": 1743000000.0,
     "treasury_assets": 10000000.0,
     "treasury_card_pct": 0.8,
-    "y3_gp_p50": 45000000.0,
-    "y3_supply_p50": 1000000000.0
+    "y3_gp_p50": 44940000.0,
+    "y3_supply_p50": 770000000.0
   },
   "scenarios": [
     {
       "key": "bear",
-      "label": "Bear: $20M GP, 1.5B supply",
+      "label": "Bear: $400M GMV \u00d7 5% margin",
       "is_primary": false,
       "pv": {
         "p25": 0.051010666246728786,
@@ -89,8 +90,8 @@
         "p90": 0.3607318025319857
       },
       "ev": 0.1650972596968722,
-      "prob_above_spot": 0.13219759847517065,
-      "prob_3x": 0.013391182375993613,
+      "prob_above_spot": 0.20364163602648067,
+      "prob_3x": 0.02697136125700741,
       "y3_price_p50": 0.22,
       "y3_mcap_p50": 330000000.0,
       "y3_supply_p50": 1500000000.0,
@@ -98,49 +99,49 @@
     },
     {
       "key": "base",
-      "label": "Base: $45M GP, 1.0B supply",
+      "label": "Base: $535M GMV \u00d7 8.4% margin",
       "is_primary": true,
       "pv": {
-        "p25": 0.1721609985827097,
-        "p50": 0.3379608557123351,
-        "p75": 0.663434465030367,
-        "p90": 1.2174698335454521
+        "p25": 0.2232875981618174,
+        "p50": 0.4383249886208467,
+        "p75": 0.860454397069688,
+        "p90": 1.5790214810831922
       },
-      "ev": 0.5572032514769438,
-      "prob_above_spot": 0.5399597784410382,
-      "prob_3x": 0.15907182624647934,
-      "y3_price_p50": 0.7425000000000002,
-      "y3_mcap_p50": 742500000.0000001,
-      "y3_supply_p50": 1000000000.0,
-      "y3_gp_p50": 45000000.0
+      "ev": 0.7226757322185816,
+      "prob_above_spot": 0.7414240565428091,
+      "prob_3x": 0.3260414899857652,
+      "y3_price_p50": 0.9630000000000002,
+      "y3_mcap_p50": 741510000.0000001,
+      "y3_supply_p50": 770000000.0,
+      "y3_gp_p50": 44940000.0
     },
     {
       "key": "bull",
-      "label": "Bull: $85M GP, 0.8B supply",
+      "label": "Bull: $710M GMV \u00d7 12% margin",
       "is_primary": false,
       "pv": {
-        "p25": 0.40649124665362,
-        "p50": 0.7979631315430132,
-        "p75": 1.566442486877255,
-        "p90": 2.874581551426761
+        "p25": 0.4865047124128312,
+        "p50": 0.9550336619134641,
+        "p75": 1.87477998078233,
+        "p90": 3.440412265939386
       },
-      "ev": 1.3156187882094503,
-      "prob_above_spot": 0.8313376549205289,
-      "prob_3x": 0.4446667653028322,
-      "y3_price_p50": 1.753125,
-      "y3_mcap_p50": 1402500000.0,
-      "y3_supply_p50": 800000000.0,
-      "y3_gp_p50": 85000000.0
+      "ev": 1.574584312631363,
+      "prob_above_spot": 0.9231419886335962,
+      "prob_3x": 0.6285122607788245,
+      "y3_price_p50": 2.0982089552238805,
+      "y3_mcap_p50": 1405800000.0,
+      "y3_supply_p50": 670000000.0,
+      "y3_gp_p50": 85200000.0
     }
   ],
   "caveats": [
     "Gacha revenue is highly seasonal and tied to Pok\u00e9mon/TCG hype cycles; Q1 2026 peak may not be representative.",
     "Supply expansion (team, foundation, community unlocks) is the dominant model headwind; vesting schedules not fully public.",
     "No formal buyback % is publicly committed; full GP\u2192buyback assumption may overstate token demand.",
-    "Gross margin (5.9% Q1 2026) is highly compressed; recovery to 8%+ is assumed in base/bull but not guaranteed.",
+    "Gross margin floor set at ~5% (high-price pack house edge); base assumes 8.4% blend, bull 12% \u2014 none guaranteed.",
     "Distributions approximate log-normal \u03c3=1.0; no Monte Carlo simulation."
   ],
-  "data_freshness": "2026-06-19",
+  "data_freshness": "2026-06-29",
   "hist_charts": {
     "revenue_history": [
       {
@@ -216,10 +217,10 @@
         "fdv_rev": 3.254248936119384
       },
       {
-        "date": "2026-06-18",
-        "daily_rev": 691771.0,
-        "ann_30d_rev": 166768682.5,
-        "fdv_rev": 2.818985045154943
+        "date": "2026-06-29",
+        "daily_rev": 433578.0,
+        "ann_30d_rev": 193687834.0,
+        "fdv_rev": 2.3681700235132768
       }
     ],
     "run_rate_chart": [
@@ -1738,6 +1739,50 @@
       {
         "date": "2026-06-18",
         "ann_30d_rev": 166768682.5
+      },
+      {
+        "date": "2026-06-19",
+        "ann_30d_rev": 170188245.83333334
+      },
+      {
+        "date": "2026-06-20",
+        "ann_30d_rev": 171419695.0
+      },
+      {
+        "date": "2026-06-21",
+        "ann_30d_rev": 174257083.33333334
+      },
+      {
+        "date": "2026-06-22",
+        "ann_30d_rev": 178660759.66666666
+      },
+      {
+        "date": "2026-06-23",
+        "ann_30d_rev": 184383582.5
+      },
+      {
+        "date": "2026-06-24",
+        "ann_30d_rev": 183550774.16666666
+      },
+      {
+        "date": "2026-06-25",
+        "ann_30d_rev": 188393642.83333334
+      },
+      {
+        "date": "2026-06-26",
+        "ann_30d_rev": 190145837.5
+      },
+      {
+        "date": "2026-06-27",
+        "ann_30d_rev": 190572157.5
+      },
+      {
+        "date": "2026-06-28",
+        "ann_30d_rev": 192697601.16666666
+      },
+      {
+        "date": "2026-06-29",
+        "ann_30d_rev": 193687834.0
       }
     ]
   }
