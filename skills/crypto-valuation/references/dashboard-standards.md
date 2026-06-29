@@ -20,6 +20,7 @@ Every token tab should expose comparable assumptions:
 - Two-year path probabilities: undiscounted probability of spot increasing 30% and decreasing 30%.
 - Year-3 sanity metrics: aggregate GP/revenue, GP/revenue by product line, token supply, and daily mean volume or daily mean TVL.
 - Year-3 cards and report rows should include `% change vs current` in the subtitle or adjacent row. Match the denominator to the metric: Y3 annual GP/revenue vs current annualized GP/revenue, Y3 daily volume vs current daily volume, Y3 TVL/supply vs current TVL/supply, and Y3 effective token supply vs current circulating/effective supply. Use negative percentages for modeled supply reductions from buybacks/burns. Display the current baseline or make it available in the adjacent assumption/detail table.
+- **Market-implied growth rate**: invert the valuation formula to show what Y3 GP/revenue the current spot price implies, how far that sits from the model's base P50, and (where a current run-rate exists) the required 3-year CAGR. Show as a MetricCard on every token. For high-multiple or stock-like tokens, also show a dedicated panel with implied Y3 GP, model P50, % premium/discount, and implied CAGR. See `model-methodology.md` for the formula.
 - Historical diagnostic/backtest chart for the selected primary model when enough data exists.
 - Caveats that distinguish observed data from sensitivities.
 

@@ -115,6 +115,47 @@ buyback_years_with_yield = supply_adjusted_market_cap / (annual_holder_revenue +
 
 If unlocks materially increase supply, do not compute buyback years on current market cap only.
 
+## Market-Implied Growth Rate
+
+After computing the forward model, always invert the valuation formula to quantify what Y3 GP or revenue the current market price implies, and how far that sits from the model's own projection.
+
+### Formula
+
+```text
+implied_y3_gp = spot × y3_supply_p50 × (1 + DR)^3 / base_multiple
+```
+
+- `spot`: current market price per token or per share.
+- `y3_supply_p50`: Year-3 diluted token supply or share count from the base (primary) scenario.
+- `DR`: CAPM or model discount rate.
+- `base_multiple`: exit GP multiple for crypto GP models (`model.multiple`); exit P/S center for stock-like P/S models (primary scenario `ps_center`).
+
+### Derived fields
+
+| Field | Definition |
+| --- | --- |
+| `implied_y3_gp` | Dollar Y3 GP/revenue the current spot implies at `base_multiple` and `DR`. |
+| `implied_vs_model` | `(implied_y3_gp / model_y3_gp_p50 − 1) × 100`. Positive = market prices in more growth than model P50; negative = market is below model fair value. |
+| `implied_cagr` | `(implied_y3_gp / current_ann_gp)^(1/3) − 1`. Requires `current_ann_gp` from `current_gp` (try `total_revenue_ann`, `gross_profit_ann`, `revenue_ann`, `defillama_30d_ann` in that order). Omit if no current run-rate is available; do not synthesize a baseline. |
+| `implied_multiple` | The `base_multiple` value used, for auditability. |
+
+### Interpretation
+
+- `implied_vs_model` tells how much more (or less) growth the market embeds versus the model's base case.
+- `implied_cagr` converts this into an annualized revenue/GP growth rate, making it comparable to analyst consensus or management guidance.
+- When `implied_vs_model` is large and positive (e.g. >100%), state explicitly that the current price requires growth well beyond the base scenario — this is a stretched-multiple or high-conviction growth bet, not a mispricing.
+- When `implied_vs_model` is negative, the model fair value exceeds spot; the market is pricing in lower growth than the base case projects.
+
+### Storage
+
+Store all four fields under `current_gp` in the agent result JSON and in the aggregate `data/valuations.json`. Compute them in `scripts/update_valuations.py` as a post-processing step so the values are available for any downstream use (APIs, reports, alternative frontends) without re-running the full MC.
+
+### Display
+
+- Dashboard: show `implied_y3_gp` with `implied_vs_model` and `implied_cagr` as a MetricCard for every token.
+- For detailed model sections (stock-like or high-multiple tokens), add a dedicated amber "Market-Implied Growth Rate" panel with a 4-box breakdown: implied Y3 GP/revenue, model base P50, implied vs model %, and implied CAGR.
+- Color the card accent: green when `implied_vs_model ≤ 0` (market below model), yellow when `0 < implied_vs_model ≤ 50%`, red when `implied_vs_model > 50%` (market pricing in aggressive growth).
+
 ## Output Schema
 
 For each scenario, prefer:

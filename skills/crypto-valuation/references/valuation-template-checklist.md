@@ -63,6 +63,12 @@ Each model should produce:
 - End-of-Year-3 daily mean volume or daily mean TVL/supply, depending on the core driver.
 - Current baseline values that match every displayed Year-3 metric, plus percent change vs current. Use current annualized GP/revenue for Y3 annual GP/revenue, current daily volume for Y3 daily volume, current TVL/supply for Y3 TVL/supply, and current circulating/effective supply for Y3 effective supply.
 - Current annualized revenue/GP, take rate, P/S and P/GP where relevant.
+- **Market-implied growth fields** stored in `current_gp`:
+  - `implied_y3_gp`: dollar Y3 GP/revenue implied by current spot at base exit multiple and DR.
+  - `implied_vs_model`: % premium/discount vs model base P50 Y3 GP/revenue.
+  - `implied_cagr`: annualized 3-year CAGR required if a current run-rate is available; omit rather than fabricate a baseline.
+  - `implied_multiple`: the exit multiple used (for auditability).
+  - Formula: `implied_y3_gp = spot × y3_supply_p50 × (1+DR)^3 / base_multiple`. Compute in `scripts/update_valuations.py` post-processing so it is stored in the aggregate JSON.
 
 ## 6. Dashboard Requirements
 
@@ -74,6 +80,7 @@ Each model should produce:
 - Include a Y3 sanity block with aggregate GP/revenue, product-line split, supply, and daily mean volume/TVL.
 - Include a historical diagnostic/backtest for the selected primary model when enough historical data exists. Name it explicitly if it is only a proxy, and do not show a sensitivity backtest as if it were the selected model.
 - Keep incumbent dashboard standards intact; do not degrade existing HYPE or other tabs while adding a new model.
+- **Show the market-implied growth card for every token** — `implied_y3_gp` value with `implied_vs_model` % and `implied_cagr` as subtitle. Color accent: green ≤ 0%, yellow 0–50%, red > 50%. For stock-like or high-multiple tokens, also render a dedicated amber "Market-Implied Growth Rate" panel with four boxes: implied Y3 GP/revenue, model base P50, % premium/discount, and implied CAGR.
 
 ## 7. Pre-Publish Audit
 
