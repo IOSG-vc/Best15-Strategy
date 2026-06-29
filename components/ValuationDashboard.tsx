@@ -4789,7 +4789,9 @@ export default function ValuationDashboard({ data }: Props) {
                 const active   = key === selected;
                 const spot     = token.data?.market.spot;
                 const primary  = token.data?.scenarios.find((s) => s.is_primary) ?? token.data?.scenarios[0];
-                const p50      = primary?.pv.p50;
+                const weightedPv = token.data?.current_gp?.["weighted_pv"] as number | undefined;
+                const p50      = key === "cards" && weightedPv !== undefined ? weightedPv : primary?.pv.p50;
+                const p50Label = key === "cards" && weightedPv !== undefined ? "Wtd PV" : "P50";
                 const ring     = TOKEN_RING[key] ?? "#60a5fa";
 
                 return (
@@ -4825,7 +4827,7 @@ export default function ValuationDashboard({ data }: Props) {
                       )}
                       {p50 !== undefined && (
                         <div className="text-xs text-gray-600">
-                          P50 {fmtPrice(p50)}
+                          {p50Label} {fmtPrice(p50)}
                         </div>
                       )}
                     </div>
