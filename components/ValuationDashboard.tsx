@@ -3317,12 +3317,12 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
                 </tr>
               </thead>
               <tbody>
-                {velScens.map((s) => {
+                {velScens.filter((s) => !s.label.startsWith("Weighted")).map((s) => {
                   const vsSpot = spot > 0 ? (s.pv / spot - 1) * 100 : 0;
-                  const isWeighted = s.label.startsWith("Weighted");
+                  const isBase = s.decay_months === 12 && !s.label.includes("FDV");
                   return (
-                    <tr key={s.label} className={`border-b border-gray-100 last:border-0 ${isWeighted ? "bg-white" : ""}`}>
-                      <td className={`px-5 py-4 text-sm ${isWeighted ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                    <tr key={s.label} className={`border-b border-gray-100 last:border-0 ${isBase ? "bg-white" : ""}`}>
+                      <td className={`px-5 py-4 text-sm ${isBase ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}{isBase ? "  ← base" : ""}</td>
                       <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_gmv)}</td>
                       <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(netSpread * 100).toFixed(2)}%`}</td>
                       <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${(gpConv * 100).toFixed(0)}%`}</td>
@@ -3366,15 +3366,14 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
         {/* GP Conversion Sensitivity */}
         {(() => {
           const baseGp  = gp["y3_gp_p50"]    as number ?? 0;
-          const primaryScen = data.scenarios?.find((s: { is_primary?: boolean }) => s.is_primary);
-          const basePv  = (primaryScen as { pv?: { p50?: number } } | undefined)?.pv?.p50 ?? (gp["weighted_pv"] as number ?? 0);
+          const basePv  = gp["weighted_pv"] as number ?? 0;
           if (gpConv === 0 || baseGp === 0 || basePv === 0) return null;
           const gpRates = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60];
           return (
             <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200">
                 <h3 className="text-base font-semibold text-gray-800">Gross Profit Estimate Sensitivity</h3>
-                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on base-scenario Y3 GP ($535M GMV × 8.4% margin); PV uses full 3-year DR³ discount — 60% base matches the card P50. All other model inputs held constant.</p>
+                <p className="text-xs text-gray-400 mt-1">Varies GP conversion rate on conservative-scenario Y3 GP ($535M GMV × 8.4% margin); PV uses weighted 6/12/24M discount. All other model inputs held constant.</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -4320,7 +4319,6 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
                   label={`Base PV at ${d.model.multiple}x GP`}
                   value={fmtPrice(primarySc.pv.p50)}
                   sub={`${fmtLarge(primarySc.y3_gp_p50 ?? 0)} modeled GP × ${d.model.multiple}x, discounted 3Y at ${(d.model.discount_rate * 100).toFixed(0)}%.`}
-                  highlighted
                   termKey="p50"
                 />
               </div>
@@ -4330,6 +4328,7 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
                   label="Weighted PV"
                   value={fmtPrice((gp["weighted_pv"] as number) ?? primarySc.ev)}
                   sub="40% 6M decay, 40% 12M decay, 20% 24M decay."
+                  highlighted
                 />
                 <MetricCard
                   label="Discount rate"
