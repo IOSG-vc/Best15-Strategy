@@ -4871,34 +4871,37 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
             accent={probColor as "green" | "red" | "yellow"}
             termKey="prob_above_spot"
           />
-          {/* Implied growth card — computed for every token */}
-          {(() => {
-            const ig = computeImpliedGrowth(d);
-            if (!ig) return null;
-            const vsModel = ig.vsModelPct;
-            const isStock = (primary as unknown as Record<string,unknown>)["ps_center"] != null;
-            const labelSuffix = isStock ? "rev" : "GP";
-            const vsLabel = vsModel != null
-              ? `${vsModel >= 0 ? "+" : ""}${vsModel.toFixed(0)}% vs model P50`
-              : "—";
-            const cagrLabel = ig.impliedCagr != null
-              ? `${ig.impliedCagr >= 0 ? "+" : ""}${(ig.impliedCagr * 100).toFixed(0)}% ann. CAGR`
-              : null;
-            const accent = vsModel == null ? "default"
-              : vsModel > 50  ? "red"
-              : vsModel > 0   ? "yellow"
-              : "green";
-            return (
-              <MetricCard
-                label={`Mkt-implied Y3 ${labelSuffix}`}
-                value={fmtLarge(ig.impliedY3Gp)}
-                sub={cagrLabel ? `${vsLabel} · ${cagrLabel} from current run-rate` : vsLabel}
-                accent={accent as "green" | "red" | "yellow" | "default"}
-              />
-            );
-          })()}
         </div>
       )}
+
+      {/* ── Market-implied growth card — rendered for every token ────── */}
+      {(() => {
+        const ig = computeImpliedGrowth(d);
+        if (!ig) return null;
+        const vsModel = ig.vsModelPct;
+        const isStock = (primary as unknown as Record<string,unknown>)["ps_center"] != null;
+        const labelSuffix = isStock ? "rev" : "GP";
+        const vsLabel = vsModel != null
+          ? `${vsModel >= 0 ? "+" : ""}${vsModel.toFixed(0)}% vs model P50`
+          : "—";
+        const cagrLabel = ig.impliedCagr != null
+          ? `${ig.impliedCagr >= 0 ? "+" : ""}${(ig.impliedCagr * 100).toFixed(0)}% ann. CAGR`
+          : null;
+        const accent = vsModel == null ? "default"
+          : vsModel > 50  ? "red"
+          : vsModel > 0   ? "yellow"
+          : "green";
+        return (
+          <div className="grid grid-cols-1">
+            <MetricCard
+              label={`Mkt-implied Y3 ${labelSuffix}`}
+              value={fmtLarge(ig.impliedY3Gp)}
+              sub={cagrLabel ? `${vsLabel} · ${cagrLabel} from current run-rate` : vsLabel}
+              accent={accent as "green" | "red" | "yellow" | "default"}
+            />
+          </div>
+        );
+      })()}
 
       {/* ── Market share trend ───────────────────────────────────────── */}
       {(tokenKey === "hype" || tokenKey === "lighter" || tokenKey === "uni" || tokenKey === "ethfi" || tokenKey === "jup" || tokenKey === "sky" || tokenKey === "cards") && <MarketShareSection data={d} tokenKey={tokenKey} />}
