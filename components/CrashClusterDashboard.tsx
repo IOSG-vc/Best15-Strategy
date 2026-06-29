@@ -7,6 +7,7 @@ import type { CrashClusterData, CrashClusterMetric } from "@/lib/loadCrashCluste
 const CrashClusterBarChart    = dynamic(() => import("./CrashClusterBarChart"),    { ssr: false });
 const CrashClusterLineChart   = dynamic(() => import("./CrashClusterLineChart"),   { ssr: false });
 const CrashClusterExposureChart = dynamic(() => import("./CrashClusterExposureChart"), { ssr: false });
+const CrashClusterBtcChart    = dynamic(() => import("./CrashClusterBtcChart"),    { ssr: false });
 
 function pct(v: number, digits = 1) {
   return `${(v * 100).toFixed(digits)}%`;
@@ -287,6 +288,15 @@ export default function CrashClusterDashboard({ data }: { data: CrashClusterData
           <p className="text-sm text-gray-500 mb-4">All strategies indexed to 1.0 on 2020-01-01 · Red ticks mark individual crash events</p>
           <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
             <CrashClusterLineChart />
+          </div>
+        </section>
+
+        {/* BTC price + crash cluster chart */}
+        <section>
+          <h2 className="text-lg font-semibold mb-1">BTC Price with Crash Clustering</h2>
+          <p className="text-sm text-gray-500 mb-4">BTC close price overlaid with individual crash event ticks and shaded cluster bands (events ≤30 days apart grouped into one cluster)</p>
+          <div className="bg-[#1a1d29] rounded-xl p-5 border border-[#2d3144]">
+            <CrashClusterBtcChart />
           </div>
         </section>
 
