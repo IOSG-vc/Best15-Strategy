@@ -48,7 +48,8 @@ TOKENS = [
     ("bp",       "agents.bp",       "Backpack",       "BP",    "Solana",    "backpack"),
     ("cards",    "agents.cards",    "Collector Crypt","CARDS", "Solana",    "collector-crypt"),
     # Stock tickers (cg_id="" → agent supplies its own mcap_history)
-    ("coinbase", "agents.coinbase", "Coinbase",       "COIN",  "NYSE",      ""),
+    ("coinbase",   "agents.coinbase",   "Coinbase",   "COIN",  "NYSE",      ""),
+    ("robinhood",  "agents.robinhood",  "Robinhood",  "HOOD",  "NASDAQ",    ""),
 ]
 
 UA = "Mozilla/5.0 Hermes valuation cron"
@@ -131,7 +132,8 @@ def fetch_yahoo_price_history(ticker: str, days: int = 200) -> list[tuple[str, f
 
 # Stock tickers to use Yahoo Finance for beta computation (token_key → yahoo ticker)
 YAHOO_BETA_TICKERS: dict[str, str] = {
-    "coinbase": "COIN",
+    "coinbase":  "COIN",
+    "robinhood": "HOOD",
 }
 
 

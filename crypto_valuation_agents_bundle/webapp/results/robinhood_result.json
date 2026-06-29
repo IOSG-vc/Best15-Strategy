@@ -1,0 +1,522 @@
+{
+  "token": "HOOD",
+  "name": "Robinhood",
+  "as_of_utc": "2026-06-29T20:05:29.029644+00:00",
+  "market": {
+    "spot": 101.83,
+    "market_cap": 88490270000.0,
+    "fdv": 88490270000.0,
+    "circulating_supply": 869000000.0,
+    "max_supply": 1042800000.0
+  },
+  "model": {
+    "type": "3Y Revenue MC (50,000 paths)",
+    "discount_rate": 0.213453312667636,
+    "multiple": 4.0,
+    "paths": 50000,
+    "note": "DR=21.3% (CAPM: 4.37%rf + 5.5%ERP \u00d7 \u03b23.09). Crypto: Binance spot regime-switching \u00d7 HOOD crypto MS \u00d7 170bps. Equities+Options: regime-switching on Q1-2025 calibrated run-rate ($288M/Q = options $218M + equities $70M). NIR: AUC \u00d7 6% cash \u00d7 SOFR \u00d7 85% capture. Other: Gold subs + card at 10% CAGR base. Exit P/S: log-normal \u03c3=0.30 around bear/base/bull centers (2\u00d7/4\u00d7/7\u00d7). 50,000 MC paths; real percentiles."
+  },
+  "current_gp": {
+    "ms7_ms30_trend": 1.0,
+    "ms30_ms180_trend": 1.0,
+    "crypto_ms7_vs_binance": 0.007389162561576354,
+    "crypto_ms30_vs_binance": 0.007389162561576354,
+    "crypto_ms180_vs_binance": 0.007389162561576354,
+    "crypto_vel_monthly": 0.0,
+    "crypto_volume_30d": 4500000000.0,
+    "bn_spot_volume_30d": 609000000000.0,
+    "crypto_revenue_ann": 930750000.0000001,
+    "eq_opt_revenue_ann": 1500000000.0,
+    "nir_ann": 369240000.00000006,
+    "other_revenue_ann": 350000000.0,
+    "total_revenue_ann": 3149990000.0,
+    "sofr_rate": 0.0362,
+    "risk_free_rate": 0.043739999999999994,
+    "auc_estimate": 200000000000.0,
+    "cash_ratio": 0.06,
+    "hood_daily_vol": 0.04334333717290779,
+    "sp500_daily_vol": 0.007917673073891913,
+    "capm_beta": 3.0856965939570182,
+    "derived_discount_rate": 0.213453312667636,
+    "shares_outstanding": 869000000.0,
+    "hood_ps_current": 28.092238388058373,
+    "y3_revenue_p50": 3654970358.054696,
+    "y3_supply_p50": 999349999.9999999,
+    "y3_crypto_revenue_p50": 1030890907.5516348,
+    "y3_eq_opt_revenue_p50": 1680427355.9000506,
+    "y3_nir_p50": 272952000.0,
+    "y3_other_revenue_p50": 442576437.94114196
+  },
+  "scenarios": [
+    {
+      "key": "bear",
+      "label": "Bear: activity decline + rate compression",
+      "is_primary": false,
+      "pv": {
+        "p25": 5.704908656316173,
+        "p50": 8.092772242582225,
+        "p75": 11.800679578372115,
+        "p90": 16.095548445248454
+      },
+      "ev": 9.339262970436192,
+      "prob_above_spot": 0.0,
+      "prob_3x": 0.0,
+      "prob_spot_up_30_2y": 0.0,
+      "prob_spot_down_30_2y": 0.99952,
+      "prob_y2_undiscounted_up_30": 0.0,
+      "prob_y2_undiscounted_down_30": 0.99952,
+      "y3_price_p50": 14.459941398687146,
+      "y3_mcap_p50": 15078826890.550957,
+      "y3_supply_p50": 1042800000.0,
+      "y3_revenue_p50": 3562393920.1135535,
+      "y3_gp_p50": 3562393920.1135535,
+      "y3_revenue_by_product_line_p50": {
+        "crypto": 1030890907.5516348,
+        "equities_options": 1680427355.9000506,
+        "net_interest": 272952000.0,
+        "other": 350000000.00000006
+      },
+      "decay_months": 6,
+      "ps_center": 4.0,
+      "sbc_dilution": 1.2
+    },
+    {
+      "key": "base",
+      "label": "Base: moderate growth + stable rates",
+      "is_primary": true,
+      "pv": {
+        "p25": 15.264419712296139,
+        "p50": 21.618050245671512,
+        "p75": 31.36327785742745,
+        "p90": 42.581393698464794
+      },
+      "ev": 24.821504868033724,
+      "prob_above_spot": 0.00014,
+      "prob_3x": 0.0,
+      "prob_spot_up_30_2y": 0.0073,
+      "prob_spot_down_30_2y": 0.85494,
+      "prob_y2_undiscounted_up_30": 0.0073,
+      "prob_y2_undiscounted_down_30": 0.85494,
+      "y3_price_p50": 38.626533694038805,
+      "y3_mcap_p50": 38601426447.13767,
+      "y3_supply_p50": 999349999.9999999,
+      "y3_revenue_p50": 3654970358.054696,
+      "y3_gp_p50": 3654970358.054696,
+      "y3_revenue_by_product_line_p50": {
+        "crypto": 1030890907.5516348,
+        "equities_options": 1680427355.9000506,
+        "net_interest": 272952000.0,
+        "other": 442576437.94114196
+      },
+      "decay_months": 12,
+      "ps_center": 10.0,
+      "sbc_dilution": 1.15
+    },
+    {
+      "key": "bull",
+      "label": "Bull: crypto supercycle + margin expansion",
+      "is_primary": false,
+      "pv": {
+        "p25": 29.04751849097581,
+        "p50": 38.80568833451825,
+        "p75": 55.77603606260786,
+        "p90": 71.88940571316716
+      },
+      "ev": 43.56839825846517,
+      "prob_above_spot": 0.00782,
+      "prob_3x": 0.0,
+      "prob_spot_up_30_2y": 0.09502,
+      "prob_spot_down_30_2y": 0.51356,
+      "prob_y2_undiscounted_up_30": 0.09502,
+      "prob_y2_undiscounted_down_30": 0.51356,
+      "y3_price_p50": 69.33692960001156,
+      "y3_mcap_p50": 66279171004.651054,
+      "y3_supply_p50": 955900000.0000001,
+      "y3_revenue_p50": 3761073902.2296877,
+      "y3_gp_p50": 3761073902.2296877,
+      "y3_revenue_by_product_line_p50": {
+        "crypto": 1030890907.5516348,
+        "equities_options": 1680427355.9000506,
+        "net_interest": 272952000.0,
+        "other": 548679982.1161336
+      },
+      "decay_months": 24,
+      "ps_center": 18.0,
+      "sbc_dilution": 1.1
+    }
+  ],
+  "hist_charts": {},
+  "caveats": [
+    "Crypto MS from CoinGecko /exchanges/robinhood; Binance denom $609B/month.",
+    "Equities+Options TRR calibrated Q1-2025 ($288M/Q); no live per-venue PFOF data available.",
+    "NIR modeled as AUC \u00d7 6% cash \u00d7 SOFR \u00d7 85% capture. SOFR mean-reverts to 2.5% over 36 months.",
+    "AUC proxy = 200B (5\u00d7 market cap heuristic); no real-time AUC API.",
+    "Crypto take rate 170bps (spread-based, compressed from Q1-2025 ~193bps).",
+    "Exit P/S log-normal \u03c3=0.30; 50,000 paths; real percentiles.",
+    "Regulatory: PFOF ban risk (EU-style) could materially reduce equities/options TRR.",
+    "Bitstamp acquisition (2024) adds institutional crypto revenue not modeled separately."
+  ],
+  "data_freshness": "2026-06-29",
+  "mcap_history": [
+    {
+      "date": "2026-02-19",
+      "mcap": 65739851326
+    },
+    {
+      "date": "2026-02-20",
+      "mcap": 66139590530
+    },
+    {
+      "date": "2026-02-23",
+      "mcap": 62376818939
+    },
+    {
+      "date": "2026-02-24",
+      "mcap": 63775909470
+    },
+    {
+      "date": "2026-02-25",
+      "mcap": 67373568939
+    },
+    {
+      "date": "2026-02-26",
+      "mcap": 69042047348
+    },
+    {
+      "date": "2026-02-27",
+      "mcap": 65913648674
+    },
+    {
+      "date": "2026-03-02",
+      "mcap": 68459818939
+    },
+    {
+      "date": "2026-03-03",
+      "mcap": 66104829735
+    },
+    {
+      "date": "2026-03-04",
+      "mcap": 71440489204
+    },
+    {
+      "date": "2026-03-05",
+      "mcap": 70006637878
+    },
+    {
+      "date": "2026-03-06",
+      "mcap": 66991206818
+    },
+    {
+      "date": "2026-03-09",
+      "mcap": 68955148674
+    },
+    {
+      "date": "2026-03-10",
+      "mcap": 68242568939
+    },
+    {
+      "date": "2026-03-11",
+      "mcap": 68381612122
+    },
+    {
+      "date": "2026-03-12",
+      "mcap": 66148282387
+    },
+    {
+      "date": "2026-03-13",
+      "mcap": 63775909470
+    },
+    {
+      "date": "2026-03-16",
+      "mcap": 65444387878
+    },
+    {
+      "date": "2026-03-17",
+      "mcap": 67217148674
+    },
+    {
+      "date": "2026-03-18",
+      "mcap": 65088101326
+    },
+    {
+      "date": "2026-03-19",
+      "mcap": 64445043182
+    },
+    {
+      "date": "2026-03-20",
+      "mcap": 61603409470
+    },
+    {
+      "date": "2026-03-23",
+      "mcap": 62993808144
+    },
+    {
+      "date": "2026-03-24",
+      "mcap": 60030521591
+    },
+    {
+      "date": "2026-03-25",
+      "mcap": 63037260796
+    },
+    {
+      "date": "2026-03-26",
+      "mcap": 61134148674
+    },
+    {
+      "date": "2026-03-27",
+      "mcap": 57371377083
+    },
+    {
+      "date": "2026-03-30",
+      "mcap": 56624043182
+    },
+    {
+      "date": "2026-03-31",
+      "mcap": 60221702652
+    },
+    {
+      "date": "2026-04-01",
+      "mcap": 60925590530
+    },
+    {
+      "date": "2026-04-02",
+      "mcap": 59874101326
+    },
+    {
+      "date": "2026-04-06",
+      "mcap": 60638818939
+    },
+    {
+      "date": "2026-04-07",
+      "mcap": 60525851326
+    },
+    {
+      "date": "2026-04-08",
+      "mcap": 62420271591
+    },
+    {
+      "date": "2026-04-09",
+      "mcap": 60934282387
+    },
+    {
+      "date": "2026-04-10",
+      "mcap": 60126112122
+    },
+    {
+      "date": "2026-04-13",
+      "mcap": 62281228409
+    },
+    {
+      "date": "2026-04-14",
+      "mcap": 68729206818
+    },
+    {
+      "date": "2026-04-15",
+      "mcap": 75881079735
+    },
+    {
+      "date": "2026-04-16",
+      "mcap": 75472648674
+    },
+    {
+      "date": "2026-04-17",
+      "mcap": 78861750000
+    },
+    {
+      "date": "2026-04-20",
+      "mcap": 79317976326
+    },
+    {
+      "date": "2026-04-21",
+      "mcap": 75107670265
+    },
+    {
+      "date": "2026-04-22",
+      "mcap": 76845670265
+    },
+    {
+      "date": "2026-04-23",
+      "mcap": 72596260796
+    },
+    {
+      "date": "2026-04-24",
+      "mcap": 73612989204
+    },
+    {
+      "date": "2026-04-27",
+      "mcap": 72952547348
+    },
+    {
+      "date": "2026-04-28",
+      "mcap": 71318829735
+    },
+    {
+      "date": "2026-04-29",
+      "mcap": 61872797348
+    },
+    {
+      "date": "2026-04-30",
+      "mcap": 63341409470
+    },
+    {
+      "date": "2026-05-01",
+      "mcap": 64010543182
+    },
+    {
+      "date": "2026-05-04",
+      "mcap": 66521952652
+    },
+    {
+      "date": "2026-05-05",
+      "mcap": 66939068939
+    },
+    {
+      "date": "2026-05-06",
+      "mcap": 68694452652
+    },
+    {
+      "date": "2026-05-07",
+      "mcap": 66287318939
+    },
+    {
+      "date": "2026-05-08",
+      "mcap": 66939068939
+    },
+    {
+      "date": "2026-05-11",
+      "mcap": 70197818939
+    },
+    {
+      "date": "2026-05-12",
+      "mcap": 68016627083
+    },
+    {
+      "date": "2026-05-13",
+      "mcap": 66695750000
+    },
+    {
+      "date": "2026-05-14",
+      "mcap": 70128297348
+    },
+    {
+      "date": "2026-05-15",
+      "mcap": 67034659470
+    },
+    {
+      "date": "2026-05-18",
+      "mcap": 67043351326
+    },
+    {
+      "date": "2026-05-19",
+      "mcap": 64445043182
+    },
+    {
+      "date": "2026-05-20",
+      "mcap": 65835441856
+    },
+    {
+      "date": "2026-05-21",
+      "mcap": 65974478409
+    },
+    {
+      "date": "2026-05-22",
+      "mcap": 63993159470
+    },
+    {
+      "date": "2026-05-26",
+      "mcap": 64384206818
+    },
+    {
+      "date": "2026-05-27",
+      "mcap": 66243872917
+    },
+    {
+      "date": "2026-05-28",
+      "mcap": 73725956818
+    },
+    {
+      "date": "2026-05-29",
+      "mcap": 81946702652
+    },
+    {
+      "date": "2026-06-01",
+      "mcap": 78844372917
+    },
+    {
+      "date": "2026-06-02",
+      "mcap": 76611043182
+    },
+    {
+      "date": "2026-06-03",
+      "mcap": 71996648674
+    },
+    {
+      "date": "2026-06-04",
+      "mcap": 76758771591
+    },
+    {
+      "date": "2026-06-05",
+      "mcap": 71666431061
+    },
+    {
+      "date": "2026-06-08",
+      "mcap": 73899760796
+    },
+    {
+      "date": "2026-06-09",
+      "mcap": 72796127083
+    },
+    {
+      "date": "2026-06-10",
+      "mcap": 75046840530
+    },
+    {
+      "date": "2026-06-11",
+      "mcap": 80147872917
+    },
+    {
+      "date": "2026-06-12",
+      "mcap": 80982112122
+    },
+    {
+      "date": "2026-06-15",
+      "mcap": 85266282387
+    },
+    {
+      "date": "2026-06-16",
+      "mcap": 84040989204
+    },
+    {
+      "date": "2026-06-17",
+      "mcap": 91418797348
+    },
+    {
+      "date": "2026-06-18",
+      "mcap": 93982351326
+    },
+    {
+      "date": "2026-06-22",
+      "mcap": 91861989204
+    },
+    {
+      "date": "2026-06-23",
+      "mcap": 89724250000
+    },
+    {
+      "date": "2026-06-24",
+      "mcap": 84458112122
+    },
+    {
+      "date": "2026-06-25",
+      "mcap": 81225431061
+    },
+    {
+      "date": "2026-06-26",
+      "mcap": 85761612122
+    },
+    {
+      "date": "2026-06-29",
+      "mcap": 88490271591
+    }
+  ]
+}

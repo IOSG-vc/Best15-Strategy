@@ -205,6 +205,30 @@ const METHODOLOGY: Record<string, { sections: { heading: string; text: string }[
       },
     ],
   },
+  robinhood: {
+    sections: [
+      {
+        heading: "Core revenue model",
+        text: "Four product lines: (1) Crypto TRR — Binance spot denominator × HOOD crypto MS × ~170bps blended spread (Q1-2025 calibration: $252M/Q on ~$13B notional ≈ 193bps; forward rate compressed by competition). (2) Equities + Options TRR — regime-switching MC on 2025-2026 calibrated run-rate ($1.5B ann); no live per-venue PFOF API exists so growth is modeled via log-normal multiplier. (3) NIR — AUC ($200B) × 6% cash ratio × SOFR × 85% capture rate. (4) Other — Gold subscriptions + credit card + misc at 10% CAGR base. PV = Y3 revenue × P/S / Y3 diluted shares / (1+DR)³.",
+      },
+      {
+        heading: "CAPM discount rate (derived, not hardcoded)",
+        text: "DR = risk-free rate (10Y US Treasury) + equity risk premium (5.5%) × CAPM beta. Beta computed as cov(HOOD daily log-returns, S&P 500) / var(S&P 500) over trailing 1Y from Yahoo Finance. HOOD is a high-beta equity (typically 2.5–3.5×) due to its crypto revenue mix and retail brokerage exposure. High beta drives aggressive discount rates, which is why the model shows a large discount to the current market price.",
+      },
+      {
+        heading: "Model implies significant premium to DCF fair value",
+        text: "HOOD currently trades at ~25–30× P/S, well above the model's bear/base/bull exit multiples (4×/10×/18×). The bull case P50 is well below current spot, meaning the market is pricing in extreme revenue growth and/or sustained multiple expansion. The model is not a catalyst call — it identifies the growth rate that must be realized to justify the current price. Use the implied growth metric to stress-test whether the embedded assumptions are achievable.",
+      },
+      {
+        heading: "Net interest revenue sensitivity",
+        text: "NIR = AUC × cash ratio (6%) × SOFR × 85% net capture. SOFR mean-reverts to 2.5% over 36 months. A 150bps rate cut reduces NIR ~35% — the most volatile revenue line after crypto TRR. AUC is proxied at $200B (Q1-2025 reported: $220B); actual AUC fluctuates with equity and crypto market levels.",
+      },
+      {
+        heading: "Key risks",
+        text: "PFOF ban risk: EU-style restrictions could materially reduce equities/options TRR (~$1.5B ann at risk). Crypto revenue cyclicality: crypto TRR closely tracks BTC/ETH price and market activity. Rate sensitivity: NIR compresses ~35% per 150bps SOFR cut. Bitstamp acquisition (2024) adds institutional crypto revenue not modeled separately. SBC dilution: significant share-based compensation is dilutive. Regulatory: evolving SEC/FINRA framework creates ongoing uncertainty.",
+      },
+    ],
+  },
   vvv: {
     sections: [
       {
@@ -2052,7 +2076,8 @@ const TOKEN_COLORS: Record<string, string> = {
   hype:     "#00e5a0",
   lighter:  "#14b8a6",
   sky:      "#f59e0b",
-  coinbase: "#0052ff",
+  coinbase:  "#0052ff",
+  robinhood: "#00c805",
 };
 
 // ── TokenHistoricalCharts (UNI / ETHFI / JUP / SKY) ─────────────────────────
@@ -2807,6 +2832,11 @@ const TOKEN_Y3_CARDS: Record<string, Y3CardCfg[]> = {
     { label: "Spot MS (30D vs Binance)",    value: (gp) => `${(((gp["spot_ms30_vs_binance"] as number) ?? 0)*100).toFixed(2)}%`, sub: (gp) => `Vel ${(((gp["spot_vel_monthly"] as number) ?? 0)*100).toFixed(2)}%/mo · Deribit MS ${(((gp["deribit_ms30_vs_binance_futures"] as number) ?? 0)*100).toFixed(2)}%` },
     { label: "Y3 diluted shares (base)",    value: (gp) => `${(((gp["y3_supply_p50"] as number) ?? 0) / 1e6).toFixed(0)}M`, sub: "Current shares × 1.15 SBC dilution (base)" },
   ],
+  robinhood: [
+    { label: "Y3 total revenue (base P50)", value: (gp) => fmtLarge(gp["y3_revenue_p50"]), sub: (gp) => `Crypto ${fmtLarge(gp["y3_crypto_revenue_p50"] as number)} · Eq/Opt ${fmtLarge(gp["y3_eq_opt_revenue_p50"] as number)} · NIR ${fmtLarge(gp["y3_nir_p50"] as number)} · Other ${fmtLarge(gp["y3_other_revenue_p50"] as number)}` },
+    { label: "Crypto MS (30D vs Binance)",  value: (gp) => `${(((gp["crypto_ms30_vs_binance"] as number) ?? 0)*100).toFixed(2)}%`, sub: (gp) => `Vel ${(((gp["crypto_vel_monthly"] as number) ?? 0)*100).toFixed(2)}%/mo · ${fmtLarge(gp["crypto_revenue_ann"] as number)} ann. crypto TRR` },
+    { label: "Y3 diluted shares (base)",    value: (gp) => `${(((gp["y3_supply_p50"] as number) ?? 0) / 1e6).toFixed(0)}M`, sub: "Current shares × 1.15 SBC dilution (base)" },
+  ],
 };
 
 function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
@@ -3050,6 +3080,250 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
               <li><span className="font-bold text-gray-900">USDC:</span> {fmtLarge(usdcSupply)} supply × {(sofr*100).toFixed(2)}% SOFR × 37.9% Coinbase net share = {fmtLarge(usdcRev)}/yr (calibrated Q1-2026: $1.22B ann). SOFR mean-reverts to 2.5% long-run.</li>
               <li><span className="font-bold text-gray-900">Other services:</span> Staking (cbETH), custody, subscriptions, Base L2 = ~17% of spot+derivatives revenue (Q4-2024 empirical ratio).</li>
               <li><span className="font-bold text-gray-900">Discount rate:</span> CAPM from live market data — not fixed. High COIN beta (~{beta.toFixed(1)}×) drives the {(DR*100).toFixed(1)}% DR; this re-prices automatically each run.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
+  // ── ROBINHOOD: revenue-line MC output ───────────────────────────────────
+  if (tokenKey === "robinhood") {
+    const gp   = data.current_gp as Record<string, unknown>;
+    const spot = data.market.spot;
+
+    type HoodScenario = {
+      key: string; label: string; is_primary: boolean;
+      pv: { p25: number; p50: number; p75: number; p90: number };
+      ev: number; prob_above_spot: number; prob_3x: number;
+      prob_y2_undiscounted_up_30: number; prob_y2_undiscounted_down_30: number;
+      y3_revenue_p50: number; y3_supply_p50: number; y3_mcap_p50: number;
+      y3_gp_p50: number;
+      y3_revenue_by_product_line_p50: {
+        crypto: number; equities_options: number; net_interest: number; other: number;
+      };
+      decay_months: number; ps_center: number; sbc_dilution: number;
+    };
+
+    const scenarios  = data.scenarios as unknown as HoodScenario[];
+    const DR         = (gp["derived_discount_rate"]  as number) ?? 0.22;
+    const beta       = (gp["capm_beta"]              as number) ?? 0;
+    const rf         = (gp["risk_free_rate"]          as number) ?? 0;
+    const hoodVol    = (gp["hood_daily_vol"]          as number) ?? 0;
+    const spVol      = (gp["sp500_daily_vol"]         as number) ?? 0;
+    const sofr       = (gp["sofr_rate"]               as number) ?? 0;
+    const cryptoMs   = (gp["crypto_ms30_vs_binance"]  as number) ?? 0;
+    const cryptoVel  = (gp["crypto_vel_monthly"]      as number) ?? 0;
+    const cryptoRev  = (gp["crypto_revenue_ann"]      as number) ?? 0;
+    const eqOptRev   = (gp["eq_opt_revenue_ann"]      as number) ?? 0;
+    const nirAnn     = (gp["nir_ann"]                 as number) ?? 0;
+    const otherRev   = (gp["other_revenue_ann"]       as number) ?? 0;
+    const totalRev   = (gp["total_revenue_ann"]       as number) ?? 0;
+    const shares     = (gp["shares_outstanding"]      as number) ?? 0;
+    const aucEst     = (gp["auc_estimate"]            as number) ?? 0;
+    const hoodPs     = (gp["hood_ps_current"]         as number) ?? 0;
+    const crypto30d  = (gp["crypto_volume_30d"]       as number) ?? 0;
+    const bn30d      = (gp["bn_spot_volume_30d"]      as number) ?? 0;
+
+    const pct    = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+    const SmCard2 = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-5">
+        <div className="text-xs font-mono text-gray-500 mb-1 leading-snug">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-xs text-gray-500 leading-snug">{sub}</div>
+      </div>
+    );
+
+    return (
+      <div className="space-y-5">
+        <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
+
+        {/* ── CAPM block ───────────────────────────────────── */}
+        <div className="bg-[#0a0c14] rounded-xl border border-[#2d3144] p-6">
+          <div className="text-xs font-mono text-gray-500 mb-3 tracking-wide">CAPM Discount Rate — derived from live market data</div>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            {[
+              { label: "10Y risk-free rate", val: `${(rf*100).toFixed(2)}%` },
+              { label: "CAPM beta (1Y daily)", val: beta.toFixed(2) },
+              { label: "HOOD daily vol", val: `${(hoodVol*100).toFixed(2)}%` },
+              { label: "SPX daily vol", val: `${(spVol*100).toFixed(2)}%` },
+              { label: "Derived DR", val: `${(DR*100).toFixed(1)}%` },
+            ].map(c => (
+              <div key={c.label} className="text-center">
+                <div className="text-xs text-gray-500 mb-1">{c.label}</div>
+                <div className="text-2xl font-bold font-mono text-white">{c.val}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-4">DR = {(rf*100).toFixed(2)}% rf + 5.5% ERP × β{beta.toFixed(2)} = {(DR*100).toFixed(1)}%. Beta from cov(HOOD,SPX)/var(SPX) trailing 1Y daily returns. High beta is typical for retail crypto brokers.</p>
+        </div>
+
+        {/* ── Current snapshot ─────────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-4">Current Revenue Snapshot</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Crypto TRR (ann.)",     val: fmtLarge(cryptoRev),  sub: `MS ${(cryptoMs*100).toFixed(2)}% vs Binance · ${(crypto30d/1e9).toFixed(1)}B/mo vol · vel ${(cryptoVel*100).toFixed(2)}%/mo` },
+              { label: "Equities + Options TRR", val: fmtLarge(eqOptRev),   sub: `Q1-2025 calibrated · no live API · ~$1.5B annualized base` },
+              { label: "Net Interest Revenue",   val: fmtLarge(nirAnn),     sub: `AUC ~${(aucEst/1e9).toFixed(0)}B × 6% cash × ${(sofr*100).toFixed(2)}% SOFR × 85%` },
+              { label: "Total revenue proxy",    val: fmtLarge(totalRev),   sub: `Crypto + Eq/Opt + NIR + Other · current P/S ${hoodPs.toFixed(1)}×` },
+            ].map(c => (
+              <div key={c.label} className="bg-white rounded-lg border border-gray-200 px-4 py-3">
+                <div className="text-xs text-gray-400 font-mono mb-1">{c.label}</div>
+                <div className="text-xl font-bold text-gray-900 font-mono">{c.val}</div>
+                <div className="text-xs text-gray-400 mt-1">{c.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Scenario assumptions ─────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Scenario Assumptions — 50k MC paths each</h3>
+            <p className="text-xs text-gray-400 mt-1">Velocity decays linearly to 0 over decay window. P/S: log-normal σ=0.30 around center. Exit price = Y3 revenue × sampled P/S ÷ diluted shares, discounted at {(DR*100).toFixed(1)}% DR. Market currently prices HOOD at ~{hoodPs.toFixed(1)}× P/S.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","VEL. DECAY WINDOW","EXIT P/S CENTER","SBC DILUTION (3Y)","Y3 DILUTED SHARES","P(ABOVE SPOT)","P(3×)"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => (
+                  <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                    <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.decay_months}M</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.ps_center.toFixed(0)}×</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.sbc_dilution.toFixed(2)}×</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${((s.y3_supply_p50 ?? 0)/1e6).toFixed(0)}M`}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-700 whitespace-nowrap">{`${(s.prob_above_spot*100).toFixed(1)}%`}</td>
+                    <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-700 whitespace-nowrap">{`${(s.prob_3x*100).toFixed(1)}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Product-line outputs ──────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Product-Line Outputs — Y3 P50</h3>
+            <p className="text-xs text-gray-400 mt-1">P50 of Y3 TTM (months 25–36). Crypto TRR: Binance regime MC × HOOD crypto MS velocity-decay × 170bps. Eq+Opt: regime-switching on run-rate. NIR: AUC × 6% cash × SOFR path × 85%.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","CRYPTO TRR P50","EQ+OPT TRR P50","NIR P50","OTHER P50","TOTAL REV P50"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const pl = s.y3_revenue_by_product_line_p50 ?? {} as Record<string, number>;
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.crypto ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.equities_options ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.net_interest ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtLarge(pl.other ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-900 whitespace-nowrap">{fmtLarge(s.y3_revenue_p50 ?? 0)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Valuation chain ───────────────────────────────── */}
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">Valuation Chain — Real MC Percentiles</h3>
+            <p className="text-xs text-gray-400 mt-1">Y3 revenue × sampled P/S (log-normal σ=0.30) ÷ diluted shares → discounted at {(DR*100).toFixed(1)}% CAPM DR. P25/P50/P75/P90 from 50k paths. Note: current market P/S is ~{hoodPs.toFixed(1)}×; bull P/S center is {scenarios.find(s=>s.key==="bull")?.ps_center.toFixed(0)}×.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  {["CASE","Y3 REV P50","MCAP P50","DILUTED SHARES","P25","P50","P75","P90","P(SPOT)","EV"].map(h => (
+                    <th key={h} className={`py-3 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h==="CASE"?"text-left px-5":"text-right px-4"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map(s => {
+                  const pColor = s.prob_above_spot >= 0.35 ? "#15803d" : s.prob_above_spot >= 0.15 ? "#a16207" : "#b91c1c";
+                  return (
+                    <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary?"bg-white":""}`}>
+                      <td className={`px-5 py-3 text-sm ${s.is_primary?"font-semibold text-gray-900":"text-gray-600"}`}>{s.label}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_revenue_p50 ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtLarge(s.y3_mcap_p50 ?? 0)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{`${((s.y3_supply_p50 ?? 0)/1e6).toFixed(0)}M`}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-500 whitespace-nowrap">{fmtPrice(s.pv.p25)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-gray-900 whitespace-nowrap">{fmtPrice(s.pv.p50)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-500 whitespace-nowrap">{fmtPrice(s.pv.p75)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-400 whitespace-nowrap">{fmtPrice(s.pv.p90)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: pColor }}>
+                        {pct(s.prob_above_spot)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── 4 summary cards ───────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SmCard2
+            label="Y3 total revenue — base P50"
+            value={fmtLarge((gp["y3_revenue_p50"] as number) ?? 0)}
+            sub={`Crypto ${fmtLarge((gp["y3_crypto_revenue_p50"] as number) ?? 0)} · Eq/Opt ${fmtLarge((gp["y3_eq_opt_revenue_p50"] as number) ?? 0)} · NIR ${fmtLarge((gp["y3_nir_p50"] as number) ?? 0)}`}
+          />
+          <SmCard2
+            label="Base P50 PV / HOOD"
+            value={fmtPrice(scenarios.find(s => s.is_primary)?.pv.p50 ?? 0)}
+            sub={`P25 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p25 ?? 0)} · P75 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p75 ?? 0)} · P90 ${fmtPrice(scenarios.find(s => s.is_primary)?.pv.p90 ?? 0)}`}
+          />
+          <SmCard2
+            label="Derived discount rate"
+            value={`${(DR * 100).toFixed(1)}%`}
+            sub={`β${beta.toFixed(2)} (1Y cov/var) · rf ${(rf*100).toFixed(2)}% · HOOD vol ${(hoodVol*100).toFixed(1)}%/day`}
+          />
+          <SmCard2
+            label="Market P/S vs model P/S"
+            value={`${hoodPs.toFixed(1)}× mkt`}
+            sub={`Bear ${scenarios.find(s=>s.key==="bear")?.ps_center.toFixed(0)}× · Base ${scenarios.find(s=>s.key==="base")?.ps_center.toFixed(0)}× · Bull ${scenarios.find(s=>s.key==="bull")?.ps_center.toFixed(0)}× (model exit P/S centers)`}
+          />
+        </div>
+
+        {/* ── Revenue Semantics ─────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Revenue Semantics</h2>
+            <p className="text-gray-500 text-base leading-relaxed">
+              Four-engine model: (1) Crypto TRR via Binance spot denominator MC × HOOD market share velocity, (2) Equities + Options TRR via regime-switching on calibrated run-rate, (3) Net Interest Revenue = AUC × cash ratio × SOFR path, (4) Other = Gold subs + card.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <ul className="space-y-4 text-sm text-gray-700 leading-relaxed">
+              <li><span className="font-bold text-gray-900">Crypto TRR:</span> Binance spot ({`$${(bn30d*12/1e12).toFixed(1)}T`}/yr) × HOOD MS {(cryptoMs*100).toFixed(2)}% × 170bps. Calibrated Q1-2025: $252M/Q on $13B notional ≈ 193bps; forward rate compressed by competition.</li>
+              <li><span className="font-bold text-gray-900">Equities + Options:</span> Regime-switching MC on $1.5B ann. run-rate (Q1-2025: options $218M/Q + equities $70M/Q). No live PFOF/venue volume API available.</li>
+              <li><span className="font-bold text-gray-900">NIR:</span> AUC ~${(aucEst/1e9).toFixed(0)}B × 6% cash ratio × {(sofr*100).toFixed(2)}% SOFR × 85% capture = {fmtLarge(nirAnn)}/yr. SOFR mean-reverts to 2.5% over 36 months.</li>
+              <li><span className="font-bold text-gray-900">Other:</span> Gold subscriptions + credit card + misc = {fmtLarge(otherRev)}/yr at 10% CAGR base.</li>
+              <li><span className="font-bold text-gray-900">Discount rate:</span> CAPM from live data. HOOD beta ~{beta.toFixed(1)}× drives {(DR*100).toFixed(1)}% DR. Current market prices HOOD at {hoodPs.toFixed(1)}× P/S vs model bull {scenarios.find(s=>s.key==="bull")?.ps_center.toFixed(0)}× — implies significant DCF premium.</li>
             </ul>
           </div>
         </div>
@@ -4437,8 +4711,25 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               sub={`rf ${((gp["risk_free_rate"] as number ?? 0)*100).toFixed(2)}% + 5.5% ERP × β = DR`}
             />
           </>}
+          {tokenKey === "robinhood" && <>
+            <MetricCard
+              label="Crypto MS vs Binance"
+              value={`${((gp["crypto_ms30_vs_binance"] as number ?? 0) * 100).toFixed(2)}%`}
+              sub={`${fmtLarge(gp["crypto_revenue_ann"] as number)} ann. · 170bps spread`}
+            />
+            <MetricCard
+              label="NIR / Total rev ann."
+              value={`${fmtLarge(gp["nir_ann"] as number)} / ${fmtLarge(gp["total_revenue_ann"] as number)}`}
+              sub={`AUC ~${((gp["auc_estimate"] as number ?? 0)/1e9).toFixed(0)}B × 6% cash × ${((gp["sofr_rate"] as number ?? 0)*100).toFixed(2)}% SOFR × 85%`}
+            />
+            <MetricCard
+              label="CAPM beta / DR"
+              value={`β${(gp["capm_beta"] as number ?? 0).toFixed(2)} / ${((gp["derived_discount_rate"] as number ?? 0)*100).toFixed(1)}%`}
+              sub={`rf ${((gp["risk_free_rate"] as number ?? 0)*100).toFixed(2)}% + 5.5% ERP × β = DR · mkt P/S ${(gp["hood_ps_current"] as number ?? 0).toFixed(1)}×`}
+            />
+          </>}
           {/* Fallback for unknown tokens */}
-          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards", "coinbase"].includes(tokenKey) && <>
+          {!["uni", "ethfi", "jup", "lighter", "sky", "vvv", "bp", "cards", "coinbase", "robinhood"].includes(tokenKey) && <>
             <MetricCard label="Market Cap" value={fmtLarge(d.market.market_cap)} sub={`FDV ${fmtLarge(d.market.fdv)}`} />
             <MetricCard label="Circ. Supply" value={`${(d.market.circulating_supply / 1e6).toFixed(0)}M`} sub={`of ${(d.market.max_supply / 1e6).toFixed(0)}M max`} />
             <MetricCard label="EV (mean)" value={fmtPrice(primary.ev)} accent="blue" termKey="ev" />
@@ -4751,12 +5042,13 @@ function LandingSummary({
 // ── Token picker ─────────────────────────────────────────────────────────────
 
 const TOKEN_RING: Record<string, string> = {
-  uni:      "#ff007a",
-  ethfi:    "#06b6d4",
-  jup:      "#9945ff",
-  hype:     "#00e5a0",
-  sky:      "#f59e0b",
-  coinbase: "#0052ff",
+  uni:       "#ff007a",
+  ethfi:     "#06b6d4",
+  jup:       "#9945ff",
+  hype:      "#00e5a0",
+  sky:       "#f59e0b",
+  coinbase:  "#0052ff",
+  robinhood: "#00c805",
 };
 
 // ── Main dashboard ───────────────────────────────────────────────────────────
@@ -4791,7 +5083,11 @@ export default function ValuationDashboard({ data }: Props) {
                 const primary  = token.data?.scenarios.find((s) => s.is_primary) ?? token.data?.scenarios[0];
                 const weightedPv = token.data?.current_gp?.["weighted_pv"] as number | undefined;
                 const p50      = key === "cards" && weightedPv !== undefined ? weightedPv : primary?.pv.p50;
-                const p50Label = key === "cards" && weightedPv !== undefined ? "Wtd PV" : "P50";
+                const p50Label = key === "cards" && weightedPv !== undefined
+                  ? "Wtd PV"
+                  : key === "coinbase" || key === "robinhood"
+                    ? "P50"
+                    : "P50";
                 const ring     = TOKEN_RING[key] ?? "#60a5fa";
 
                 return (
