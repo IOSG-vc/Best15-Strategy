@@ -87,11 +87,12 @@ def _get_text(url: str, timeout: int = 20):
         return r.read().decode()
 
 
-def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0) -> np.ndarray:
+def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0,
+                      decay_months: int = _MS_DECAY_MONTHS) -> np.ndarray:
     monthly_log_velocity = min(max(float(monthly_log_velocity), 0.0), _MAX_MONTHLY_LOG_VELOCITY)
     cumulative, acc = [], 0.0
     for m in range(months):
-        decay_weight = max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / decay_months)
         acc += monthly_log_velocity * decay_weight
         cumulative.append(math.exp(acc))
     return np.array(cumulative, dtype=float)
@@ -273,7 +274,8 @@ def _compute_share(tvl_rows: list[dict]) -> tuple[dict | None, list[dict], list[
     return snapshot, history[-365:], full[-365:]
 
 
-def _simulate(aave_tvl_start: float, ms_snapshot: dict | None) -> dict:
+def _simulate(aave_tvl_start: float, ms_snapshot: dict | None,
+              velocity_decay_months: int = _MS_DECAY_MONTHS) -> dict:
     rng = np.random.default_rng(SEED)
     monthly_log_returns = _load_growth_distribution()
     basket_months, basket_tvl = _load_basket_monthly()
@@ -290,7 +292,8 @@ def _simulate(aave_tvl_start: float, ms_snapshot: dict | None) -> dict:
         anchor = ms_snapshot.get("ms180") or ms_snapshot.get("ms90")
         velocity = _velocity_ensemble(ms_snapshot.get("ms7"), float(ms_snapshot["ms30"]), float(anchor))
         share_path = np.minimum(
-            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"]),
+            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"],
+                                                           velocity_decay_months),
             _AAVE_SHARE_CAP)
     else:
         velocity = _velocity_ensemble(None, 1.0, 1.0)
@@ -469,6 +472,27 @@ def run() -> dict:
         make_scenario("current_fdv", "Current-state · max-supply (FDV)", rev_yield_current, max_supply, False),
     ]
 
+    # Velocity scenario analysis: vary the momentum-decay window (bear 6M / base 12M / bull 24M)
+    # holding the primary revenue yield and supply fixed. Shows share-momentum sensitivity.
+    _vel_sims = {
+        6:  _simulate(aave_tvl, ms_snapshot, 6),
+        12: sim,
+        24: _simulate(aave_tvl, ms_snapshot, 24),
+    }
+    velocity_scenarios = []
+    for _dm, _vlabel in ((6, "Bear: 6M momentum decay"), (12, "Base: 12M momentum decay"), (24, "Bull: 24M momentum decay")):
+        _vsim = _vel_sims[_dm]
+        _vy3_gp = _vsim["y3_tvl_months_arr"] * rev_yield_current / 12.0
+        _vpv = _vy3_gp * GP_MULTIPLE / y3_effective_supply / disc
+        velocity_scenarios.append({
+            "label": _vlabel, "decay_months": _dm,
+            "y3_gp_p50": float(np.percentile(_vy3_gp, 50)),
+            "pv": {"p25": float(np.percentile(_vpv, 25)), "p50": float(np.percentile(_vpv, 50)),
+                   "p75": float(np.percentile(_vpv, 75))},
+            "eoy3_share": _vsim["mc_path"]["eoy3_share"],
+            "prob_above_spot": float(np.mean(_vpv >= spot)),
+        })
+
     current_gp = {
         "annualized_current_state": ann_revenue,                  # real protocol revenue today
         "annualized_full_activation": aave_tvl * REV_YIELD_EXPANSION,  # margin-expansion ceiling
@@ -516,7 +540,8 @@ def run() -> dict:
                      "AAVE ~95% circulating. Aavenomics "
                      "buyback (~$1M/wk) reported as supporting context, not added to GP."),
         },
-        "current_gp": current_gp, "scenarios": scenarios, "ms_history": ms_history,
+        "current_gp": current_gp, "scenarios": scenarios, "velocity_scenarios": velocity_scenarios,
+        "ms_history": ms_history,
         "caveats": [
             "Aave earns REAL protocol revenue today (reserve-factor cut of borrower interest); current-state is the primary case, not an activation story.",
             "Net revenue yield = DefiLlama Aave V3 dailyRevenue / TVL. GHO stablecoin interest accrues to the treasury and is captured in the margin-expansion scenario, not the base.",

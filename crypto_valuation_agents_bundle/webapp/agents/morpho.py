@@ -94,13 +94,14 @@ def _get_text(url: str, timeout: int = 20):
         return r.read().decode()
 
 
-def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0) -> np.ndarray:
+def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0,
+                      decay_months: int = _MS_DECAY_MONTHS) -> np.ndarray:
     """Cumulative share multiplier from a capped monthly velocity that decays over 12M."""
     monthly_log_velocity = min(max(float(monthly_log_velocity), 0.0), _MAX_MONTHLY_LOG_VELOCITY)
     cumulative = []
     acc = 0.0
     for m in range(months):
-        decay_weight = max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / decay_months)
         acc += monthly_log_velocity * decay_weight
         cumulative.append(math.exp(acc))
     return np.array(cumulative, dtype=float)
@@ -319,7 +320,8 @@ def _compute_lending_ms(tvl_rows: list[dict]) -> tuple[dict | None, list[dict], 
 
 
 # ── Monte Carlo: gross interest fees over 36 months ───────────────────────────
-def _simulate(fee_yield_on_tvl: float, morpho_tvl_start: float, ms_snapshot: dict | None) -> dict:
+def _simulate(fee_yield_on_tvl: float, morpho_tvl_start: float, ms_snapshot: dict | None,
+              velocity_decay_months: int = _MS_DECAY_MONTHS) -> dict:
     rng = np.random.default_rng(SEED)
     monthly_log_returns = _load_growth_distribution()
     basket_months, basket_tvl = _load_basket_monthly()
@@ -339,7 +341,8 @@ def _simulate(fee_yield_on_tvl: float, morpho_tvl_start: float, ms_snapshot: dic
         anchor = ms_snapshot.get("ms180") or ms_snapshot.get("ms90")
         velocity = _velocity_ensemble(ms_snapshot.get("ms7"), float(ms_snapshot["ms30"]), float(anchor))
         share_path = np.minimum(
-            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"]),
+            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"],
+                                                           velocity_decay_months),
             _MORPHO_LENDING_SHARE_CAP,
         )
     else:
@@ -555,6 +558,27 @@ def run() -> dict:
         scenarios.append(make_scenario("base_10_circ", "Base activation (10%) · circulating-supply",
                                        FEE_SWITCH_BASE, circ, False))
 
+    # Velocity scenario analysis: vary the momentum-decay window (bear 6M / base 12M / bull 24M)
+    # holding the primary fee-switch take and supply fixed. Shows share-momentum sensitivity.
+    _vel_sims = {
+        6:  _simulate(fee_yield_on_tvl, morpho_tvl, ms_snapshot, 6),
+        12: sim,
+        24: _simulate(fee_yield_on_tvl, morpho_tvl, ms_snapshot, 24),
+    }
+    velocity_scenarios = []
+    for _dm, _vlabel in ((6, "Bear: 6M momentum decay"), (12, "Base: 12M momentum decay"), (24, "Bull: 24M momentum decay")):
+        _vsim = _vel_sims[_dm]
+        _vy3_gp = _vsim["y3_ttm_gross_fees_arr"] * FEE_SWITCH_BASE
+        _vpv = _vy3_gp * GP_MULTIPLE / y3_effective_supply / disc
+        velocity_scenarios.append({
+            "label": _vlabel, "decay_months": _dm,
+            "y3_gp_p50": float(np.percentile(_vy3_gp, 50)),
+            "pv": {"p25": float(np.percentile(_vpv, 25)), "p50": float(np.percentile(_vpv, 50)),
+                   "p75": float(np.percentile(_vpv, 75))},
+            "eoy3_share": _vsim["mc_path"]["eoy3_lending_share"],
+            "prob_above_spot": float(np.mean(_vpv >= spot)),
+        })
+
     # ── current_gp block (cards + diagnostics) ────────────────────────────────
     current_full_gp = ann_interest_fees * FEE_SWITCH_FULL
     current_base_gp = ann_interest_fees * FEE_SWITCH_BASE
@@ -627,6 +651,7 @@ def run() -> dict:
         },
         "current_gp": current_gp,
         "scenarios": scenarios,
+        "velocity_scenarios": velocity_scenarios,
         "ms_history": ms_history,
         "caveats": [
             "Morpho Blue's protocol fee switch is OFF by default — the MORPHO token captures ~0 of borrower interest today. This is a fee-ACTIVATION valuation, not a current-cashflow one.",

@@ -85,14 +85,15 @@ BLOCKWORKS_BINANCE_SPOT_ANNUAL = {
 }
 
 
-def _ms_acceleration_path(months: int = _MS_MONTHS, initial: float = 1.0) -> np.ndarray:
+def _ms_acceleration_path(months: int = _MS_MONTHS, initial: float = 1.0,
+                           decay_months: int = _MS_DECAY_MONTHS) -> np.ndarray:
     """HYPE-style cumulative share multiplier from a decaying 6M share-growth amplifier."""
     initial = min(max(float(initial), _MS_DECELERATOR_FLOOR), _MS_AMPLIFIER_CAP)
     monthly_log_velocity = math.log(initial) / 6.0
     cumulative = []
     acc = 0.0
     for m in range(months):
-        decay_weight = max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / decay_months)
         acc += monthly_log_velocity * decay_weight
         cumulative.append(math.exp(acc))
     return np.array(cumulative, dtype=float)
@@ -699,6 +700,24 @@ def run() -> dict:
     multiple = 15.0
     disc = (1 + DR) ** 3
 
+    # Velocity scenario analysis: vary momentum-decay window (bear 6M / base 12M / bull 24M)
+    # holding full-activation take and base supply fixed; reuses the already-computed dex_paths.
+    _velocity_scenarios = []
+    if ms_snapshot and ms_snapshot.get("ms90"):
+        for _dm, _vlabel in ((6, "Bear: 6M momentum decay"), (12, "Base: 12M momentum decay"), (24, "Bull: 24M momentum decay")):
+            _sp = np.minimum(float(ms_snapshot["ms90"]) * _ms_acceleration_path(_MS_MONTHS, ms_momentum_initial, _dm), MS_CAP)
+            _y3_vol = (dex_paths * _sp[None, :])[:, -12:].sum(axis=1)
+            _y3_gp = _y3_vol * full_take_bps / 10000.0
+            _pv = _y3_gp * multiple / y3_effective_supply / disc
+            _velocity_scenarios.append({
+                "label": _vlabel, "decay_months": _dm,
+                "y3_gp_p50": float(np.percentile(_y3_gp, 50)),
+                "pv": {"p25": float(np.percentile(_pv, 25)), "p50": float(np.percentile(_pv, 50)),
+                       "p75": float(np.percentile(_pv, 75))},
+                "eoy3_share": float(_sp[-1]),
+                "prob_above_spot": float(np.mean(_pv > spot)),
+            })
+
     def value_arrays(vol_arr, take_bps, supply):
         gp = vol_arr * take_bps / 10000.0
         pv = gp * multiple / supply / disc
@@ -935,6 +954,7 @@ def run() -> dict:
             }) if binance_spot_outputs and binance_spot_pv is not None else {}),
         },
         "scenarios": scenarios,
+        "velocity_scenarios": _velocity_scenarios,
         "ms_history": ms_history,
         "binance_spot_ms_history": binance_spot_history,
         "caveats": caveats,

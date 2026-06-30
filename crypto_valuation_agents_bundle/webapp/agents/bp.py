@@ -336,6 +336,31 @@ def run() -> dict:
 
     base_sc = next((s for s in scenario_list if s["is_primary"]), scenario_list[0])
 
+    # Velocity scenario analysis: vary momentum multiplier (bear 0.5× / base 1.0× / bull 1.5×)
+    # holding the primary scenario's P/S, securities revenue, supply, and denominator growth fixed.
+    _base_params = next(s for s in SCENARIOS if s[8])
+    _, _, _, _, _base_denom_growth, _base_sec_rev, _base_ps_mult, _base_y3_supply, _ = _base_params
+    _base_bn_fut_y3 = bn_fut_ann * _base_denom_growth
+    _base_bn_spot_y3 = bn_spot_ann * _base_denom_growth
+    velocity_scenarios = []
+    for _dm, _vlabel, _ms_mult in (
+        (6,  "Bear: 6M momentum decay",  0.50),
+        (12, "Base: 12M momentum decay", 1.00),
+        (24, "Bull: 24M momentum decay", 1.50),
+    ):
+        _pv, _, _ = _compute_y3_volume_and_ms(perps_30d, bn_fut_ann, _base_bn_fut_y3, _ms_mult, PERPS_MS_CAP)
+        _sv, _, _ = _compute_y3_volume_and_ms(spot_vol_30d, bn_spot_ann, _base_bn_spot_y3, _ms_mult, SPOT_MS_CAP)
+        _y3_rev = _pv * (perps_take_bps / 10_000) + _sv * (SPOT_TAKE_RATE_BPS / 10_000) + _base_sec_rev
+        _y3_price = _y3_rev * _base_ps_mult * EQUITY_STAKE / max(_base_y3_supply, 1.0)
+        _pv_med = _y3_price / disc
+        _pv_dist = _lognorm_pv(_pv_med)
+        velocity_scenarios.append({
+            "label": _vlabel, "decay_months": _dm,
+            "y3_gp_p50": float(_y3_rev),
+            "pv": {"p25": _pv_dist["p25"], "p50": _pv_dist["p50"], "p75": _pv_dist["p75"]},
+            "prob_above_spot": _prob_above(spot, _pv_med),
+        })
+
     result = {
         "token": "BP",
         "name": "Backpack",
@@ -396,6 +421,7 @@ def run() -> dict:
             "y3_equity_pool_p50": float(base_sc["y3_equity_pool"]),
         },
         "scenarios": scenario_list,
+        "velocity_scenarios": velocity_scenarios,
         "caveats": [
             "IPO is not guaranteed; equity conversion does not occur if Backpack does not IPO.",
             "Phase 2 (375M tokens) unlocks on business milestones; each unlock dilutes per-BP equity value.",

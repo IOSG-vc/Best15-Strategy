@@ -253,11 +253,11 @@ def compute_volume_ms(numerator_rows, denominator_rows, cap, history_days=365):
     return snapshot, history, full
 
 
-def share_path_from_snapshot(snapshot, cap):
+def share_path_from_snapshot(snapshot, cap, decay_months=_MS_DECAY_MONTHS):
     if not snapshot or snapshot.get("ms90") is None:
         return np.full(MONTHS, 0.0, dtype=float), {"velocity_raw": 1.0, "velocity_capped": 1.0}
     velocity = _share_velocity(snapshot)
-    path = float(snapshot["ms90"]) * _ms_acceleration_path(MONTHS, velocity["velocity_capped"])
+    path = float(snapshot["ms90"]) * _ms_acceleration_path(MONTHS, velocity["velocity_capped"], decay_months)
     return np.minimum(path, cap), velocity
 
 
@@ -580,7 +580,29 @@ def run_mc(market, gpdata):
             },
         }
 
+    # Velocity scenario analysis: vary momentum-decay window (bear 6M / base 12M / bull 24M)
+    # holding the primary 'core' multiple and flat circulating supply fixed.
+    _velocity_scenarios_mc = []
+    for _dm, _vlabel in ((6, "Bear: 6M momentum decay"), (12, "Base: 12M momentum decay"), (24, "Bull: 24M momentum decay")):
+        _psp, _ = share_path_from_snapshot(gpdata["market_share"]["perps_snapshot"], JUP_BINANCE_PERPS_MS_CAP, _dm)
+        _ssp, _ = share_path_from_snapshot(gpdata["market_share"]["spot_snapshot"], JUP_BINANCE_SPOT_MS_CAP, _dm)
+        _y3_gp = (
+            (perps_den_paths * _psp[None, :])[:, -12:].sum(axis=1) * float(gpdata["seeds"]["perps_clean_take_rate"])
+            + (spot_den_paths * _ssp[None, :])[:, -12:].sum(axis=1) * float(gpdata["seeds"]["spot_take_rate"])
+        )
+        _pv = _y3_gp * MULTIPLE / circ / ((1 + DISCOUNT) ** 3)
+        _velocity_scenarios_mc.append({
+            "label": _vlabel, "decay_months": _dm,
+            "y3_gp_p50": float(np.percentile(_y3_gp, 50)),
+            "pv": {"p25": float(np.percentile(_pv, 25)), "p50": float(np.percentile(_pv, 50)),
+                   "p75": float(np.percentile(_pv, 75))},
+            "perps_eoy3_share": float(_psp[-1]),
+            "spot_eoy3_share": float(_ssp[-1]),
+            "prob_above_spot": float(np.mean(_pv > spot)),
+        })
+
     return {
+        "velocity_scenarios": _velocity_scenarios_mc,
         "mc": {
             "paths": N_PATHS,
             "months": MONTHS,
@@ -958,6 +980,7 @@ def run() -> dict:
         },
         "y3_state": valuation["y3_state"],
         "scenarios": scenarios,
+        "velocity_scenarios": valuation["velocity_scenarios"],
         "ms_history": gpdata["market_share"]["perps_history"] or ms_history,
         "binance_perps_ms_history": gpdata["market_share"]["perps_history"],
         "binance_spot_ms_history": gpdata["market_share"]["spot_history"],

@@ -39,13 +39,14 @@ def _ms_acceleration_path(months: int = _MS_MONTHS, initial: float = 1.0) -> np.
     return _ms_velocity_path(months, monthly_log_velocity)
 
 
-def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0) -> np.ndarray:
-    """Cumulative share multiplier from a capped monthly velocity that decays over 12M."""
+def _ms_velocity_path(months: int = _MS_MONTHS, monthly_log_velocity: float = 0.0,
+                      decay_months: int = _MS_DECAY_MONTHS) -> np.ndarray:
+    """Cumulative share multiplier from a capped monthly velocity that decays over decay_months."""
     monthly_log_velocity = min(max(float(monthly_log_velocity), 0.0), _MAX_MONTHLY_LOG_VELOCITY)
     cumulative = []
     acc = 0.0
     for m in range(months):
-        decay_weight = max(0.0, 1.0 - (m + 0.5) / _MS_DECAY_MONTHS)
+        decay_weight = max(0.0, 1.0 - (m + 0.5) / decay_months)
         acc += monthly_log_velocity * decay_weight
         cumulative.append(math.exp(acc))
     return np.array(cumulative, dtype=float)
@@ -305,7 +306,8 @@ def _compute_money_market_ms(supply_rows: list[dict]) -> tuple[dict | None, list
 
 
 def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float,
-              usds_start: float, dai_start: float, ms_snapshot: dict | None) -> dict:
+              usds_start: float, dai_start: float, ms_snapshot: dict | None,
+              velocity_decay_months: int = _MS_DECAY_MONTHS) -> dict:
     rng = np.random.default_rng(SEED)
     monthly_log_returns = _load_growth_distribution()
     money_market_months, money_market_tvl = _load_money_market_monthly()
@@ -325,7 +327,8 @@ def _simulate(opex: float, np_multiple: float, spot: float, sky_supply: float,
         velocity = _velocity_ensemble(ms_snapshot.get("ms7"), float(ms_snapshot["ms30"]), float(anchor))
         momentum = math.exp(velocity["monthly_log_velocity"] * 6.0)
         share_path = np.minimum(
-            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"]),
+            float(ms_snapshot["ms90"]) * _ms_velocity_path(HORIZON_MONTHS, velocity["monthly_log_velocity"],
+                                                           velocity_decay_months),
             _SKY_MONEY_MARKET_SHARE_CAP,
         )
     else:
@@ -648,6 +651,25 @@ def run() -> dict:
         _make_scenario("bull_np15x", "Bull OPEX ($50M), 15× NP", False, "bull_50m_opex", "pv_np"),
     ]
 
+    # Velocity scenario analysis: vary the momentum-decay window (bear 6M / base 12M / bull 24M)
+    # holding the primary OPEX ($70M) and NP multiple (15x) fixed.
+    _base_opex = OPEX_SCENARIOS["base_70m_opex"]
+    _vel_sims_sky = {
+        6:  _simulate(_base_opex, NP_MULTIPLE, spot, sky_supply, usds_start, dai_start, ms_snapshot, 6),
+        12: scenarios_raw["base_70m_opex"],
+        24: _simulate(_base_opex, NP_MULTIPLE, spot, sky_supply, usds_start, dai_start, ms_snapshot, 24),
+    }
+    velocity_scenarios = []
+    for _dm, _vlabel in ((6, "Bear: 6M momentum decay"), (12, "Base: 12M momentum decay"), (24, "Bull: 24M momentum decay")):
+        _vs = _vel_sims_sky[_dm]
+        velocity_scenarios.append({
+            "label": _vlabel, "decay_months": _dm,
+            "y3_gp_p50": _vs["y3_ttm_gp"]["p50"],
+            "pv": {"p25": _vs["pv_np"]["p25"], "p50": _vs["pv_np"]["p50"], "p75": _vs["pv_np"]["p75"]},
+            "eoy3_share": _vs["mc_path"]["eoy3_money_market_share"],
+            "prob_above_spot": _vs["pv_np"]["prob_spot_justified"],
+        })
+
     result = {
         "token": "SKY",
         "name": "Sky",
@@ -744,6 +766,7 @@ def run() -> dict:
                } if ms_snapshot else {}),
         },
         "scenarios": scenarios,
+        "velocity_scenarios": velocity_scenarios,
         "ms_history": ms_history,
         "caveats": [
             "USDS/DAI supply is sourced from Sky's official supply page API; financial rates and savings/stUSDS assumptions remain locked at the prior run.",
