@@ -114,7 +114,13 @@
           "implied_vs_model": -1.9810086444237651,
           "implied_cagr": null,
           "implied_multiple": 15.0,
-          "implied_current_ann": null
+          "implied_current_ann": null,
+          "accel_vel_short": -0.187042,
+          "accel_vel_long": 0.00743,
+          "acceleration_monthly": -0.194472,
+          "positive_streak": 0,
+          "trend_label": "decelerating",
+          "vel_unit": "pct_monthly"
         },
         "scenarios": [
           {
@@ -28010,7 +28016,13 @@
           "implied_vs_model": null,
           "implied_cagr": null,
           "implied_multiple": 15.0,
-          "implied_current_ann": null
+          "implied_current_ann": null,
+          "accel_vel_short": -0.05,
+          "accel_vel_long": 0.093216,
+          "acceleration_monthly": -0.143216,
+          "positive_streak": 0,
+          "trend_label": "decelerating",
+          "vel_unit": "pct_monthly"
         },
         "scenarios": [
           {
@@ -36805,7 +36817,13 @@
           "implied_vs_model": -38.37139233320935,
           "implied_cagr": null,
           "implied_multiple": 15.0,
-          "implied_current_ann": null
+          "implied_current_ann": null,
+          "accel_vel_short": 0.028649,
+          "accel_vel_long": -0.023098,
+          "acceleration_monthly": 0.051746,
+          "positive_streak": 1,
+          "trend_label": "accelerating",
+          "vel_unit": "pct_monthly"
         },
         "y3_state": {
           "y3_ttm_gp": {
@@ -50634,7 +50652,13 @@
           "implied_vs_model": 131.5417381701669,
           "implied_cagr": 0.4965883892955947,
           "implied_multiple": 15.0,
-          "implied_current_ann": 716954182.1666666
+          "implied_current_ann": 716954182.1666666,
+          "accel_vel_short": -0.234088,
+          "accel_vel_long": 0.190019,
+          "acceleration_monthly": -0.424107,
+          "positive_streak": 0,
+          "trend_label": "decelerating",
+          "vel_unit": "log_ratio"
         },
         "scenarios": [
           {
@@ -59551,7 +59575,13 @@
           "implied_vs_model": -20.98357574176263,
           "implied_cagr": null,
           "implied_multiple": 15.0,
-          "implied_current_ann": null
+          "implied_current_ann": null,
+          "accel_vel_short": 0.0,
+          "accel_vel_long": 0.011918,
+          "acceleration_monthly": -0.011918,
+          "positive_streak": 0,
+          "trend_label": "decelerating",
+          "vel_unit": "pct_monthly"
         },
         "scenarios": [
           {
@@ -67255,7 +67285,13 @@
           "implied_vs_model": 202.56282012381175,
           "implied_cagr": 0.6067678440380615,
           "implied_multiple": 15.0,
-          "implied_current_ann": 34305875.5
+          "implied_current_ann": 34305875.5,
+          "accel_vel_short": -0.189862,
+          "accel_vel_long": -0.259723,
+          "acceleration_monthly": 0.069861,
+          "positive_streak": 0,
+          "trend_label": "accelerating",
+          "vel_unit": "log_ratio"
         },
         "scenarios": [
           {
@@ -72885,7 +72921,13 @@
           "implied_vs_model": 150.8440099099038,
           "implied_cagr": 0.3911391824392352,
           "implied_multiple": 7.0,
-          "implied_current_ann": 4067780130.614591
+          "implied_current_ann": 4067780130.614591,
+          "accel_vel_short": -0.118737,
+          "accel_vel_long": 0.076328,
+          "acceleration_monthly": -0.195065,
+          "positive_streak": 0,
+          "trend_label": "decelerating",
+          "vel_unit": "log_ratio"
         },
         "scenarios": [
           {
@@ -73423,7 +73465,13 @@
           "implied_vs_model": 397.48354024379324,
           "implied_cagr": 0.7938431509693675,
           "implied_multiple": 10.0,
-          "implied_current_ann": 3149990000.0
+          "implied_current_ann": 3149990000.0,
+          "accel_vel_short": 0.0,
+          "accel_vel_long": 0.0,
+          "acceleration_monthly": 0.0,
+          "positive_streak": 0,
+          "trend_label": "stable",
+          "vel_unit": "log_ratio"
         },
         "scenarios": [
           {

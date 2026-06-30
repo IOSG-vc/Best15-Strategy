@@ -470,6 +470,15 @@ interface ImpliedGrowth {
   baseMultiple: number;       // the exit multiple used (P/S or P/GP)
 }
 
+interface AccelerationData {
+  velShort: number;            // most recent velocity window
+  velLong: number;             // medium-term velocity window
+  accelerationMonthly: number; // velShort − velLong
+  positiveStreak: number;      // consecutive windows (0–3) with positive velocity
+  trendLabel: "accelerating" | "decelerating" | "stable";
+  velUnit: "pct_monthly" | "log_ratio";
+}
+
 function computeImpliedGrowth(data: ValuationData): ImpliedGrowth | null {
   const spot    = data.market.spot;
   const dr      = data.model.discount_rate;
@@ -505,6 +514,25 @@ function computeImpliedGrowth(data: ValuationData): ImpliedGrowth | null {
       : null;
 
   return { impliedY3Gp, vsModelPct, impliedCagr, baseMultiple };
+}
+
+function computeAcceleration(data: ValuationData): AccelerationData | null {
+  const gp = data.current_gp as Record<string, unknown>;
+  const velShort  = gp["accel_vel_short"]      as number | undefined;
+  const velLong   = gp["accel_vel_long"]        as number | undefined;
+  const accel     = gp["acceleration_monthly"]  as number | undefined;
+  const streak    = gp["positive_streak"]       as number | undefined;
+  const trend     = gp["trend_label"]           as string | undefined;
+  const velUnit   = gp["vel_unit"]              as string | undefined;
+  if (velShort == null || velLong == null || accel == null) return null;
+  return {
+    velShort,
+    velLong,
+    accelerationMonthly: accel,
+    positiveStreak: streak ?? 0,
+    trendLabel: (trend as AccelerationData["trendLabel"]) ?? "stable",
+    velUnit: (velUnit as AccelerationData["velUnit"]) ?? "pct_monthly",
+  };
 }
 
 // ── MetricCard ───────────────────────────────────────────────────────────────
@@ -4898,6 +4926,39 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
               value={fmtLarge(ig.impliedY3Gp)}
               sub={cagrLabel ? `${vsLabel} · ${cagrLabel} from current run-rate` : vsLabel}
               accent={accent as "green" | "red" | "yellow" | "default"}
+            />
+          </div>
+        );
+      })()}
+
+      {/* ── Growth velocity acceleration — rendered for every token ─── */}
+      {(() => {
+        const ac = computeAcceleration(d);
+        if (!ac) return null;
+        const isPct = ac.velUnit === "pct_monthly";
+        const fmtV = (v: number) =>
+          isPct
+            ? `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%/mo`
+            : `${v >= 0 ? "+" : ""}${v.toFixed(3)} (log)`;
+        const arrow =
+          ac.trendLabel === "accelerating" ? "↑" :
+          ac.trendLabel === "decelerating" ? "↓" : "→";
+        const heading = `${ac.trendLabel.charAt(0).toUpperCase()}${ac.trendLabel.slice(1)} ${arrow}`;
+        // accent: streak drives colour; also factor in absolute direction
+        const accent: "green" | "yellow" | "red" =
+          ac.positiveStreak >= 2 ? "green" :
+          ac.positiveStreak === 1 ? "yellow" : "red";
+        const streakLabel =
+          ac.positiveStreak === 0 ? "0 consecutive positive windows" :
+          `${ac.positiveStreak} consecutive positive window${ac.positiveStreak > 1 ? "s" : ""}`;
+        const subLine = `Short ${fmtV(ac.velShort)} · Long ${fmtV(ac.velLong)} · ${streakLabel}`;
+        return (
+          <div className="grid grid-cols-1">
+            <MetricCard
+              label="Growth Velocity Trend"
+              value={heading}
+              sub={subLine}
+              accent={accent}
             />
           </div>
         );

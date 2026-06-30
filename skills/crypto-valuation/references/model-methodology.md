@@ -115,6 +115,47 @@ buyback_years_with_yield = supply_adjusted_market_cap / (annual_holder_revenue +
 
 If unlocks materially increase supply, do not compute buyback years on current market cap only.
 
+## Growth Velocity Acceleration
+
+After computing velocity, always derive the acceleration signal — whether momentum is increasing or decreasing relative to the medium-term trend.
+
+### Computation
+
+```text
+vel_short = most recent velocity window (7D/30D equivalent)
+vel_long  = medium-term velocity window (30D/90D–180D equivalent)
+acceleration = vel_short − vel_long
+```
+
+**Source priority** (use first available):
+1. Explicit capped velocity components (`perps_velocity_7d_30d_capped`, `perps_velocity_30d_180d_capped`)
+2. Multiplier-based monthly equiv (`ms_velocity_short_monthly_equiv − 1`)
+3. Card velocity ensemble dict (`capped_7_30`, `capped_30_180`)
+4. Named component fields (`velocity_short_component_monthly`, `velocity_long_component_monthly`)
+5. Derive from stored MS trend ratios: `vel = log(ms7_ms30_trend)` and `log(ms30_ms180_trend)` (unit: log-ratio)
+
+### Derived fields
+
+| Field | Definition |
+| --- | --- |
+| `accel_vel_short` | Short-window velocity (most recent) |
+| `accel_vel_long` | Medium-window velocity |
+| `acceleration_monthly` | `vel_short − vel_long`. Positive = accelerating. |
+| `positive_streak` | Count of consecutive windows (0–3) with positive velocity, starting from most recent. |
+| `trend_label` | `"accelerating"` / `"decelerating"` / `"stable"` based on acceleration sign and magnitude. |
+| `vel_unit` | `"pct_monthly"` (explicit components) or `"log_ratio"` (derived from MS trend ratios). |
+
+### Positive streak
+
+Uses up to 3 windows (7D/30D, 30D/180D, 90D/180D). Count stops at the first non-positive window. Streak = 0 means even the most recent window is negative.
+
+### Display
+
+- Dashboard: show `trend_label` with arrow (↑/↓/→) as the MetricCard headline.
+- Sub-line: short and long velocity values + streak count.
+- Color accent: green ≥ 2 consecutive positive windows, yellow = 1, red = 0.
+- Computed in `scripts/update_valuations.py` post-processing alongside implied growth.
+
 ## Market-Implied Growth Rate
 
 After computing the forward model, always invert the valuation formula to quantify what Y3 GP or revenue the current market price implies, and how far that sits from the model's own projection.

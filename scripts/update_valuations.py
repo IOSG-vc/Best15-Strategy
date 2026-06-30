@@ -9,6 +9,7 @@ Usage:
 """
 
 import json
+import math
 import os
 import sys
 import datetime
@@ -298,6 +299,115 @@ for token_key, _, _, symbol, _, _ in TOKENS:
         print(f"  [{symbol}] {label}")
     except Exception as e:
         print(f"  [{symbol}] implied growth computation failed: {e}")
+
+# ── Growth velocity acceleration ─────────────────────────────────────────────
+# For each token, derive:
+#   accel_vel_short   – most recent velocity window (7D/30D or equivalent)
+#   accel_vel_long    – medium-term velocity window (30D/90D–180D or equivalent)
+#   acceleration_monthly – vel_short − vel_long (positive = accelerating)
+#   positive_streak   – consecutive windows (0-3) with positive velocity
+#   trend_label       – "accelerating" | "decelerating" | "stable"
+#   vel_unit          – "pct_monthly" (already in %/mo) | "log_ratio" (dimensionless log)
+
+def _compute_acceleration(gp: dict) -> "dict | None":
+    vel_w1 = vel_w2 = vel_w3 = None
+    unit = "pct_monthly"
+
+    def _f(v) -> "float | None":
+        return float(v) if isinstance(v, (int, float)) and v == v else None
+
+    # Pattern 1: JUP-style explicit capped velocity components (perps primary)
+    if gp.get("perps_velocity_7d_30d_capped") is not None and gp.get("perps_velocity_30d_180d_capped") is not None:
+        vel_w1 = _f(gp["perps_velocity_7d_30d_capped"])
+        vel_w2 = _f(gp["perps_velocity_30d_180d_capped"])
+    # Pattern 2: UNI-style multiplier-based monthly equiv (convert mult→additive)
+    elif gp.get("ms_velocity_short_monthly_equiv") is not None and gp.get("ms_velocity_long_monthly_equiv") is not None:
+        s = _f(gp["ms_velocity_short_monthly_equiv"])
+        l = _f(gp["ms_velocity_long_monthly_equiv"])
+        if s is not None and l is not None:
+            vel_w1, vel_w2 = s - 1.0, l - 1.0
+    # Pattern 3: ETHFI card velocity ensemble dict
+    elif isinstance(gp.get("card_velocity_ensemble"), dict):
+        cv = gp["card_velocity_ensemble"]
+        vel_w1 = _f(cv.get("capped_7_30") if cv.get("capped_7_30") is not None else cv.get("velocity_7_30"))
+        vel_w2 = _f(cv.get("capped_30_180") if cv.get("capped_30_180") is not None else cv.get("velocity_30_180"))
+    # Pattern 4: SKY-style named component fields
+    elif gp.get("velocity_short_component_monthly") is not None and gp.get("velocity_long_component_monthly") is not None:
+        vel_w1 = _f(gp["velocity_short_component_monthly"])
+        vel_w2 = _f(gp["velocity_long_component_monthly"])
+
+    # Pattern 5: HYPE / LIGHTER / COIN / HOOD — derive from stored MS trend ratios
+    if vel_w1 is None:
+        t1 = _f(gp.get("ms7_ms30_trend"))
+        t2 = _f(gp.get("ms30_ms180_trend"))
+        if t1 and t2 and t1 > 0 and t2 > 0:
+            try:
+                vel_w1, vel_w2 = math.log(t1), math.log(t2)
+                unit = "log_ratio"
+            except ValueError:
+                pass
+
+    if vel_w1 is None or vel_w2 is None:
+        return None
+
+    # Optional 3rd window: ms90 / ms180
+    _ms90_keys  = ("ms90_vs_binance", "ms90_vs_money_market", "ms90_vs_dex", "ms90_vs_lrt",
+                   "perps_ms90_vs_binance_futures")
+    _ms180_keys = ("ms180_vs_binance", "ms180_vs_money_market", "ms180_vs_dex", "ms180_vs_lrt",
+                   "perps_ms180_vs_binance_futures")
+    ms90  = next((_f(gp[k]) for k in _ms90_keys  if _f(gp.get(k))), None)
+    ms180 = next((_f(gp[k]) for k in _ms180_keys if _f(gp.get(k))), None)
+    if ms90 and ms180 and ms90 > 0 and ms180 > 0:
+        try:
+            vel_w3 = math.log(ms90 / ms180)
+        except ValueError:
+            pass
+
+    vs  = vel_w1
+    vl  = vel_w2
+    acc = vs - vl
+
+    # Streak: count consecutive positive windows from most recent
+    streak = 0
+    for v in ([vs, vl] + ([vel_w3] if vel_w3 is not None else [])):
+        if v > 0:
+            streak += 1
+        else:
+            break
+
+    # Trend label – threshold depends on unit to avoid spurious "stable" labels
+    thr = 0.005 if unit == "pct_monthly" else 0.05
+    trend = "stable" if abs(acc) < thr else ("accelerating" if acc > 0 else "decelerating")
+
+    return {
+        "accel_vel_short":      round(vs,  6),
+        "accel_vel_long":       round(vl,  6),
+        "acceleration_monthly": round(acc, 6),
+        "positive_streak":      streak,
+        "trend_label":          trend,
+        "vel_unit":             unit,
+    }
+
+
+print("\n[ACCEL] Computing growth velocity acceleration…")
+for token_key, _, _, symbol, _, _ in TOKENS:
+    try:
+        tok_data = (results.get(token_key) or {}).get("data")
+        if not tok_data:
+            continue
+        gp_dict = tok_data.get("current_gp")
+        if not isinstance(gp_dict, dict):
+            continue
+        acc = _compute_acceleration(gp_dict)
+        if acc is None:
+            print(f"  [{symbol}] insufficient velocity data — skipped")
+            continue
+        gp_dict.update(acc)
+        streak_str = f"{acc['positive_streak']}-window streak"
+        print(f"  [{symbol}] {acc['trend_label']} · accel={acc['acceleration_monthly']:+.4f} · {streak_str}")
+    except Exception as e:
+        print(f"  [{symbol}] acceleration computation failed: {e}")
+
 
 output = {
     "lastUpdated": str(datetime.date.today()),
