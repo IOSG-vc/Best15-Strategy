@@ -48,6 +48,9 @@ TOKENS = [
     ("vvv",      "agents.vvv",      "Venice AI",      "VVV",   "Ethereum",  "venice-token"),
     ("bp",       "agents.bp",       "Backpack",       "BP",    "Solana",    "backpack"),
     ("cards",    "agents.cards",    "Collector Crypt","CARDS", "Solana",    "collector-crypt"),
+    ("morpho",   "agents.morpho",   "Morpho",         "MORPHO","Ethereum",  "morpho"),
+    ("spark",    "agents.spark",    "Spark",          "SPK",   "Ethereum",  "spark-2"),
+    ("aave",     "agents.aave",     "Aave",           "AAVE",  "Ethereum",  "aave"),
     # Stock tickers (cg_id="" → agent supplies its own mcap_history)
     ("coinbase",   "agents.coinbase",   "Coinbase",   "COIN",  "NYSE",      ""),
     ("robinhood",  "agents.robinhood",  "Robinhood",  "HOOD",  "NASDAQ",    ""),
