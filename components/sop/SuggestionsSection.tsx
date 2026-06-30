@@ -391,17 +391,24 @@ function SuggestionRow({ suggestion: initial, groupBoundary }: { suggestion: Sug
         <div className="mt-2 ml-12 text-[12px] text-error font-medium">⚠ {error}</div>
       )}
 
-      {suggestion.disagreements && Object.keys(suggestion.disagreements).length > 0 && !inactive && (
-        <div className="mt-3 ml-12 rounded-md border-l-2 border-warning bg-warning/15 px-3 py-2">
-          <div className="text-[10px] uppercase tracking-[1.5px] font-bold text-warning mb-1">⚠ Sources disagree</div>
-          <div className="text-[12px] text-ink space-y-0.5">
-            {Object.entries(suggestion.disagreements).map(([k, v]) => (
-              <div key={k}>
-                <span className="font-mono font-semibold">{k}</span>: <span className="text-body-strong">{v}</span>
-              </div>
-            ))}
+      {suggestion.disagreements && !inactive && (
+        typeof suggestion.disagreements === "string" ? (
+          <div className="mt-3 ml-12 rounded-md border-l-2 border-warning bg-warning/15 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-[1.5px] font-bold text-warning mb-1">⚠ Sources disagree</div>
+            <div className="text-[12px] text-ink">{suggestion.disagreements}</div>
           </div>
-        </div>
+        ) : Object.keys(suggestion.disagreements).length > 0 ? (
+          <div className="mt-3 ml-12 rounded-md border-l-2 border-warning bg-warning/15 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-[1.5px] font-bold text-warning mb-1">⚠ Sources disagree</div>
+            <div className="text-[12px] text-ink space-y-0.5">
+              {Object.entries(suggestion.disagreements).map(([k, v]) => (
+                <div key={k}>
+                  <span className="font-mono font-semibold">{k}</span>: <span className="text-body-strong">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null
       )}
 
       {expanded && sources && (
