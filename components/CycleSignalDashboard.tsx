@@ -8,6 +8,7 @@ import Nav from "./Nav";
 
 const ExposureHistoryChart = dynamic(() => import("./ExposureHistoryChart"), { ssr: false });
 const Btc90ExposureChart = dynamic(() => import("./Btc90ExposureChart"), { ssr: false });
+const BtcCycleClock = dynamic(() => import("./BtcCycleClock"), { ssr: false });
 
 function dirColor(d: string) {
   if (d === "UP") return "#00b894";
@@ -161,6 +162,15 @@ export default function CycleSignalDashboard({
                 </div>
 
               </div>
+            </section>
+
+            {/* BTC Cycle Clock */}
+            <section>
+              <SectionHeader
+                title="BTC Cycle Clock"
+                subtitle="bear market end · next halving"
+              />
+              <BtcCycleClock />
             </section>
 
             {/* 90-day BTC + Exposure chart */}
