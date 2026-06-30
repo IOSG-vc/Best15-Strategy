@@ -1,11 +1,11 @@
 {
   "token": "BP",
   "name": "Backpack",
-  "as_of_utc": "2026-06-29T20:35:53.759263+00:00",
+  "as_of_utc": "2026-06-30T10:22:38.328113+00:00",
   "market": {
-    "spot": 0.5202,
-    "market_cap": 130050127.0,
-    "fdv": 520200507.0,
+    "spot": 0.523307,
+    "market_cap": 130530062.0,
+    "fdv": 522120247.0,
     "circulating_supply": 250000000.0,
     "max_supply": 1000000000.0
   },
@@ -37,7 +37,7 @@
     "equity_stake": 0.2,
     "equity_pool_at_1b_val": 200000000.0,
     "equity_per_bp_phase1_only": 0.8,
-    "implied_company_val_at_fdv": 2601002535.0,
+    "implied_company_val_at_fdv": 2610601235.0,
     "y3_revenue_p50": 73766200.0,
     "y3_supply_p50": 375000000.0,
     "y3_perps_revenue_p50": 17316000.0,
@@ -58,8 +58,8 @@
         "p90": 0.1061623398542823
       },
       "ev": 0.04858765229438273,
-      "prob_above_spot": 0.0020468879965656306,
-      "prob_3x": 3.601842160600672e-05,
+      "prob_above_spot": 0.0020086578879760755,
+      "prob_3x": 3.5128885760832194e-05,
       "y3_price_p50": 0.0575584,
       "y3_mcap_p50": 14389600.0,
       "y3_supply_p50": 250000000.0,
@@ -90,8 +90,8 @@
         "p90": 0.5079441333473501
       },
       "ev": 0.23247239058528626,
-      "prob_above_spot": 0.09587121189652777,
-      "prob_3x": 0.008107185123231084,
+      "prob_above_spot": 0.09486186596695854,
+      "prob_3x": 0.007976061079274658,
       "y3_price_p50": 0.27539381333333335,
       "y3_mcap_p50": 103272680.0,
       "y3_supply_p50": 375000000.0,
@@ -122,8 +122,8 @@
         "p90": 1.2229404481149382
       },
       "ev": 0.5597070048691883,
-      "prob_above_spot": 0.3347625353725535,
-      "prob_3x": 0.06357815878559644,
+      "prob_above_spot": 0.33259643914444703,
+      "prob_3x": 0.0628393406169905,
       "y3_price_p50": 0.6630458181818182,
       "y3_mcap_p50": 364675200.0,
       "y3_supply_p50": 550000000.0,
@@ -153,5 +153,5 @@
     "No buyback or revenue-share mechanism exists; value is entirely via equity conversion at IPO.",
     "Distributions approximate log-normal \u03c3=1.0; no Monte Carlo simulation."
   ],
-  "data_freshness": "2026-06-29"
+  "data_freshness": "2026-06-30"
 }

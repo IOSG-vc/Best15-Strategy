@@ -42,6 +42,27 @@ AGENTS = {
         "module": "agents.hype",
         "available": True,
     },
+    "morpho": {
+        "name": "Morpho",
+        "symbol": "MORPHO",
+        "chain": "Ethereum",
+        "module": "agents.morpho",
+        "available": True,
+    },
+    "spark": {
+        "name": "Spark",
+        "symbol": "SPK",
+        "chain": "Ethereum",
+        "module": "agents.spark",
+        "available": True,
+    },
+    "aave": {
+        "name": "Aave",
+        "symbol": "AAVE",
+        "chain": "Ethereum",
+        "module": "agents.aave",
+        "available": True,
+    },
     "lighter": {
         "name": "Lighter",
         "symbol": "LIT",

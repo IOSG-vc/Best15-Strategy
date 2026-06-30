@@ -4293,6 +4293,316 @@ function TokenModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: 
   );
 }
 
+// ── LendingModelOutputs (shared for MORPHO / SPARK / AAVE) ───────────────────
+// All three are the SKY/UNI engine: lending/yield-basket denominator × market-share
+// velocity → protocol TVL → yield-on-TVL → a capture lever → GP → PV. Only the
+// "capture lever" row differs (fee-switch take / net margin / net revenue yield).
+
+const LENDING_TOKENS = ["morpho", "spark", "aave"];
+
+interface LendingCfg {
+  tvlKey: string;
+  tvlP50Key: string;
+  yieldKey: string;
+  yieldLabel: string;
+  annKey: string;
+  annLabel: string;
+  mcapGpKey: string;
+  unit: string;
+  architecture: string;
+  leverRows: (gp: Record<string, number>) => [string, string][];
+  splitTitle: string;
+  splitRows: (gp: Record<string, number>) => [string, string][];
+  splitNote: string;
+  semanticsLead: string;
+}
+
+const LENDING_CFG: Record<string, LendingCfg> = {
+  morpho: {
+    tvlKey: "morpho_tvl", tvlP50Key: "y3_morpho_tvl_p50", yieldKey: "fee_yield_on_tvl",
+    yieldLabel: "Borrower-interest yield on TVL", annKey: "ann_interest_fees",
+    annLabel: "Ann. gross interest (borrowers)", mcapGpKey: "mcap_base_activation_gp", unit: "MORPHO",
+    architecture:
+`lending_basket_tvl_t = uniform historical monthly draw × sampled return path
+share_t          = MS90 × decayed velocity ensemble (cap 35%)
+Morpho_TVL_t     = lending_basket_tvl_t × share_t
+gross_interest_t = Morpho_TVL_t × borrower-interest yield
+GP_t             = gross_interest_t × fee-switch take
+PV/token = Year-3 TTM GP × 15× / supply / (1 + DR)^3`,
+    leverRows: (gp) => ([
+      ["Borrower-interest yield on TVL", `${((gp["fee_yield_on_tvl"] ?? 0) * 100).toFixed(2)}%`],
+      ["Fee-switch — current (today)",   "0% (switch off)"],
+      ["Fee-switch — conservative",      "5%"],
+      ["Fee-switch — base (primary)",    "10% (below Aave/Spark take)"],
+      ["Fee-switch — full (on-chain max)", "25%"],
+      ["Ann. gross interest",            fmtLarge(gp["ann_interest_fees"] ?? 0)],
+      ["Current GP captured by token",   "~$0"],
+      ["Y3 GP P50 (10% take)",           fmtLarge(gp["y3_gp_p50"] ?? 0)],
+    ]),
+    splitTitle: "Y3 GP product-line split",
+    splitRows: (gp) => {
+      const take = 0.10; const gross = (gp["y3_gp_p50"] ?? 0) / take;
+      return [
+        ["Y3 gross interest",   fmtLarge(gross)],
+        ["× Fee-switch take",   "10%"],
+        ["= Net GP (token)",    fmtLarge(gp["y3_gp_p50"] ?? 0)],
+      ];
+    },
+    splitNote: "Borrower interest accrues to suppliers today; modeled GP applies a 10% governance fee-switch take — kept below Aave (~14%) and Spark (~20%) since Morpho competes as cheap, curator-dependent infra.",
+    semanticsLead: "Driver-based fee-ACTIVATION model: the MORPHO token captures ~0 of borrower interest today (Blue's protocol fee switch is OFF). Value comes from the option on governance turning it on, capped at the 25% on-chain max.",
+  },
+  spark: {
+    tvlKey: "spark_tvl", tvlP50Key: "y3_spark_tvl_p50", yieldKey: "gross_income_yield_on_tvl",
+    yieldLabel: "Gross-income yield on TVL", annKey: "ann_gross_income",
+    annLabel: "Ann. gross income (SparkLend + SLL)", mcapGpKey: "mcap_base_gp", unit: "SPK",
+    architecture:
+`lending_basket_tvl_t = uniform historical monthly draw × sampled return path
+share_t        = MS90 × decayed velocity ensemble (cap 35%)
+Spark_TVL_t    = lending_basket_tvl_t × share_t
+gross_income_t = Spark_TVL_t × gross-income yield (SparkLend + SLL)
+GP_t           = gross_income_t × NET MARGIN (after Sky cost-of-capital + Savings Rate)
+PV/token = Year-3 TTM GP × 15× / supply / (1 + DR)^3`,
+    leverRows: (gp) => ([
+      ["Gross-income yield on TVL",      `${((gp["gross_income_yield_on_tvl"] ?? 0) * 100).toFixed(2)}%`],
+      ["Net margin — conservative",      "12%"],
+      ["Net margin — base (primary)",    "20%"],
+      ["Net margin — bull",              "28%"],
+      ["Ann. gross income",              fmtLarge(gp["ann_gross_income"] ?? 0)],
+      ["Y3 GP P50 (20% margin)",         fmtLarge(gp["y3_gp_p50"] ?? 0)],
+    ]),
+    splitTitle: "Y3 GP product-line split",
+    splitRows: (gp) => {
+      const margin = 0.20; const gross = (gp["y3_gp_p50"] ?? 0) / margin;
+      return [
+        ["Y3 gross income",            fmtLarge(gross)],
+        ["× Net margin",               "20%"],
+        ["= Net GP (DAO / staked SPK)", fmtLarge(gp["y3_gp_p50"] ?? 0)],
+      ];
+    },
+    splitNote: "Net margin (base 20%, anchored to Q1'26 actuals: net returns ~22% of gross, surplus ~11%) is the spread Spark keeps after Sky's cost-of-capital and the Savings Rate. Modeled, not directly observable; Q1'26 surplus fell ~47% QoQ.",
+    semanticsLead: "Spark is a Sky subDAO / capital allocator. Gross income = SparkLend interest + Spark Liquidity Layer yield (Savings payout is a cost, excluded). The token captures a modeled net margin; only ~30% of 10B SPK circulates, so Y3 uses near-fully-diluted supply.",
+  },
+  aave: {
+    tvlKey: "aave_tvl", tvlP50Key: "y3_aave_tvl_p50", yieldKey: "net_revenue_yield_on_tvl",
+    yieldLabel: "Net revenue yield on TVL", annKey: "ann_revenue",
+    annLabel: "Ann. protocol revenue (real)", mcapGpKey: "mcap_current_gp", unit: "AAVE",
+    architecture:
+`lending_basket_tvl_t = uniform historical monthly draw × sampled return path
+share_t   = MS90 × decayed velocity ensemble (cap 45%)
+Aave_TVL_t = lending_basket_tvl_t × share_t
+GP_t      = Aave_TVL_t × NET revenue yield (reserve-factor cut — real today)
+PV/token = Year-3 TTM GP × 15× / supply / (1 + DR)^3`,
+    leverRows: (gp) => ([
+      ["Net revenue yield on TVL (current)", `${((gp["net_revenue_yield_on_tvl"] ?? 0) * 100).toFixed(3)}%`],
+      ["Conservative yield",                 "0.40%"],
+      ["Expansion yield (GHO + RF hikes)",   "0.70%"],
+      ["Effective reserve factor",           gp["effective_reserve_factor"] != null ? `${((gp["effective_reserve_factor"]) * 100).toFixed(1)}%` : "—"],
+      ["Ann. protocol revenue (real)",       fmtLarge(gp["ann_revenue"] ?? 0)],
+      ["Aavenomics buyback (context)",       `${fmtLarge(gp["buyback_ann_usd"] ?? 0)}/yr`],
+      ["Y3 GP P50",                          fmtLarge(gp["y3_gp_p50"] ?? 0)],
+    ]),
+    splitTitle: "Y3 GP composition",
+    splitRows: (gp) => ([
+      ["Y3 protocol revenue (= GP)", fmtLarge(gp["y3_gp_p50"] ?? 0)],
+      ["Reserve factor (already netted)", gp["effective_reserve_factor"] != null ? `${((gp["effective_reserve_factor"]) * 100).toFixed(1)}%` : "—"],
+      ["Separate fee-switch take", "none — yield is already net"],
+    ]),
+    splitNote: "Unlike Morpho/Spark there is no capture lever: GP is the reserve-factor revenue Aave already earns. Current-state is the PRIMARY case, not an activation story.",
+    semanticsLead: "Aave earns REAL protocol revenue today — the reserve-factor cut of borrower interest (DefiLlama dailyRevenue, net of suppliers). Current-state is primary; AAVE is ~95% circulating so dilution is minimal.",
+  },
+};
+
+function fmtSupply(n: number, unit: string): string {
+  if (!n) return "—";
+  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(2)}B ${unit}`;
+  return `${(n / 1e6).toFixed(1)}M ${unit}`;
+}
+
+function LendingModelOutputs({ data, tokenKey }: { data: ValuationData; tokenKey: string }) {
+  const cfg = LENDING_CFG[tokenKey];
+  const gp  = data.current_gp as Record<string, number>;
+  const mc  = (gp["mc_path"] ?? {}) as unknown as Record<string, number>;
+  const spot = data.market.spot;
+  const eoy3 = (gp["eoy3_lending_share"] ?? gp["eoy3_share"] ?? mc["eoy3_lending_share"] ?? mc["eoy3_share"]) as number;
+  const trendX = (v: number | undefined) => (v != null ? `${v.toFixed(2)}×` : "—");
+
+  const snapshotRows: [string, string][] = [
+    ["MS7 vs lending basket",   pct(gp["ms7_vs_lending"])],
+    ["MS30 vs lending basket",  pct(gp["ms30_vs_lending"])],
+    ["MS90 valuation seed",     pct(gp["ms90_vs_lending"])],
+    ["MS180 vs lending basket", pct(gp["ms180_vs_lending"])],
+    ["MS30/MS180 trend",        trendX(gp["ms30_ms180_trend"])],
+    ["MS7/MS30 trend",          trendX(gp["ms7_ms30_trend"])],
+    ["Current denominator",     fmtLarge(gp["lending_basket_tvl"] ?? mc["current_basket_tvl"])],
+    ["Start denominator P50",   fmtLarge(mc["start_basket_tvl_p50"])],
+    ["Y3 denominator P50",      fmtLarge(gp["y3_basket_tvl_p50"])],
+    ["EOY3 share (terminal)",   pct(eoy3)],
+    ["Share cap",               pct(mc["share_cap"])],
+  ];
+
+  const supplyRows: [string, string][] = [
+    ["Circulating supply",   fmtSupply(data.market.circulating_supply, cfg.unit)],
+    ["Max supply",           fmtSupply(data.market.max_supply, cfg.unit)],
+    ["Circulating % of max", gp["circulating_pct_of_max"] != null ? pct(gp["circulating_pct_of_max"]) : pct(data.market.circulating_supply / data.market.max_supply)],
+    ["Reserved supply",      fmtSupply(gp["reserved_supply"], cfg.unit)],
+    ["Annual reserved release", fmtSupply(gp["annual_reserved_supply_release"], cfg.unit)],
+    ["Effective Y3 supply",  fmtSupply(gp["y3_effective_supply"], cfg.unit)],
+    ["Buybacks / burns modeled", tokenKey === "aave" ? "Aavenomics ~$52M/yr (context only)" : "None"],
+  ];
+
+  const bt      = data.hist_charts?.backtest;
+  const signals = bt?.signals ?? {};
+  const fmtRet  = (v: number | null) => (v == null ? "n/a" : `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`);
+  const sigColor: Record<string, string> = { GOOD: "#16a34a", NEUTRAL: "#ca8a04", BAD: "#dc2626" };
+  const sc      = data.hist_charts?.secondary_chart;
+  const mcapGp  = sc?.data?.[sc.data.length - 1]?.value;
+
+  const KV = ({ title, rows, note }: { title: string; rows: [string, string][]; note?: string }) => (
+    <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+      <h3 className="text-base font-semibold text-gray-800 mb-3">{title}</h3>
+      <table className="w-full text-sm"><tbody>
+        {rows.map(([k, v]) => (
+          <tr key={k} className="border-b border-gray-100 last:border-0">
+            <td className="py-2.5 text-sm text-gray-600 pr-4">{k}</td>
+            <td className="py-2.5 text-sm font-mono font-semibold text-gray-900 text-right whitespace-nowrap">{v}</td>
+          </tr>
+        ))}
+      </tbody></table>
+      {note && <p className="text-xs text-gray-500 mt-3 leading-relaxed">{note}</p>}
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <h2 className="text-3xl font-bold text-gray-900">Model Outputs</h2>
+
+      {/* Lending share architecture */}
+      <div className="bg-[#1a1d29] rounded-xl border border-[#2d3144] px-5 py-4">
+        <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Lending share architecture</div>
+        <pre className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap font-mono">{cfg.architecture}</pre>
+        <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+          The MC path is denominator × share: starting lending/yield-basket TVL is a uniform historical monthly draw
+          (P50 {fmtLarge(mc["start_basket_tvl_p50"])}), not fixed at the current {fmtLarge(gp["lending_basket_tvl"] ?? mc["current_basket_tvl"])} denominator.
+        </p>
+      </div>
+
+      {/* Snapshot + take-rate + supply */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <KV title="Current snapshot" rows={snapshotRows} note="Market share = protocol TVL ÷ lending/yield-basket TVL (53 monthly obs, locked)." />
+        <KV title="Take-rate assumptions" rows={cfg.leverRows(gp)} note={`Yield basis: ${cfg.yieldLabel.toLowerCase()}.`} />
+        <KV title="Supply & token mechanics" rows={supplyRows} note="Reserved release inferred from 365D CoinGecko circulating-supply movement, capped at remaining reserved." />
+      </div>
+
+      {/* Scenario comparison */}
+      <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h3 className="text-base font-semibold text-gray-800">Scenario comparison</h3>
+          <p className="text-xs text-gray-400 mt-1">PV / token = Year-3 TTM GP × {data.model.multiple}× / supply / (1 + {(data.model.discount_rate * 100).toFixed(1)}%)³. {data.model.paths.toLocaleString()} MC paths.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                {["CASE","P25","P50","P75","P90","EV","P(SPOT)","2Y +30%","2Y -30%","P(3X)"].map((h) => (
+                  <th key={h} className={`py-4 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap ${h === "CASE" ? "text-left px-5" : "text-right px-4"}`}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.scenarios.map((s) => {
+                const probColor = s.prob_above_spot >= 0.5 ? "#15803d" : s.prob_above_spot >= 0.35 ? "#a16207" : "#b91c1c";
+                return (
+                  <tr key={s.key} className={`border-b border-gray-100 last:border-0 ${s.is_primary ? "bg-white" : ""}`}>
+                    <td className={`px-5 py-4 text-sm ${s.is_primary ? "font-semibold text-gray-900" : "text-gray-600"}`}>{s.label}</td>
+                    {(["p25","p50","p75","p90"] as const).map((p) => (
+                      <td key={p} className={`px-4 py-4 text-right font-mono text-sm whitespace-nowrap ${p === "p50" ? "font-semibold text-gray-900" : "text-gray-700"}`}>{fmtPrice(s.pv[p])}</td>
+                    ))}
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{fmtPrice(s.ev)}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm font-semibold whitespace-nowrap" style={{ color: probColor }}>{pct(s.prob_above_spot)}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_up_30_2y   != null ? pct(s.prob_spot_up_30_2y)   : "—"}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_spot_down_30_2y != null ? pct(s.prob_spot_down_30_2y) : "—"}</td>
+                    <td className="px-4 py-4 text-right font-mono text-sm text-gray-700 whitespace-nowrap">{s.prob_3x              != null ? pct(s.prob_3x)              : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Y3 output cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {[
+          { label: "Y3 TTM GP P50",        value: fmtLarge(gp["y3_gp_p50"]),        sub: "Year-3 trailing-12M protocol GP." },
+          { label: "Y3 protocol TVL P50",  value: fmtLarge(gp[cfg.tvlP50Key]),      sub: `Current ${fmtLarge(gp[cfg.tvlKey])}.` },
+          { label: "Y3 denominator P50",   value: fmtLarge(gp["y3_basket_tvl_p50"]), sub: "Lending/yield-basket TVL EOY3." },
+          { label: "EOY3 market share",    value: pct(eoy3),                         sub: `MS90 seed ${pct(gp["ms90_vs_lending"])}, cap ${pct(mc["share_cap"])}.` },
+          { label: "Mcap / GP",            value: gp[cfg.mcapGpKey] != null ? `${gp[cfg.mcapGpKey].toFixed(1)}×` : "—", sub: cfg.annLabel + "." },
+        ].map((c) => (
+          <div key={c.label} className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] px-5 py-4">
+            <div className="text-xs text-gray-500 font-mono mb-1 whitespace-pre-line">{c.label}</div>
+            <div className="text-2xl font-bold text-gray-900 font-mono leading-tight">{c.value}</div>
+            <div className="text-xs text-gray-500 mt-1 leading-relaxed">{c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* GP split + backtest */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <KV title={cfg.splitTitle} rows={cfg.splitRows(gp)} note={cfg.splitNote} />
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-base font-semibold text-gray-800 mb-3">Historical diagnostic / backtest</h3>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                {["SIGNAL","OBS","AVG +30D","AVG +90D","RECENT DATES"].map((h) => (
+                  <th key={h} className="pb-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider pr-4 last:pr-0">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {["GOOD","NEUTRAL","BAD"].map((sig) => {
+                const s = signals[sig];
+                return (
+                  <tr key={sig} className="border-b border-gray-100 last:border-0">
+                    <td className="py-3 font-semibold text-xs pr-4" style={{ color: sigColor[sig] }}>{sig}</td>
+                    <td className="py-3 font-mono text-gray-700 pr-4">{s?.obs ?? 0}</td>
+                    <td className="py-3 font-mono text-gray-700 pr-4">{fmtRet(s?.avg_30d ?? null)}</td>
+                    <td className="py-3 font-mono text-gray-700 pr-4">{fmtRet(s?.avg_90d ?? null)}</td>
+                    <td className="py-3 text-xs text-gray-500">{s?.recent_dates?.slice(0, 3).join(", ") || "n/a"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+            Latest signal: <span className="font-semibold" style={{ color: sigColor[bt?.latest_signal ?? ""] }}>{bt?.latest_signal ?? "—"}</span>; last realized-return row: {bt?.last_realized_row ?? "—"}. Model-shaped diagnostic, not a full MC replay.
+          </p>
+        </div>
+      </div>
+
+      {/* Mcap/GP + caveats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">Historical Mcap / GP</h3>
+          <div className="text-4xl font-bold text-gray-900 mb-3">{mcapGp != null ? `${mcapGp.toFixed(1)}×` : "—"}</div>
+          <p className="text-sm text-gray-500 mb-2 leading-relaxed">{sc?.subtitle}</p>
+          <p className="text-sm text-gray-500 leading-relaxed">{sc?.note}</p>
+        </div>
+        <div className="bg-[#f8f9fb] rounded-xl border border-[#e2e6f0] p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Revenue semantics &amp; caveats</h3>
+          <p className="text-sm text-gray-700 leading-relaxed mb-3">{cfg.semanticsLead}</p>
+          <ul className="space-y-2 list-disc list-outside pl-4">
+            {(data.caveats ?? []).map((c, i) => (
+              <li key={i} className="text-sm text-gray-600 leading-relaxed">{c}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── TokenView ────────────────────────────────────────────────────────────────
 
 function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }) {
@@ -4971,7 +5281,9 @@ function TokenView({ tokenKey, token }: { tokenKey: string; token: TokenResult }
       {tokenKey === "hype" && primary.y3_price_p50 && (
         <HypeModelOutputs data={d} />
       )}
-      {tokenKey !== "hype" && <TokenModelOutputs data={d} tokenKey={tokenKey} />}
+      {LENDING_TOKENS.includes(tokenKey)
+        ? <LendingModelOutputs data={d} tokenKey={tokenKey} />
+        : tokenKey !== "hype" && <TokenModelOutputs data={d} tokenKey={tokenKey} />}
 
       {/* ── PV price distribution ─────────────────────────────────────── */}
       <DistributionChart scenario={primary} spot={spot} ev={primary.ev} />
