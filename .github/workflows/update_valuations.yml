@@ -43,3 +43,6 @@ jobs:
 
       - name: Push changes
         run: git push
+
+      - name: Trigger Vercel deploy
+        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
